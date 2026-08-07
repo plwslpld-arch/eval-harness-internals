@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -59,4 +59,15 @@ test("checkBrandAssets reports a stale committed derivative", async () => {
   const errors = await checkBrandAssets(root);
 
   assert.match(errors.join("\n"), /stale brand derivative.*evalorium-logo\.png/);
+});
+
+test("formal horizontal logos do not depend on platform fonts", async () => {
+  const repositoryRoot = path.resolve(import.meta.dirname, "..");
+  for (const name of ["evalorium-logo.svg", "evalorium-logo-dark.svg"]) {
+    const source = await readFile(
+      path.join(repositoryRoot, "docs", "assets", "brand", name),
+      "utf8",
+    );
+    assert.doesNotMatch(source, /<text\b|font-family/i, name);
+  }
 });
