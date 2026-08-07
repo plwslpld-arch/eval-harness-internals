@@ -1,0 +1,37 @@
+# Secrets and local credentials
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+auth.json
+credentials.json
+secrets/
+.codex/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# JavaScript
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*.bak

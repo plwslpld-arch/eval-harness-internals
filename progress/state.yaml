@@ -1,0 +1,44 @@
+schema_version: 1
+project: Evalorium
+learner: plwslpld
+updated_at: "2026-08-08T01:10:00+08:00"
+
+program:
+  phases: 8
+  core_chapters: 29
+  knowledge_units_minimum: 138
+  phase_capstones: 8
+  enterprise_capstones: 1
+  scope_reduction_allowed: false
+
+current:
+  phase: A
+  chapter: A1
+  unit: A1.1
+  title: AI评测的本质
+  status: in_progress
+
+assessment:
+  status: not_passed
+  attempts: 0
+  score: null
+
+last_completed: null
+
+next_actions:
+  - 从 A1.1 第一节重新开始，不引用此前未正式交付的课程内容
+  - 完成概念讲解、示例、实践实验和正式测评
+  - 通过测评后才更新为 completed 并进入 A1.2
+
+product_decisions:
+  primary_product: 企业级 AI 质量工程、评测、门禁、监控与治理平台
+  agent_environment_harness: Evalorium 内部的深度核心能力
+  coding_agent_runtime: 不属于当前 Evalorium 的产品中心，未来如需建设应作为独立产品
+  loopward_rein_vein_dependency: none
+
+publication:
+  repository: https://github.com/plwslpld-arch/evalorium
+  content_format:
+    - source
+    - html
+  github_pages: planned
