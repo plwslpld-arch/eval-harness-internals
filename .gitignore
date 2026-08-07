@@ -20,6 +20,9 @@ venv/
 
 # JavaScript
 node_modules/
+.brand-build/
+.superpowers/
+npm-debug.log*
 .next/
 dist/
 build/
