@@ -1,7 +1,12 @@
 schema_version: 1
 project: Evalorium
 learner: plwslpld
-updated_at: "2026-08-08T01:10:00+08:00"
+updated_at: "2026-08-08T02:00:00+08:00"
+
+repository:
+  default_branch: main
+  visibility: public
+  license: Apache-2.0
 
 program:
   phases: 8
@@ -18,6 +23,11 @@ current:
   title: AI评测的本质
   status: in_progress
 
+learning_protocol:
+  current_stage: learning
+  document_only_after_pass: true
+  advance_only_after_commit: true
+
 assessment:
   status: not_passed
   attempts: 0
@@ -26,15 +36,28 @@ assessment:
 last_completed: null
 
 next_actions:
-  - 从 A1.1 第一节重新开始，不引用此前未正式交付的课程内容
-  - 完成概念讲解、示例、实践实验和正式测评
-  - 通过测评后才更新为 completed 并进入 A1.2
+  - 从 A1.1 第一节开始正式学习，不提前写入完成版课程正文
+  - 通过复述和边界问题确认理解，然后完成实践实验
+  - 完成正式测评；通过后才整理开源文档、验证、提交并进入 A1.2
 
 product_decisions:
   primary_product: 企业级 AI 质量工程、评测、门禁、监控与治理平台
   agent_environment_harness: Evalorium 内部的深度核心能力
   coding_agent_runtime: 不属于当前 Evalorium 的产品中心，未来如需建设应作为独立产品
   loopward_rein_vein_dependency: none
+
+maturity:
+  project: learning
+  academy: learning
+  platform: planned
+
+handoff:
+  path: handoffs/CURRENT.md
+  based_on_commit: 2178a190adcd6776797c42a8ac1141b85d548399
+
+verification:
+  command: npm run check
+  status: passed
 
 publication:
   repository: https://github.com/plwslpld-arch/evalorium

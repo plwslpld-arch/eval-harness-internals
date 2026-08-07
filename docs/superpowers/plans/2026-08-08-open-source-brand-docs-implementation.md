@@ -639,7 +639,7 @@ verification:
   status: passed
 ```
 
-Set `handoff.last_commit` to the full output of `git rev-parse HEAD` immediately before the state update. The written YAML value must be a literal 40-character SHA.
+Set `handoff.based_on_commit` to the full output of `git rev-parse HEAD` immediately before the state update. The written YAML value must be a literal 40-character SHA and is intentionally the commit that the Handoff describes, not a self-referential claim about the later metadata commit.
 
 - [ ] **Step 3: Write the reusable Handoff template**
 
