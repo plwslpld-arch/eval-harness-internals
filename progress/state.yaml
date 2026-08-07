@@ -53,7 +53,7 @@ maturity:
 
 handoff:
   path: handoffs/CURRENT.md
-  based_on_commit: 2178a190adcd6776797c42a8ac1141b85d548399
+  based_on_commit: 63cc108a91b8dc55d27cafb35f35873b4867bac3
 
 verification:
   command: npm run check
