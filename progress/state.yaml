@@ -1,7 +1,7 @@
 schema_version: 1
 project: Evalorium
 learner: plwslpld
-updated_at: "2026-08-08T02:00:00+08:00"
+updated_at: "2026-08-08T01:54:00+08:00"
 
 repository:
   default_branch: main
@@ -53,11 +53,18 @@ maturity:
 
 handoff:
   path: handoffs/CURRENT.md
-  based_on_commit: 63cc108a91b8dc55d27cafb35f35873b4867bac3
+  based_on_commit: 98a4b6a88a1a0767c650e893abebb3d6cca33962
 
 verification:
   command: npm run check
   status: passed
+  local_tests: 9
+  remote_workflow:
+    name: Documentation Quality
+    run_id: 31204362566
+    commit: 98a4b6a88a1a0767c650e893abebb3d6cca33962
+    status: passed
+    url: https://github.com/plwslpld-arch/evalorium/actions/runs/31204362566
 
 publication:
   repository: https://github.com/plwslpld-arch/evalorium

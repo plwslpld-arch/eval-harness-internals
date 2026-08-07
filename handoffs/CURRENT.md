@@ -10,7 +10,8 @@
 
 ## 当前状态
 
-- 实施分支：`feat/open-source-foundation`
+- 当前分支：`main`
+- 远程同步：公开仓库 `origin/main` 已包含提交 `98a4b6a88a1a0767c650e893abebb3d6cca33962`
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
@@ -21,26 +22,26 @@
 ## 已完成证据
 
 - Evidence Gate SVG 品牌源文件和脚本派生 PNG。
-- 仓库验证器及 8 个自动化测试。
+- 仓库验证器及 9 个自动化测试。
 - 中英文 README。
 - 愿景、范围、目标架构、路线图、成熟度、掌握标准和 JD 能力映射。
 - 贡献、安全和社区行为文件。
+- GitHub Documentation Quality 工作流已在 Linux 上通过：[run 31204362566](https://github.com/plwslpld-arch/evalorium/actions/runs/31204362566)。
 
 ## 本次变更
 
-建立了公开项目信息架构和品牌体系；将成熟度声明绑定到证据；将“先学习、后沉淀”写入机器状态、人类进度和 Handoff 协议。
+建立了公开项目信息架构和品牌体系；将成熟度声明绑定到证据；将“先学习、后沉淀”写入机器状态、人类进度和 Handoff 协议。正式横版 Logo 已改为纯 SVG 几何路径，消除了 Windows 与 Linux 的字体渲染差异；GitHub Actions 使用已核验的 `actions/checkout@v7` 与 `actions/setup-node@v7`。
 
 ## 验证结果
 
-已执行完整的 `npm run check`：8 个自动化测试通过，品牌派生文件与 SVG 一致，仓库文档、YAML、链接、UTF-8、SVG 安全和凭据形态验证通过。
+已执行完整的 `npm run check`：9 个自动化测试通过，品牌派生文件与 SVG 一致，仓库文档、YAML、链接、UTF-8、SVG 安全和凭据形态验证通过。提交 `98a4b6a88a1a0767c650e893abebb3d6cca33962` 的远程 Documentation Quality 工作流在 Ubuntu 上通过。
 
 ## 下一次准确动作
 
-1. 合并并推送到公开仓库，确认远程 Documentation Quality 工作流成功。
-2. 回到 A1.1 第一节正式学习。
-3. 依次完成复述确认、实践和正式测评。
-4. A1.1 通过测评后才创建完成版课程正文和能力证据。
-5. 文档验证和提交完成后才进入 A1.2。
+1. 从 A1.1 第一节《AI评测的本质》开始正式学习。
+2. 依次完成复述确认、实践和正式测评。
+3. A1.1 通过测评后才创建完成版课程正文和能力证据。
+4. 文档验证和提交完成后才进入 A1.2。
 
 ## 未解决问题与风险
 
@@ -51,6 +52,6 @@
 
 ## Git 状态
 
-- 本 Handoff 基于提交 `63cc108a91b8dc55d27cafb35f35873b4867bac3` 之后的工作。
-- 当前真实提交使用 `git rev-parse HEAD` 获取。
-- 完成最终验证后再更新远程同步结果。
+- 本 Handoff 基于已通过本地与远程质量门禁的提交 `98a4b6a88a1a0767c650e893abebb3d6cca33962`。
+- 对应远程证据为 [Documentation Quality run 31204362566](https://github.com/plwslpld-arch/evalorium/actions/runs/31204362566)。
+- 本次元数据提交之后的当前真实 HEAD 使用 `git rev-parse HEAD` 获取；`based_on_commit` 刻意记录被描述且已验证的前序提交，避免自引用。
