@@ -132,7 +132,7 @@ Create `package.json` with:
   "type": "module",
   "engines": { "node": ">=20" },
   "scripts": {
-    "test": "node --test",
+    "test": "node --test test",
     "verify": "node scripts/verify-repository.mjs",
     "brand:render": "node scripts/render-brand.mjs",
     "brand:check": "node scripts/render-brand.mjs --check",
