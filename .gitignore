@@ -32,6 +32,7 @@ coverage/
 Thumbs.db
 
 # Temporary files
+.worktrees/
 *.tmp
 *.swp
 *.bak
