@@ -1,25 +1,124 @@
-# Evalorium
+<p align="center">
+  <img src="docs/assets/brand/evalorium-logo.svg" alt="Evalorium" width="420">
+</p>
 
-Evalorium is an open-source enterprise AI quality engineering platform for evaluating, gating, monitoring, and governing models, RAG systems, agents, and multi-agent systems.
+<p align="center"><strong>Evidence before release.</strong></p>
 
-Evalorium is being developed through two connected tracks:
+<p align="center">
+  Open-source enterprise AI quality engineering for models, RAG systems, agents, and multi-agent systems.
+</p>
 
-1. **Academy** — a rigorous, practice-driven curriculum for AI evaluation and quality engineering.
-2. **Platform** — a production-grade evaluation system, including an in-depth Agent Environment Harness.
+<p align="center">
+  English · <a href="README.zh-CN.md">简体中文</a>
+</p>
 
-The current priority is to complete the Academy curriculum and its practical capstones before implementing the full platform.
+> **Current status — Academy foundation.** The learning and evidence system is under construction. The Platform described below is a target architecture, not a claim that production software is already available.
 
-## Start here
+## What Evalorium is
 
-- Read [`START_HERE.md`](START_HERE.md) to resume the project on any computer.
-- Read [`progress/PROGRESS.md`](progress/PROGRESS.md) for the human-readable learning status.
-- Read [`progress/state.yaml`](progress/state.yaml) for the canonical machine-readable state.
-- Read [`handoffs/CURRENT.md`](handoffs/CURRENT.md) for the exact next action.
+Evalorium is an open-source quality engineering platform that turns AI requirements and risks into reproducible evaluations, release gates, production monitoring, governance evidence, and improvement data.
 
-## Product boundary
+Most evaluation tools answer a narrow question: *how did a model score on this dataset?* Evalorium is designed around the broader enterprise decision: *is there enough reliable evidence to release this AI system, keep it in production, and improve it safely?*
 
-Evalorium is an AI quality engineering and decision platform. Its core responsibility is to turn requirements and risks into reproducible evidence, release decisions, production monitoring, and improvement data. It is not a general-purpose model serving platform or a Claude Code-style coding-agent runtime.
+## Principles
+
+- **Evidence before release** — quality claims must be traceable to tests, measurements, and limitations.
+- **Uncertainty-aware** — estimates include sampling, model, judge, and execution uncertainty.
+- **System-level** — evaluate the complete model, retrieval, tools, memory, environment, and policy boundary.
+- **Risk-driven** — capability, reliability, safety, bias, security, cost, and operational risks share one decision model.
+- **Reproducible** — tasks, environments, versions, traces, and gates are replayable and auditable.
+- **No maturity without proof** — planned, implemented, validated, and production-proven are different states.
+
+## Two connected tracks
+
+| Track | Purpose | Current state |
+|---|---|---|
+| **Academy** | Learn evaluation science through instruction, practice, assessment, and capstones | Learning |
+| **Platform** | Implement the methods as an enterprise evaluation and quality control plane | Planned |
+
+Academy content follows a strict unit gate:
+
+```text
+learn → explain → practice → assess → document after passing → verify → commit → next unit
+```
+
+Curriculum maps may be planned in advance. Completed lesson bodies and competency evidence are written only after the learner passes the corresponding unit assessment.
+
+## Target capability map
+
+| Capability | Responsibility |
+|---|---|
+| Standards | Quality models, risk taxonomy, baselines, and release policy |
+| Eval Core | Tasks, datasets, runners, solvers, scorers, judges, and reports |
+| Measurement | Sampling, uncertainty, confidence intervals, effect sizes, and significance |
+| LLM-as-Judge | Calibration, bias detection, reliability, and human comparison |
+| Human Evaluation | Annotation design, sampling, adjudication, and agreement |
+| Agent Environment Harness | Controlled environments, tools, state assertions, traces, and fault injection |
+| Security and Red Team | Threat models, adversarial generation, permissions, and regression suites |
+| Quality Gates | Pull-request, CI/CD, canary, release, and exception decisions |
+| Observability | Quality drift, hallucination, bias, latency, cost, and incident signals |
+| Governance | Ownership, approvals, evidence chains, audit, and risk acceptance |
+| Eval-to-RL | Failure mining, preference data, verifiers, rewards, and training exports |
+| Academy | Formal lessons, experiments, assessments, and capstones |
+
+See the [target architecture](docs/ARCHITECTURE.md) and [scope boundary](docs/SCOPE.md).
+
+## Agent Environment Harness
+
+The Agent Environment Harness is a deep core capability inside Evalorium. It will provision and reset environments, expose controlled tools, capture trajectories, inject failures, inspect final state, and score whether an agent truly completed a task safely and reliably.
+
+It evaluates agent products. It is not itself a Claude Code-style general coding-agent runtime.
+
+## Eval-to-RL loop
+
+```text
+evaluations and production incidents
+  → failure clusters and hard cases
+  → human preferences, verifiers, and reward signals
+  → training or policy improvement
+  → regression evaluation and release gates
+```
+
+## Current maturity
+
+| Area | State | Evidence |
+|---|---|---|
+| Repository and brand foundation | Implemented | Versioned assets and local validation |
+| Academy curriculum | Learning | A1.1 is active; no unit is completed |
+| Platform runtime | Planned | Design and roadmap only |
+| Production adoption | Not claimed | Requires external organizational evidence |
+
+Read the [project maturity model](docs/PROJECT_MATURITY.md) before interpreting any capability claim.
+
+## Learning scope
+
+The full program targets:
+
+- 8 phases
+- 29 core chapters
+- at least 138 knowledge units
+- 8 phase capstones
+- 1 enterprise capstone
+
+The scope is not reduced to fit a one-month learning rhythm. Time is a pacing constraint, not a reason to remove content or evidence.
+
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [Vision](docs/VISION.md)
+- [Scope and non-goals](docs/SCOPE.md)
+- [Target architecture](docs/ARCHITECTURE.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Project maturity](docs/PROJECT_MATURITY.md)
+- [Mastery standard](docs/MASTERY_STANDARD.md)
+- [Job competency map](docs/JD_COMPETENCY_MAP.md)
+- [Brand guide](docs/BRAND.md)
+- [Resume work on another computer](START_HERE.md)
+
+## Contributing and security
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes. Report security issues through the process in [SECURITY.md](SECURITY.md). Community participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
 
-Apache License 2.0. See [`LICENSE`](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).

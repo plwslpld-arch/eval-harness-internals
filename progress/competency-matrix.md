@@ -1,16 +1,16 @@
-# 能力矩阵
+# Competency Evidence Matrix
 
-| 能力域 | 当前水平 | 目标证据 |
-|---|---|---|
-| AI 质量标准 | 未评估 | 标准体系、质量基线、风险分类与评审记录 |
-| 评测方法论 | 学习中 | 多维评测方案、统计报告与边界分析 |
-| LLM-as-Judge | 未开始 | 校准实验、偏差分析与人工对照 |
-| 人工评测 | 未开始 | 标注规范、抽样、仲裁与一致性分析 |
-| Agent 评测 | 未开始 | 环境、轨迹、状态断言、故障注入与 Scorer |
-| 安全红队 | 未开始 | 威胁模型、攻击集与安全回归门禁 |
-| CI/CD 门禁 | 未开始 | 可执行门禁、豁免机制与审计证据 |
-| 生产监控 | 未开始 | 退化检测、事故复盘与风险告警 |
-| Eval-to-RL | 未开始 | 失败样本、Verifier、Reward 与数据导出 |
-| 质量文化与治理 | 未开始 | ADR、评审流程、责任模型与实际采用证据 |
+Only evidence-supported capability is recorded. Reading a topic is not equivalent to designing or validating a system.
 
-该矩阵只记录有证据支持的能力，不以阅读完成代替工程能力。
+| Capability domain | Target level | Current level | Required evidence | Evidence path | Last verified | Limitation |
+|---|---|---|---|---|---|---|
+| AI quality standards | Validation | Not assessed | Quality baseline, risk taxonomy, policy review, and gate outcome | Not available | Not verified | No completed unit |
+| Evaluation methodology | Validation | Learning | Multi-dimensional design, statistical report, and boundary analysis | `progress/state.yaml` | 2026-08-08 | A1.1 is in progress |
+| LLM-as-Judge | Validation | Not started | Calibration, bias analysis, and human comparison | Not available | Not verified | No study completed |
+| Human evaluation | Design | Not started | Annotation protocol, sampling, adjudication, and agreement | Not available | Not verified | No study completed |
+| Agent evaluation | Validation | Not started | Environment, trajectory, state assertion, fault injection, and scorer | Not available | Not verified | Harness is planned |
+| Security red team | Validation | Not started | Threat model, attack suite, mitigation, and regression gate | Not available | Not verified | No security suite exists |
+| CI/CD quality gates | Validation | Not started | Executable gate, baseline policy, waiver, rollback, and audit | Not available | Not verified | Documentation CI is not an AI release gate |
+| Production monitoring | Validation | Not started | Drift detection, incident replay, sampling, and alert analysis | Not available | Not verified | No production telemetry |
+| Eval-to-RL | Design | Not started | Failure mining, verifier or reward data, export, and regression study | Not available | Not verified | No training integration |
+| Quality culture and governance | Leadership | Not started | Real adoption, accountable owners, reviews, and measured outcome | External evidence required | Not verified | Cannot be proven by repository alone |
