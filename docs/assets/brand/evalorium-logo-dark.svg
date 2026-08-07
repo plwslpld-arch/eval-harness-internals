@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" role="img" aria-labelledby="title">
+  <title id="title">Evalorium for dark backgrounds</title>
+  <defs>
+    <mask id="logo-dark-channels">
+      <rect width="64" height="64" fill="#fff"/>
+      <path d="M17 17H25L43 27V33H38L23 24H17Z" fill="#000"/>
+      <path d="M10 29H39L48 32L39 35H10Z" fill="#000"/>
+      <path d="M17 47H25L43 37V31H38L23 40H17Z" fill="#000"/>
+    </mask>
+  </defs>
+  <g transform="translate(8 8)">
+    <rect x="4" y="4" width="56" height="56" rx="8" fill="#F8FAFC" mask="url(#logo-dark-channels)"/>
+    <path d="M40 24L53 32L40 40Z" fill="#6C63FF"/>
+  </g>
+  <text x="92" y="52" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="38" font-weight="650" letter-spacing="-1">Evalorium</text>
+</svg>

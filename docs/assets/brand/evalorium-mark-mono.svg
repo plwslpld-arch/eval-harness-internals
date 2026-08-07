@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Evalorium Evidence Gate monochrome mark</title>
+  <defs>
+    <mask id="channels-mono">
+      <rect width="64" height="64" fill="#fff"/>
+      <path d="M17 17H25L43 27V33H38L23 24H17Z" fill="#000"/>
+      <path d="M10 29H39L48 32L39 35H10Z" fill="#000"/>
+      <path d="M17 47H25L43 37V31H38L23 40H17Z" fill="#000"/>
+    </mask>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="8" fill="#0B1020" mask="url(#channels-mono)"/>
+  <path d="M40 24L53 32L40 40Z" fill="#0B1020"/>
+</svg>
