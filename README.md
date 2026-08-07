@@ -12,6 +12,10 @@
   English · <a href="README.zh-CN.md">简体中文</a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/plwslpld-arch/evalorium/actions/workflows/docs-quality.yml"><img src="https://github.com/plwslpld-arch/evalorium/actions/workflows/docs-quality.yml/badge.svg" alt="Documentation Quality"></a>
+</p>
+
 > **Current status — Academy foundation.** The learning and evidence system is under construction. The Platform described below is a target architecture, not a claim that production software is already available.
 
 ## What Evalorium is

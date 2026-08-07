@@ -12,6 +12,10 @@
   <a href="README.md">English</a> · 简体中文
 </p>
 
+<p align="center">
+  <a href="https://github.com/plwslpld-arch/evalorium/actions/workflows/docs-quality.yml"><img src="https://github.com/plwslpld-arch/evalorium/actions/workflows/docs-quality.yml/badge.svg" alt="Documentation Quality"></a>
+</p>
+
 > **当前状态：Academy 基础建设阶段。** 学习体系和证据系统正在建设；下文 Platform 是目标架构，不代表生产级软件已经交付。
 
 ## Evalorium 是什么
