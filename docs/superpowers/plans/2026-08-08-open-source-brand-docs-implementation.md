@@ -15,6 +15,7 @@
 - Evalorium is an enterprise AI quality engineering platform, not a general coding-agent runtime.
 - Agent Environment Harness remains a deep core module inside Evalorium.
 - Academy and Platform are both first-class deliverables.
+- Academy course bodies are documented only after the learner studies, practices, and passes the unit assessment; curriculum maps and learning objectives may be planned in advance, but they are not completion evidence.
 - Target scope remains 8 phases, 29 core chapters, at least 138 knowledge units, 8 phase capstones, and 1 enterprise capstone.
 - Do not claim implementation, validation, production adoption, work tenure, or business impact without linked evidence.
 - Formal logo source files are SVG. PNG files must be generated from SVG, not manually edited.
@@ -386,6 +387,8 @@ Use this exact section order:
 
 Use the phrase “target architecture” for unimplemented modules. Do not present planned modules as available features. Do not add CI badges until Task 8 creates and validates the workflow.
 
+In the Academy section, state the unit gate explicitly: learn, explain, practice, assess, document after passing, commit, then advance. Do not describe Academy as a pre-generated course dump.
+
 - [ ] **Step 2: Write the complete Chinese mirror**
 
 Create `README.zh-CN.md` with the same section order and status semantics. Use formal Chinese terminology, retain established English technical terms where they are standard, and link back to `README.md`.
@@ -428,6 +431,8 @@ git commit -m "docs: publish bilingual project entry"
 `docs/README.md` must group links under Product, Learning, Quality Evidence, Brand, Governance, and Project Design.
 
 `docs/VISION.md` must identify the six user groups—AI quality leads, evaluation engineers, AI platform engineers, agent engineers, safety/red-team engineers, and governance leaders—and define the core job: turn AI requirements and risks into reproducible evidence, release decisions, production monitoring, and improvement data.
+
+State that public Academy lessons are validated learning records: the curriculum map may be designed in advance, but a unit body becomes a completed artifact only after study, practice, and assessment.
 
 - [ ] **Step 2: Write the scope boundary**
 
@@ -502,6 +507,8 @@ For every state, specify required artifacts and forbidden claims. Set the curren
 Use these learner levels exactly: Understanding, Application, Design, Validation, and Leadership.
 
 Clarify that course completion demonstrates only Understanding and limited Application; working projects can demonstrate Design and Validation; Leadership requires real team adoption, governance, and measurable outcomes.
+
+Define the unit completion gate as a prerequisite for even the “course completed” claim: instruction consumed, explanation checked, practical exercise completed, formal assessment passed, and final documentation committed.
 
 - [ ] **Step 3: Map all seven JD responsibilities**
 
@@ -594,10 +601,19 @@ git commit -m "docs: add community and security policies"
 **Interfaces:**
 - Consumes: current Git commit, current learning unit, validation results, and exact next actions.
 - Produces: a complete resume packet that a new Codex task can read without the original conversation.
+- Enforces: the active unit cannot advance until learning, practice, assessment, post-pass documentation, verification, and commit are complete in that order.
 
 - [ ] **Step 1: Make START_HERE authoritative**
 
 Define exact read order, exact resume prompt, start-of-session `git pull --rebase`, end-of-session update order, conflict resolution, secret handling, and the rule that conversation history is not the source of truth.
+
+Add the formal Academy unit sequence:
+
+```text
+learn -> explain -> practice -> assess -> document after passing -> verify -> commit -> next unit
+```
+
+If assessment fails, remain on the same unit and return to learning. Only progress metadata and correction notes may be updated; the unit body and competency evidence must not be marked complete.
 
 - [ ] **Step 2: Extend machine-readable state**
 
@@ -612,6 +628,10 @@ maturity:
   project: learning
   academy: learning
   platform: planned
+learning_protocol:
+  current_stage: learning
+  document_only_after_pass: true
+  advance_only_after_commit: true
 handoff:
   path: handoffs/CURRENT.md
 verification:
@@ -627,7 +647,7 @@ Required sections: confirmed decisions, current state, evidence completed, files
 
 - [ ] **Step 4: Refresh CURRENT handoff and human progress**
 
-Record the completed open-source documentation and brand foundation without marking A1.1 complete. Set the next learning action to restart A1.1 from the first formal lesson after repository verification.
+Record the completed open-source documentation and brand foundation without marking A1.1 complete. Set the next learning action to restart A1.1 from the first formal lesson after repository verification. The Handoff must state that A1.1 documentation is created only after the learner passes its assessment.
 
 - [ ] **Step 5: Validate synchronization semantics**
 
@@ -735,6 +755,7 @@ Verify each design-spec acceptance criterion directly:
 - Target scope covers the complete enterprise AI quality role.
 - Maturity and mastery claims include evidence and limitations.
 - START_HERE plus state and handoff can resume on another computer.
+- Academy enforces learn, explain, practice, assess, post-pass documentation, verification, commit, and only then the next unit.
 - All required SVG and PNG assets exist.
 - No placeholder, broken link, encoding failure, unsafe SVG, stale PNG, or possible credential is reported.
 
@@ -778,7 +799,7 @@ Use commit message:
 git commit -m "docs: record verified open-source foundation"
 ```
 
-The next action after this plan is A1.1 first formal lesson; do not mark A1.1 complete.
+The next action after this plan is A1.1 first formal lesson. Do not prewrite the completed A1.1 lesson in the repository and do not mark A1.1 complete. Teach and learn it first; after practice and assessment pass, create the final open-source unit documentation, update evidence, commit, and only then enter A1.2.
 
 ---
 
