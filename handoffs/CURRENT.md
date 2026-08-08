@@ -5,53 +5,47 @@
 1. Evalorium 是独立、开源、企业级的 AI 质量工程平台，与 Loopward、Rein、Vein 解耦。
 2. Agent Environment Harness 是深度核心模块；Evalorium 不是通用 Coding Agent 运行时。
 3. Academy 和 Platform 都是正式交付物。
-4. 课程采用“学习、复述、实践、测评、通过后文档、验证、提交、下一单元”的固定门禁。
-5. 课程范围保持 8 个阶段、29 个核心章节、不少于 138 个知识单元、8 个阶段 Capstone 和 1 个企业级综合 Capstone。
+4. 公开仓库只保存校订后的课程、工程模板、案例、验证与项目成果，不保存对话、个人回答、私人笔记或中间草稿。
+5. Academy 默认由助手完整讲解并给出答案，使用者阅读和理解；不强制在对话中逐题作答。
+6. 课程范围保持 8 个阶段、29 个核心章节、不少于 138 个知识单元、8 个阶段 Capstone 和 1 个企业级综合 Capstone。
 
 ## 当前状态
 
 - 当前分支：`main`
-- 远程同步：公开仓库 `origin/main` 已包含提交 `98a4b6a88a1a0767c650e893abebb3d6cca33962`
+- 公开仓库：<https://github.com/plwslpld-arch/evalorium>
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
-- 当前单元：A1.1《AI评测的本质》
-- 当前关口：学习
-- A1.1 测评：尚未通过，0 次尝试
+- 当前单元：A1.2《从业务需求到评测问题》
+- 已验证单元：A1.1《AI 评测的本质》
 
-## 已完成证据
+## A1.1 交付证据
 
-- Evidence Gate SVG 品牌源文件和脚本派生 PNG。
-- 仓库验证器及 9 个自动化测试。
-- 中英文 README。
-- 愿景、范围、目标架构、路线图、成熟度、掌握标准和 JD 能力映射。
-- 贡献、安全和社区行为文件。
-- GitHub Documentation Quality 工作流已在 Linux 上通过：[run 31204362566](https://github.com/plwslpld-arch/evalorium/actions/runs/31204362566)。
-
-## 本次变更
-
-建立了公开项目信息架构和品牌体系；将成熟度声明绑定到证据；将“先学习、后沉淀”写入机器状态、人类进度和 Handoff 协议。正式横版 Logo 已改为纯 SVG 几何路径，消除了 Windows 与 Linux 的字体渲染差异；GitHub Actions 使用已核验的 `actions/checkout@v7` 与 `actions/setup-node@v7`。
-
-## 验证结果
-
-已执行完整的 `npm run check`：9 个自动化测试通过，品牌派生文件与 SVG 一致，仓库文档、YAML、链接、UTF-8、SVG 安全和凭据形态验证通过。提交 `98a4b6a88a1a0767c650e893abebb3d6cca33962` 的远程 Documentation Quality 工作流在 Ubuntu 上通过。
+- 正式 Markdown 课程和独立 HTML 阅读版。
+- Evaluation Charter、Evaluation Target、Risk Definition、Task Spec、Harness Manifest、Metric Card、Gate Policy、Gate Decision、Monitoring Signal 共 9 类模板。
+- 退款 Agent 和合同审查 Agent 两个端到端案例。
+- Academy 单元包验证器，覆盖缺失资产、YAML 解析、决策字段和 HTML 可访问文档壳。
+- 完整 `npm run check` 共 15 项自动化测试通过。
+- 桌面页面和 390px 窄屏实际检查通过，无横向溢出或控制台错误。
+- 内容提交：[`b8bb47b`](https://github.com/plwslpld-arch/evalorium/commit/b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8)。
+- Linux 远程门禁：[Documentation Quality run 31248603764](https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764)。
 
 ## 下一次准确动作
 
-1. 从 A1.1 第一节《AI评测的本质》开始正式学习。
-2. 依次完成复述确认、实践和正式测评。
-3. A1.1 通过测评后才创建完成版课程正文和能力证据。
-4. 文档验证和提交完成后才进入 A1.2。
+1. 从 A1.2 第一部分开始：区分业务愿望、产品目标、风险陈述、决策问题和评测问题。
+2. 用退款 Agent、合同审查 Agent 和企业知识助手展示同一句模糊需求如何导出不同评测设计。
+3. 深入 Evaluation Charter、risk taxonomy、stakeholder-impact mapping、construct operationalization 和 evidence requirement。
+4. 学完后交付 A1.2 的正式课程、HTML、模板、案例和自动化验证，再进入 A1.3。
 
 ## 未解决问题与风险
 
 - Platform 尚无运行时代码。
-- GitHub Pages 尚未建设。
-- 没有生产采用、组织影响或工作年限证据。
-- A1.1 尚未学习完成，不能标记为课程成果。
+- GitHub Pages 尚未建设，HTML 需要下载或本地打开；源文件已可从 GitHub 浏览。
+- 尚无生产采用、组织影响或工作年限证据，相关声明不得由仓库规模替代。
+- 完整 138+ 单元仍需按单元逐步交付；不得使用空正文或占位文件制造完成进度。
 
-## Git 状态
+## Git 状态语义
 
-- 本 Handoff 基于已通过本地与远程质量门禁的提交 `98a4b6a88a1a0767c650e893abebb3d6cca33962`。
-- 对应远程证据为 [Documentation Quality run 31204362566](https://github.com/plwslpld-arch/evalorium/actions/runs/31204362566)。
-- 本次元数据提交之后的当前真实 HEAD 使用 `git rev-parse HEAD` 获取；`based_on_commit` 刻意记录被描述且已验证的前序提交，避免自引用。
+- 本 Handoff 的完成证据基于内容提交 `b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8`。
+- 对应远程证据为 [Documentation Quality run 31248603764](https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764)。
+- Handoff 与状态元数据提交本身的远程运行号不做递归自引用；在最终交接中读取最新 GitHub Actions 即可。

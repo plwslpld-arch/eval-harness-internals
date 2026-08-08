@@ -1,7 +1,6 @@
-schema_version: 1
+schema_version: 2
 project: Evalorium
-learner: plwslpld
-updated_at: "2026-08-08T01:54:00+08:00"
+updated_at: "2026-08-08T16:33:02+08:00"
 
 repository:
   default_branch: main
@@ -19,26 +18,37 @@ program:
 current:
   phase: A
   chapter: A1
-  unit: A1.1
-  title: AI评测的本质
+  unit: A1.2
+  title: 从业务需求到评测问题
   status: in_progress
 
 learning_protocol:
-  current_stage: learning
-  document_only_after_pass: true
-  advance_only_after_commit: true
+  interaction: assistant_provides_complete_instruction_and_answers
+  publication: corrected_final_artifacts_only
+  private_process_in_repository: false
+  advance_only_after_validated_commit: true
 
-assessment:
-  status: not_passed
-  attempts: 0
-  score: null
+delivery:
+  status: in_progress
+  current_unit: A1.2
 
-last_completed: null
+last_completed:
+  unit: A1.1
+  title: AI 评测的本质
+  status: artifact_validated
+  artifact: academy/phase-a/chapter-a1/unit-a1-1/
+  content_commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
+  verification:
+    local_command: npm run check
+    local_tests: 15
+    remote_run_id: 31248603764
+    remote_status: passed
+    remote_url: https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764
 
 next_actions:
-  - 从 A1.1 第一节开始正式学习，不提前写入完成版课程正文
-  - 通过复述和边界问题确认理解，然后完成实践实验
-  - 完成正式测评；通过后才整理开源文档、验证、提交并进入 A1.2
+  - 学习 A1.2：把业务目标、使用场景和风险容忍度转化为可验证的评测问题
+  - 建立决策问题、风险陈述、构念定义和证据需求之间的追踪关系
+  - 完成 A1.2 的正式课程、工程模板、案例、HTML 和单元合同验证
 
 product_decisions:
   primary_product: 企业级 AI 质量工程、评测、门禁、监控与治理平台
@@ -53,18 +63,18 @@ maturity:
 
 handoff:
   path: handoffs/CURRENT.md
-  based_on_commit: 98a4b6a88a1a0767c650e893abebb3d6cca33962
+  based_on_commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
 
 verification:
   command: npm run check
   status: passed
-  local_tests: 9
+  local_tests: 15
   remote_workflow:
     name: Documentation Quality
-    run_id: 31204362566
-    commit: 98a4b6a88a1a0767c650e893abebb3d6cca33962
+    run_id: 31248603764
+    commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
     status: passed
-    url: https://github.com/plwslpld-arch/evalorium/actions/runs/31204362566
+    url: https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764
 
 publication:
   repository: https://github.com/plwslpld-arch/evalorium

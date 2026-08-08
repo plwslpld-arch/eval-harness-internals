@@ -39,8 +39,8 @@ current:
   chapter: A1
   unit: A1.1
   status: in_progress
-assessment:
-  status: not_passed
+delivery:
+  status: in_progress
 next_actions:
   - learn A1.1
 publication:
@@ -98,6 +98,15 @@ test("missing state keys are reported", async () => {
   const errors = await verifyRepository(root);
 
   assert.match(errors.join("\n"), /current\.unit/);
+});
+
+test("public progress state uses artifact delivery status rather than personal assessment", async () => {
+  const root = await createValidFixture();
+
+  const errors = await verifyRepository(root);
+
+  assert.doesNotMatch(errors.join("\n"), /assessment\.status/);
+  assert.doesNotMatch(errors.join("\n"), /delivery\.status/);
 });
 
 test("unsafe SVG content is reported", async () => {

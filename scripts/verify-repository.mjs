@@ -51,7 +51,7 @@ const STATE_PATHS = [
   "current.chapter",
   "current.unit",
   "current.status",
-  "assessment.status",
+  "delivery.status",
   "next_actions",
   "publication.repository",
 ];
