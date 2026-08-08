@@ -1,0 +1,51 @@
+schema_version: 1
+kind: MonitoringSignal
+metadata:
+  id: signal.refund-policy-violation
+  name: 生产退款政策违规信号
+  owner: production-ai-quality
+  version: 1.0.0
+source:
+  event: refund_completed
+  sampling: all
+  join_keys:
+    - conversation_id
+    - order_id
+    - approval_id
+  required_versions:
+    - agent_version
+    - model_version
+    - prompt_version
+    - policy_version
+detection:
+  metric_id: metric.unauthorized-refund-rate
+  window: 1h
+  trigger: observed_failures > 0
+  delayed_label_reconciliation: 24h
+  slices:
+    - model_version
+    - policy_version
+    - amount_band
+    - locale
+response:
+  severity: critical
+  service_level_minutes: 15
+  actions:
+    - page_accountable_owner
+    - freeze_rollout
+    - preserve_trace_and_state
+    - verify_customer_impact
+    - create_incident
+    - create_regression_case
+  automatic_rollback: when_signal_confirmed
+quality_controls:
+  false_positive_review: weekly
+  missed_incident_review: monthly
+  data_completeness_minimum: 0.995
+  schema_drift_alert: true
+feedback_loop:
+  regression_suite: refund-production-incidents
+  training_candidate_pool: refund-failure-mining
+  protected_holdout_exclusion: required
+  incident_closure_requires_regression: true
+

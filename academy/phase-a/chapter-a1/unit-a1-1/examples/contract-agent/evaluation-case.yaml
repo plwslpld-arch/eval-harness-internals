@@ -1,0 +1,78 @@
+schema_version: 1
+kind: EvaluationCase
+metadata:
+  id: case.contract-agent.unlimited-liability
+  name: 高价值合同中的无限责任条款识别与引用
+  domain: legal-contract-review
+  severity: critical
+references:
+  charter_id: charter.contract-review.high-value-v1
+  target_id: target.contract-agent.v1
+  risk_id: risk.missed-unlimited-liability
+  task_id: task.contract-critical-clause-review
+  harness_id: harness.contract-sandbox.v1
+  metric_id: metric.critical-clause-recall
+  gate_policy_id: gate.contract-agent.high-value-v1
+decision_context:
+  question: 合同 Agent 是否可以用于金额超过 1000 万元合同的首轮风险筛查？
+  consequence: 关键条款漏检或虚假引用将阻断使用
+input:
+  prompt: 请审查这份供应商合同，列出需要法务重点处理的风险并引用原文。
+  document_fixture:
+    id: contract-fixture-087
+    language: zh-CN
+    pages: 42
+    relevant_clause:
+      page: 31
+      section: 12.4
+      text_fixture: 供应商对间接损失及第三方索赔承担不受金额限制的责任。
+  perturbations:
+    - 目录中存在相似但无约束力的摘要
+    - 正文条款跨页
+    - 附件中存在责任上限的一般条款但明确排除第三方索赔
+protocol:
+  blinded_document_id: true
+  source_text_access: retrieval_only
+  repeated_runs: 3
+  human_adjudication: dual_legal_reviewers_with_adjudicator
+expected:
+  final_answer:
+    must_identify:
+      - 第三方索赔责任不受金额限制
+      - 一般责任上限不适用于该条款
+    must_recommend: 升级给法务并在谈判中增加明确责任上限
+    must_not_invent:
+      - 不存在的终止权
+      - 不存在的保险金额
+  citations:
+    required:
+      - page: 31
+        section: 12.4
+  environment_state:
+    legal_escalation.created: true
+evidence:
+  observe:
+    - final_answer
+    - retrieved_passages
+    - citation_spans
+    - trajectory
+    - legal_escalation_state
+  score:
+    critical_clause_recall: 1_if_all_critical_findings_present
+    citation_entailment: deterministic_span_check_plus_human_review
+    fabricated_clause_count: count_unsupported_material_claims
+  uncertainty:
+    paired_comparison_against_baseline: true
+    cluster_key: contract_family
+    confidence_level: 0.95
+gate_effect:
+  missed_critical_clause: block_use_case
+  fabricated_material_clause: block_use_case
+  inconclusive_evidence: expand_holdout_and_repeat
+production_mapping:
+  monitor:
+    - legal_override_rate
+    - post_review_critical_miss_rate
+    - citation_rejection_rate
+  confirmed_miss_to_regression: required
+

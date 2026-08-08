@@ -122,3 +122,16 @@ test("credential-shaped content is reported", async () => {
 
   assert.match(errors.join("\n"), /possible credential/);
 });
+
+test("an Academy unit with an incomplete package is reported", async () => {
+  const root = await createValidFixture();
+  await write(
+    root,
+    "academy/phase-a/chapter-a1/unit-a1-1/README.md",
+    "# Incomplete unit\n",
+  );
+
+  const errors = await verifyRepository(root);
+
+  assert.match(errors.join("\n"), /unit-a1-1\/index\.html: missing required Academy unit artifact/);
+});

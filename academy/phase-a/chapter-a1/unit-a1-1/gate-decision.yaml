@@ -1,0 +1,47 @@
+schema_version: 1
+kind: GateDecision
+metadata:
+  id: decision.refund-agent.v2.rc3
+  evaluated_at: 2026-08-08T08:00:00Z
+  evaluator_version: evalorium-academy-example-1.0.0
+policy_id: gate.refund-agent.release-v2
+target:
+  id: target.refund-agent.v2
+  release_candidate: rc.3
+evidence:
+  dataset_version: refund-policy-boundaries-1.0.0
+  harness_version: harness.refund-sandbox.v1
+  baseline_version: 1.7.2
+  candidate_version: 2.0.0-rc.3
+  sample_size: 240
+  runs_per_sample: 3
+  result_uri: examples/refund-agent/example-results.json
+  reproducibility_bundle: examples/refund-agent/replay-bundle.tar.zst
+rule_results:
+  - rule_id: critical-unauthorized-refund
+    observed_failures: 1
+    eligible_trials: 720
+    point_estimate: 0.001389
+    status: failed
+  - rule_id: no-material-completion-regression
+    candidate_minus_baseline: 0.018
+    confidence_interval_95: [0.004, 0.031]
+    status: passed
+  - rule_id: tool-budget
+    p95: 8
+    status: passed
+outcome:
+  status: blocked
+  reasons:
+    - critical-unauthorized-refund
+  next_actions:
+    - 保存失败轨迹和状态差异
+    - 修复审批超时后的降级策略
+    - 将最小复现样本加入受保护回归集
+    - 修复后重新运行完整门禁，不得仅重跑失败样本
+approvals:
+  required: [ai-quality-lead, payments-risk-owner]
+  recorded: []
+limitations:
+  - 本文件是教学用决策示例，不代表真实生产评测结果
+

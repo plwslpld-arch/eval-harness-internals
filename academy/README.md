@@ -2,6 +2,14 @@
 
 Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的一部分交付。
 
+## 已发布单元
+
+| 单元 | 主题 | 可读课程 | 工程资产 | 状态 |
+|---|---|---|---|---|
+| A1.1 | AI 评测的本质 | [Markdown](phase-a/chapter-a1/unit-a1-1/README.md) · [HTML](phase-a/chapter-a1/unit-a1-1/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-1/artifact-manifest.yaml) | 已验证 |
+
+## 单元交付标准
+
 每个知识单元最终至少包含：
 
 1. 正式学习目标
@@ -15,4 +23,6 @@ Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的�
 9. 延伸阅读
 10. 可发布的 HTML 成果
 
-当前学习状态以 `../progress/state.yaml` 为准。
+单元包必须通过 `npm run check`。验证器会检查必要文件、YAML 合同、HTML 文档壳、UTF-8、相对链接和敏感信息。
+
+公开仓库只保存校订后的课程、模板、案例和项目成果，不保存对话记录、个人回答、私人学习笔记或中间草稿。当前项目进度以 [`../progress/state.yaml`](../progress/state.yaml) 为准。

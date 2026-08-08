@@ -4,6 +4,8 @@ import { pathToFileURL } from "node:url";
 
 import { parse as parseYaml } from "yaml";
 
+import { verifyAcademyUnit } from "./verify-academy-unit.mjs";
+
 const IGNORED_DIRECTORIES = new Set([
   ".brand-build",
   ".git",
@@ -215,6 +217,22 @@ async function verifyCredentialPatterns(rootDir, files, errors) {
   }
 }
 
+async function verifyAcademyPackages(rootDir, files, errors) {
+  const unitDirectories = new Set();
+  const unitPattern = /^academy\/phase-[^/]+\/chapter-[^/]+\/unit-[^/]+\//;
+  for (const filePath of files) {
+    const repositoryPath = relative(rootDir, filePath);
+    const match = repositoryPath.match(unitPattern);
+    if (match) unitDirectories.add(match[0].slice(0, -1));
+  }
+
+  for (const unitDirectory of [...unitDirectories].sort()) {
+    for (const error of await verifyAcademyUnit(path.join(rootDir, unitDirectory))) {
+      errors.push(`${unitDirectory}/${error}`);
+    }
+  }
+}
+
 export async function verifyRepository(rootDir) {
   const resolvedRoot = path.resolve(rootDir);
   const errors = [];
@@ -225,6 +243,7 @@ export async function verifyRepository(rootDir) {
   await verifySvgSafety(resolvedRoot, files, errors);
   await verifyBrandFiles(resolvedRoot, errors);
   await verifyCredentialPatterns(resolvedRoot, files, errors);
+  await verifyAcademyPackages(resolvedRoot, files, errors);
   return errors;
 }
 

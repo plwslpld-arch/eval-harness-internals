@@ -10,18 +10,15 @@ Learning completion and professional mastery are different claims. Evalorium rec
 | Validation | Prove whether the system works and where it fails | Statistical evidence, baselines, ablations, adversarial tests, and limitations |
 | Leadership | Establish adoption, governance, and continuous improvement in a real organization | Team process, accountable owners, production outcomes, and business or risk evidence |
 
-## Unit completion gate
+## Two independent evidence tracks
 
-A knowledge unit is complete only after all of the following:
+Evalorium separates public artifact delivery from personal competency claims.
 
-1. Formal instruction has been studied.
-2. Understanding has been checked through explanation and boundary questions.
-3. The practical exercise has been completed and interpreted.
-4. The formal assessment has been passed.
-5. Corrected lesson, experiment, assessment summary, and learning log have been documented.
-6. Repository validation has passed and the artifacts have been committed.
+An Academy unit artifact is complete when its corrected lesson, practical templates, examples, and publication formats exist; its declared contract passes repository validation; and the artifacts are committed. This status describes the public product only.
 
-If assessment fails, the learner stays on the same unit. Progress metadata and correction notes may change, but the unit body and competency evidence cannot be marked complete.
+A personal competency claim requires separate evidence appropriate to the claimed level, such as an independent assessment, reproducible implementation, design review, adversarial validation, or real organizational outcomes. Publishing or reading a unit does not automatically create that claim.
+
+Conversation transcripts, private answers, error histories, and personal learning notes are not public competency evidence and are not committed to the repository.
 
 ## What the repository can and cannot prove
 

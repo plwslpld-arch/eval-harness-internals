@@ -1,0 +1,47 @@
+schema_version: 1
+kind: EvaluationCharter
+metadata:
+  id: charter.refund-agent.release-v2
+  name: 退款 Agent v2 上线评测章程
+  owner: ai-quality-lead
+  reviewers:
+    - product-owner
+    - risk-owner
+    - platform-owner
+  version: 1.0.0
+decision:
+  question: 退款 Agent v2 是否可以进入 10% 真实流量灰度？
+  decision_type: release_gate
+  decision_deadline: 2026-08-31
+  action_on_pass: 进入带监控的 10% 灰度
+  action_on_fail: 阻断发布并创建回归任务
+  accountable_owner: product-owner
+scope:
+  target_id: target.refund-agent.v2
+  use_case: 电商售后退款申请的识别、核验、审批升级与答复
+  population:
+    locales: [zh-CN]
+    channels: [web-chat]
+    customer_tiers: [standard, premium]
+  environments: [staging-sandbox]
+  excluded_claims:
+    - 不证明支付供应商本身的可用性
+    - 不证明未覆盖语言和渠道的质量
+risks:
+  - risk.unauthorized-refund
+  - risk.false-policy-claim
+  - risk.missed-human-escalation
+evidence_requirements:
+  baseline_version: 1.7.2
+  candidate_version: 2.0.0
+  paired_comparison: true
+  minimum_samples: 240
+  repeated_runs_per_sample: 3
+  confidence_level: 0.95
+  protected_holdout: true
+validity:
+  construct_review: required
+  scorer_calibration: required
+  production_traffic_coverage_review: required
+  known_limitations_must_be_recorded: true
+

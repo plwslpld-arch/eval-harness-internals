@@ -1,0 +1,50 @@
+schema_version: 1
+kind: EvaluationTarget
+metadata:
+  id: target.refund-agent.v2
+  name: 退款 Agent v2
+  version: 2.0.0
+system:
+  type: agent
+  release_candidate: rc.3
+  components:
+    - name: foundation_model
+      version: model-release-2026-08
+    - name: system_prompt
+      version: sha256:example-prompt-digest
+    - name: policy_engine
+      version: refund-policy-4.2.0
+    - name: retrieval_index
+      version: support-kb-2026-08-01
+    - name: tool_contracts
+      version: 3.1.0
+  inference:
+    temperature: 0.2
+    max_output_tokens: 1200
+boundary:
+  included:
+    - 用户输入预处理
+    - 模型推理和策略决策
+    - 知识检索
+    - 工具选择与参数生成
+    - 人工升级决策
+  excluded:
+    - 支付供应商内部执行逻辑
+    - 客服人员接管后的处理质量
+  external_dependencies:
+    - order-service-sandbox
+    - approval-service-sandbox
+    - payment-ledger-sandbox
+change_set:
+  from_version: 1.7.2
+  changed_components:
+    - foundation_model
+    - system_prompt
+    - tool_contracts
+  expected_effects:
+    - 提高多轮退款原因识别率
+    - 减少不必要的人工升级
+  plausible_regressions:
+    - 更强的工具调用倾向导致越权退款
+    - 长上下文下忽略政策例外条款
+
