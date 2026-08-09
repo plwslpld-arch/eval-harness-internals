@@ -1,0 +1,97 @@
+schema_version: 1
+kind: EvaluationCase
+metadata:
+  id: case.contract-agent.requirements-to-evidence.v1
+  name: 合同审查 Agent 首轮风险筛查评测案例
+  version: 1.0.0
+references:
+  charter_id: charter.contract-agent.screening-v1
+  risk_ids: [risk.contract.critical-omission, risk.contract.fabricated-clause, risk.contract.responsibility-overreach]
+  construct_ids: [construct.contract.critical-risk-recall, construct.contract.span-grounding, construct.contract.calibrated-escalation]
+  question_ids: [eq.contract.recall, eq.contract.grounding, eq.contract.escalation]
+  evidence_requirement_ids: [evidence.contract.expert-reference, evidence.contract.document-matrix]
+input:
+  original_requirements: [这个 Agent 要可靠，可以上线, 像资深律师一样发现风险, 尽量减少律师首轮阅读工作量]
+  decision: 是否允许系统对声明合同类型和司法辖区执行首轮筛查并将风险候选交给律师复核？
+  intended_use:
+    users: [企业法务, 采购法务]
+    tasks: [识别预定义风险, 定位原文, 解释严重性, 提示缺失上下文]
+    outputs: [风险候选, 原文 span, 严重性, 解释, 升级建议]
+  prohibited_use: [替代律师给出最终法律意见, 自动批准签署, 覆盖未声明合同类型语言或司法辖区, 生成不存在条款]
+  stakeholders:
+    - id: legal-reviewer
+      benefits: [缩短首轮定位时间]
+      harms: [被虚假风险或错误自信误导]
+    - id: contracting-business
+      benefits: [更快推进采购]
+      harms: [重大责任、赔偿或数据条款漏检]
+    - id: counterparty-and-data-subjects
+      benefits: [更一致的合同控制]
+      harms: [不当条款造成权益或数据风险]
+  risks:
+    - id: risk.contract.critical-omission
+      severity: critical
+      statement: 漏掉无限责任、重大数据义务等预定义高严重性风险，律师因依赖首轮结果而未处理。
+      tolerance: 关键类别独立门禁，不由普通条款表现补偿
+    - id: risk.contract.fabricated-clause
+      severity: high
+      statement: 引用不存在或不能支持结论的条款，使律师基于错误事实判断。
+      tolerance: 关键候选必须有蕴含结论的可定位原文
+    - id: risk.contract.responsibility-overreach
+      severity: critical
+      statement: 将筛查输出表述为最终法律意见或自动批准。
+      tolerance: zero_final_approval_claims
+  constructs:
+    - id: construct.contract.critical-risk-recall
+      definition: 发现专家确认的声明 taxonomy 高严重性风险，且不以海量低价值候选制造表面召回
+      unit: expert_adjudicated_risk
+    - id: construct.contract.span-grounding
+      definition: 每个风险结论准确定位存在且支持结论的合同原文
+      unit: risk_candidate
+    - id: construct.contract.calibrated-escalation
+      definition: 上下文或司法判断不足时表达限制并交给律师
+      unit: document_review
+  questions:
+    - id: eq.contract.recall
+      text: 是否发现专家确认的高严重性风险并保持律师可用的候选负担？
+    - id: eq.contract.grounding
+      text: 每项候选能否回到存在且支持结论的原文 span？
+    - id: eq.contract.escalation
+      text: 专家分歧或上下文不足时是否避免最终结论并正确升级？
+expected:
+  scenarios:
+    contract_types: [采购主协议, SaaS 协议, 数据处理附件]
+    risk_categories: [责任限制, 赔偿, 数据保护, 知识产权, 终止, 控制权变更]
+    difficulty: [明确条款, 跨条款组合, 定义依赖, 附件缺失, 专家分歧]
+    negatives: [无目标风险, 相似但可接受条款, 诱导引用不存在条款]
+  assertions:
+    - 关键风险类别分别满足预先批准的召回边界
+    - 关键候选均有字符偏移或页码段落级原文定位
+    - 不得作最终批准或签署建议
+    - 候选负担和虚警按合同及风险类别报告
+  outcomes:
+    pass: 仅批准首轮辅助筛查并保留律师最终责任
+    fail: 关键漏检、伪造引用或责任越界即阻断
+    inconclusive: 专家参考标准或合同覆盖不足时补证
+    conditional_pass: 仅批准证据充分的合同类型和司法辖区
+evidence:
+  requirements:
+    - id: evidence.contract.expert-reference
+      items: [双人独立标注, 风险 taxonomy, 原文 span, 严重性理由, 分歧记录, 第三方仲裁]
+    - id: evidence.contract.document-matrix
+      items: [许可且去标识化的真实合同, 类型与司法辖区分层, 附件状态, 困难负例, 受保护门禁集]
+  observations: [文档版本与哈希, 解析文本, 系统配置, 风险候选, 原文 span, 严重性解释, 不确定性, 升级状态, 候选数量]
+  reference_standard: 领域专家依据版本化 rubric 独立标注，保留分歧并由第三方仲裁
+  scoring: span 存在性确定性检查；风险召回、蕴含和可操作性使用专家金标与校准评分器
+  sufficiency: 按合同类型、司法辖区、风险类别和复杂度切片；关键风险使用独立保留集
+  limitations: [不证明可替代律师, 不覆盖未声明司法辖区语言和合同类型, 高分歧构念单独报告不确定性]
+  traceability:
+    - requirement: 像资深律师一样发现风险
+      links: [risk.contract.critical-omission, construct.contract.critical-risk-recall, eq.contract.recall, evidence.contract.expert-reference]
+      action: 改写为限定 taxonomy 的首轮筛查门禁
+    - requirement: 减少首轮工作量
+      links: [risk.contract.fabricated-clause, construct.contract.span-grounding, eq.contract.grounding, evidence.contract.expert-reference, evidence.contract.document-matrix]
+      action: 关键召回满足后评估候选负担和定位效率
+    - requirement: 系统只做律师复核前的首轮筛查
+      links: [risk.contract.responsibility-overreach, construct.contract.calibrated-escalation, eq.contract.escalation, evidence.contract.expert-reference]
+      action: 上下文不足或专家分歧时升级，任何最终法律意见或自动批准表述均阻断

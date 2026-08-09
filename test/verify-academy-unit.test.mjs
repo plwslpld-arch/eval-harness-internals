@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -19,6 +19,14 @@ contents:
   html: index.html
   templates:
     - evaluation-charter.yaml
+    - evaluation-target.yaml
+    - risk-definition.yaml
+    - task-spec.yaml
+    - harness-manifest.yaml
+    - metric-card.yaml
+    - gate-policy.yaml
+    - gate-decision.yaml
+    - monitoring-signal.yaml
   examples:
     - examples/refund-agent/evaluation-case.yaml
     - examples/contract-agent/evaluation-case.yaml
@@ -100,6 +108,11 @@ expected: {final_answer: refusal-or-escalation, environment_state: no-refund-cre
 evidence: {observe: [final_answer, trajectory, tool_calls, environment_state]}
 `;
 
+const A12_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a1/unit-a1-2",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -167,6 +180,299 @@ test("a template missing its decision-bearing fields is rejected", async () => {
   assert.match(errors.join("\n"), /gate-policy\.yaml: missing required key decision/);
 });
 
+test("a manifest-driven A1.2 package accepts unit-specific templates and a third case", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    `schema_version: 1
+unit:
+  id: A1.2
+  title: 从业务需求到评测问题
+publication:
+  status: candidate
+  formats: [markdown, html, yaml]
+contents:
+  lesson: README.md
+  html: index.html
+  templates:
+    - evaluation-charter.yaml
+    - risk-taxonomy.yaml
+    - stakeholder-impact-map.yaml
+    - construct-definition.yaml
+    - evidence-requirements.yaml
+    - requirements-traceability.yaml
+  examples:
+    - examples/refund-agent/evaluation-case.yaml
+    - examples/contract-agent/evaluation-case.yaml
+    - examples/knowledge-assistant/evaluation-case.yaml
+verification:
+  profile: requirements-to-evidence-v1
+`,
+  );
+  await write(
+    root,
+    "evaluation-charter.yaml",
+    `schema_version: 1
+kind: EvaluationCharter
+metadata: {id: charter.refund-auto.v1}
+decision: {id: decision.refund-auto.v1, question: Should the limited scope be automated?}
+scope: {intended_use: [limited-refunds], prohibited_use: [fraud-disputes]}
+stakeholders: [customer, merchant, finance]
+risks: [risk.unauthorized-refund]
+evaluation_questions: [eq.refund.authorization]
+evidence_requirements: [evidence.refund.authorization]
+limitations: [Does not support fraud disputes]
+`,
+  );
+  await write(
+    root,
+    "risk-taxonomy.yaml",
+    `schema_version: 1
+kind: RiskTaxonomy
+metadata: {id: taxonomy.enterprise-agent.v1}
+categories: [{id: action, name: Action risk}]
+application_rules: {review_required: true}
+`,
+  );
+  await write(
+    root,
+    "stakeholder-impact-map.yaml",
+    `schema_version: 1
+kind: StakeholderImpactMap
+metadata: {id: stakeholder.refund.v1}
+stakeholders: [{id: customer, role: affected-party}]
+impact_chains: [{id: impact.false-denial, stakeholder_id: customer}]
+`,
+  );
+  await write(
+    root,
+    "construct-definition.yaml",
+    `schema_version: 1
+kind: ConstructDefinition
+metadata: {id: construct.appropriate-escalation.v1}
+construct: {name: appropriate_escalation, definition: Escalate when evidence is insufficient}
+operationalization: {unit: complete_trajectory, observables: [tool_calls, final_state]}
+limitations: [Does not assess the human decision after escalation]
+`,
+  );
+  await write(
+    root,
+    "evidence-requirements.yaml",
+    `schema_version: 1
+kind: EvidenceRequirements
+metadata: {id: evidence.refund-auto.v1}
+decision: {id: decision.refund-auto.v1}
+sources: [{id: policy, type: policy_snapshot}]
+sufficiency: {on_missing: inconclusive}
+`,
+  );
+  await write(
+    root,
+    "requirements-traceability.yaml",
+    `schema_version: 1
+kind: RequirementsTraceability
+metadata: {id: trace.refund-auto.v1}
+decision: {id: decision.refund-auto.v1}
+links:
+  - requirement_id: BR-01
+    original_requirement: The refund agent must be reliable
+    stakeholder_ids: [customer]
+    risk_ids: [risk.unauthorized-refund]
+    construct_ids: [construct.appropriate-escalation.v1]
+    question_ids: [eq.refund.authorization]
+    scenario_ids: [policy-boundary]
+    evidence_requirement_ids: [evidence.refund-auto.v1]
+    gate_rule_ids: [gate.refund.authorization]
+    accountable_owner: product-owner
+    action_on_failure: block
+    status: covered
+`,
+  );
+  const a12Example = `schema_version: 1
+kind: EvaluationCase
+metadata: {id: case.a1-2.example}
+references:
+  charter_id: charter.refund-auto.v1
+  risk_ids: [risk.unauthorized-refund]
+  construct_ids: [construct.appropriate-escalation.v1]
+  question_ids: [eq.refund.authorization]
+  evidence_requirement_ids: [evidence.refund-auto.v1]
+input:
+  scenario: policy-boundary
+  risks: [{id: risk.unauthorized-refund}]
+  constructs: [{id: construct.appropriate-escalation.v1}]
+  questions: [{id: eq.refund.authorization}]
+expected: {decision: escalate}
+evidence:
+  requirements: [{id: evidence.refund-auto.v1}]
+  observe: [tool_calls, final_state]
+  traceability:
+    - requirement: The refund agent must escalate at the policy boundary
+      links: [risk.unauthorized-refund, construct.appropriate-escalation.v1, eq.refund.authorization, evidence.refund-auto.v1]
+      action: block
+`;
+  await write(root, "examples/refund-agent/evaluation-case.yaml", a12Example);
+  await write(root, "examples/contract-agent/evaluation-case.yaml", a12Example);
+  await write(root, "examples/knowledge-assistant/evaluation-case.yaml", a12Example);
+
+  assert.deepEqual(await verifyAcademyUnit(root), []);
+});
+
+test("an undeclared template contract and an unsafe manifest path are rejected", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    REQUIRED_YAML["artifact-manifest.yaml"]
+      .replace("    - evaluation-charter.yaml\n", "    - unknown-template.yaml\n")
+      .replace(
+        "    - examples/refund-agent/evaluation-case.yaml\n",
+        "    - ../private/evaluation-case.yaml\n",
+      ),
+  );
+  await write(root, "unknown-template.yaml", "schema_version: 1\nkind: Unknown\n");
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(errors.join("\n"), /no YAML contract for template unknown-template\.yaml/);
+  assert.match(errors.join("\n"), /unsafe declared artifact path \.\.\/private\/evaluation-case\.yaml/);
+});
+
+test("a publication status outside the two-stage lifecycle is rejected", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    REQUIRED_YAML["artifact-manifest.yaml"].replace("status: validated", "status: draft"),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(errors.join("\n"), /publication\.status must be candidate or validated/);
+});
+
+test("manifest artifact lists reject empty arrays and non-string entries", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    `schema_version: 1
+unit: {id: A1.1, title: AI 评测的本质}
+publication: {status: validated, formats: [markdown, html, yaml]}
+contents:
+  lesson: README.md
+  html: index.html
+  templates: []
+  examples: [42]
+`,
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(errors.join("\n"), /contents\.templates must be a non-empty array/);
+  assert.match(errors.join("\n"), /contents\.examples entries must be non-empty strings/);
+});
+
+test("an A1.2 verification profile requires every template and domain case", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    `${REQUIRED_YAML["artifact-manifest.yaml"].replace("id: A1.1", "id: A1.2")}verification:\n  profile: requirements-to-evidence-v1\n`,
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /profile requirements-to-evidence-v1 requires risk-taxonomy\.yaml/,
+  );
+  assert.match(
+    errors.join("\n"),
+    /profile requirements-to-evidence-v1 requires examples\/knowledge-assistant\/evaluation-case\.yaml/,
+  );
+});
+
+test("a manifest unit id must match a canonical unit directory", async () => {
+  const parent = await mkdtemp(path.join(tmpdir(), "evalorium-unit-id-"));
+  const canonicalRoot = path.join(parent, "unit-a1-2");
+  await mkdir(canonicalRoot, { recursive: true });
+  for (const [name, source] of Object.entries(REQUIRED_YAML)) {
+    await write(canonicalRoot, name, source);
+  }
+  await write(canonicalRoot, "README.md", "# A1.2\n");
+  await write(
+    canonicalRoot,
+    "index.html",
+    `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>A1.2</title></head><body><main>A1.2</main></body></html>`,
+  );
+  await write(canonicalRoot, "examples/refund-agent/evaluation-case.yaml", EXAMPLE);
+  await write(canonicalRoot, "examples/contract-agent/evaluation-case.yaml", EXAMPLE);
+
+  const errors = await verifyAcademyUnit(canonicalRoot);
+
+  assert.match(errors.join("\n"), /unit\.id A1\.1 does not match A1\.2/);
+});
+
+test("the implicit A1.1 profile cannot be weakened by shrinking its manifest", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    REQUIRED_YAML["artifact-manifest.yaml"].replace(
+      "    - evaluation-target.yaml\n",
+      "",
+    ),
+  );
+  await rm(path.join(root, "evaluation-target.yaml"));
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /profile a1-1-foundations-v1 requires evaluation-target\.yaml/,
+  );
+});
+
+test("A1.1 cannot replace its canonical profile with another unit contract", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    `${REQUIRED_YAML["artifact-manifest.yaml"]}verification:\n  profile: requirements-to-evidence-v1\n`,
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /unit A1\.1 must use verification\.profile a1-1-foundations-v1/,
+  );
+});
+
+test("A1.2 cannot disable its canonical profile by deleting the declaration", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-2-profile-"));
+  await cp(A12_UNIT, root, { recursive: true });
+  const manifestPath = path.join(root, "artifact-manifest.yaml");
+  const source = await readFile(manifestPath, "utf8");
+  await writeFile(
+    manifestPath,
+    source
+      .replace("    - risk-taxonomy.yaml\n", "")
+      .replace("  profile: requirements-to-evidence-v1\n", ""),
+  );
+  await rm(path.join(root, "risk-taxonomy.yaml"));
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(errors.join("\n"), /A1\.2 requires verification\.profile/);
+  assert.match(
+    errors.join("\n"),
+    /profile requirements-to-evidence-v1 requires risk-taxonomy\.yaml/,
+  );
+});
+
 test("the standalone lesson HTML must expose an accessible document shell", async () => {
   const root = await createValidUnit();
   await write(root, "index.html", "<html><body>lesson</body></html>");
@@ -177,4 +483,52 @@ test("the standalone lesson HTML must expose an accessible document shell", asyn
   assert.match(errors.join("\n"), /index\.html: missing UTF-8 declaration/);
   assert.match(errors.join("\n"), /index\.html: missing title/);
   assert.match(errors.join("\n"), /index\.html: missing main landmark/);
+});
+
+test("A1.2 cases reject dangling requirements-to-evidence references", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-2-reference-"));
+  await cp(A12_UNIT, root, { recursive: true });
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(
+    root,
+    relativePath,
+    source.replace(
+      "risk_ids: [risk.refund.unauthorized, risk.refund.duplicate, risk.refund.missed-escalation]",
+      "risk_ids: [risk.refund.unknown, risk.refund.duplicate, risk.refund.missed-escalation]",
+    ),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /references\.risk_ids has unknown id risk\.refund\.unknown/,
+  );
+  assert.match(
+    errors.join("\n"),
+    /risk\.refund\.unauthorized is not declared in references\.risk_ids/,
+  );
+});
+
+test("A1.2 cases reject entities omitted from every traceability chain", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-2-orphan-"));
+  await cp(A12_UNIT, root, { recursive: true });
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(
+    root,
+    relativePath,
+    source.replace(
+      "risk.refund.unauthorized, construct.refund.policy-compliance, eq.refund.authorization, evidence.refund.stateful-sandbox",
+      "risk.refund.unauthorized, construct.refund.policy-compliance, evidence.refund.stateful-sandbox",
+    ),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /eq\.refund\.authorization is not covered by evidence\.traceability/,
+  );
 });

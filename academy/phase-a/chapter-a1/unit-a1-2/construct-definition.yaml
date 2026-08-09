@@ -1,0 +1,32 @@
+schema_version: 1
+kind: ConstructDefinition
+metadata:
+  id: construct.example
+  name: 主张有据性
+  owner: evaluation-owner
+  version: 1.0.0
+construct:
+  definition: 回答中影响用户行动的原子事实主张，被系统实际获得、适用于目标场景且用户有权访问的证据充分支持
+  purpose: 控制无依据结论和引用误导风险
+  distinct_from:
+    correctness: 主张可能碰巧正确但没有被当前证据支持
+    citation_presence: 存在引用不代表引用蕴含主张或覆盖全部关键主张
+    helpfulness: 流畅和有帮助不能替代事实支持
+  unit_of_analysis: atomic_claim
+  target_population: 声明用途中的关键事实主张
+operationalization:
+  positive_example: 关键主张可定位到当前、授权证据的明确 span
+  negative_example: 引用只与主题相关，不能推出回答中的结论
+  boundary_example: 多来源部分支持或相互冲突时不得给出无条件结论
+  observables: [answer, atomic_claims, retrieved_context, citation_spans, document_version, user_acl]
+  reference_standard: 经领域所有者确认的版本化主张—证据映射
+  scorer_candidates: [确定性引用与 ACL 检查, 经校准的专家或 Judge 蕴含评分]
+  required_slices: [知识域, 身份, 可回答性, 文档版本状态, 风险严重性]
+validity:
+  known_threats: [原子主张切分不一致, 参考文档过期, Judge 偏好流畅答案]
+  unsupported_inferences: [不证明答案完整, 不证明用户最终行为正确, 不证明未授权语料不存在泄露]
+  calibration: 对领域专家双人盲标与仲裁结果报告一致性和关键错误率
+limitations:
+  - 该构念不等同于回答完整性、帮助度或最终业务结果
+  - 参考证据的版本、适用性或 ACL 不可靠时不能形成有效结论
+  - Judge 评分不得替代确定性的权限和来源版本检查

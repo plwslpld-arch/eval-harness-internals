@@ -1,0 +1,37 @@
+schema_version: 1
+kind: RequirementsTraceability
+metadata:
+  id: trace.example.v1
+  name: 需求到证据双向追踪模板
+  owner: evaluation-owner
+  version: 1.0.0
+decision:
+  charter_id: charter.example.v1
+  question: 是否批准候选系统在声明范围内投入使用？
+status_values:
+  covered: 证据和动作完整
+  partial: 仅部分范围有充分证据
+  blocked: 关键证据缺失，必须返回 inconclusive
+  out_of_scope: 经章程明确排除
+links:
+  - requirement_id: req.example
+    original_requirement: 系统回答必须可靠
+    stakeholder_ids: [stakeholder.direct-user]
+    risk_ids: [risk.example.critical]
+    construct_ids: [construct.example]
+    question_ids: [eq.example]
+    scenario_ids: [常规有答案, 无答案, 来源冲突]
+    evidence_requirement_ids: [evidence.example]
+    gate_rule_ids: [gate.example.critical]
+    accountable_owner: product-owner
+    action_on_failure: 阻断受影响范围并修复
+    status: covered
+reverse_review:
+  rules:
+    - 每个关键需求至少连接一项风险、构念、评测问题、证据与动作
+    - 每项门禁指标必须能反向连接构念、风险和决策
+    - partial 必须声明可隔离子范围，blocked 不得默认通过
+    - out_of_scope 必须与 Intended Use 或 Prohibited Use 一致
+change_control:
+  reevaluate_when: [需求变化, 新身份或知识域, 动作权限扩大, 关键依赖或版本变化]
+  orphan_link_policy: 阻断发布评审，直至恢复追踪或明确移出范围

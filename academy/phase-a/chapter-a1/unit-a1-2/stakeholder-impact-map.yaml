@@ -1,0 +1,54 @@
+schema_version: 1
+kind: StakeholderImpactMap
+metadata:
+  id: stakeholder-map.example.v1
+  name: 利益相关方与影响映射模板
+  owner: product-owner
+  version: 1.0.0
+scope:
+  decision_id: charter.example.v1
+  system_target_id: target.example.candidate
+stakeholders:
+  - id: stakeholder.direct-user
+    role: 直接用户
+    interaction: 提交请求并使用输出
+    expected_benefits: [更快完成目标任务]
+    potential_harms: [被错误或越权输出误导]
+    affected_rights_or_assets: [时间, 财务或业务权益]
+    controls: [有据性检查, 适当拒答, 纠错入口]
+    evidence_needed: [真实任务结果, 回答与轨迹, 用户身份]
+  - id: stakeholder.data-subject
+    role: 数据主体或决策对象
+    interaction: 可能不直接使用系统但会被系统处理
+    expected_benefits: [处理更一致]
+    potential_harms: [隐私泄露, 不当决定, 缺少申诉]
+    affected_rights_or_assets: [隐私, 公平待遇, 声誉]
+    controls: [访问隔离, 人工复核, 申诉机制]
+    evidence_needed: [ACL 全路径, 人工责任记录, 事故样本]
+  - id: stakeholder.asset-owner
+    role: 业务或资产负责人
+    interaction: 承担系统行为造成的业务结果
+    expected_benefits: [降低重复工作与成本]
+    potential_harms: [财务、法律或运营损失]
+    affected_rights_or_assets: [资金, 数据, 合同, 服务连续性]
+    controls: [关键风险硬门禁, 审计, 回滚]
+    evidence_needed: [环境状态, 控制有效性, 决策记录]
+responsibility:
+  harm_triage_owner: risk-owner
+  evidence_owner: evaluation-owner
+  remediation_owner: system-owner
+  appeal_owner: product-owner
+impact_chains:
+  - id: impact.example.misleading-output
+    trigger: 用户在证据不足场景请求确定结论
+    system_behavior: 系统生成无依据主张
+    affected_stakeholders: [stakeholder.direct-user, stakeholder.asset-owner]
+    immediate_impact: 用户依据错误信息行动
+    downstream_harm: 业务损失与补救负担
+    controls: [可回答性识别, 有据性门禁, 升级路径]
+    evidence: [输入, 回答, 支持证据, 用户任务结果]
+coverage_review:
+  questions:
+    - 是否包含不直接操作系统但受其决定影响的人？
+    - 是否同时记录价值、伤害、控制、证据和责任人？
+    - 关键群体是否在场景和结果中单独切片？

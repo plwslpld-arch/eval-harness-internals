@@ -1,0 +1,67 @@
+schema_version: 1
+kind: EvaluationCharter
+metadata:
+  id: charter.example.v1
+  name: 面向决策的评测章程模板
+  owner: evaluation-owner
+  reviewers: [product-owner, risk-owner, system-owner]
+  version: 1.0.0
+decision:
+  question: 是否批准候选系统在声明用户、场景和权限范围内投入使用？
+  decision_type: release_or_scope_gate
+  accountable_owner: product-owner
+  candidates:
+    pass: 批准声明范围
+    fail: 阻断并修复
+    inconclusive: 保持原权限并补充证据
+    conditional_pass: 仅批准证据充分且可隔离的子范围
+    exception: 经明确责任人批准的限时风险接受
+scope:
+  target_id: target.example.candidate
+  users: [声明的目标用户]
+  tasks: [声明的目标任务]
+  environments: [声明的运行环境]
+  excluded_claims: [开放世界零风险, 未测试范围的可用性]
+product_goal:
+  output: 系统直接交付的结果
+  user_outcome: 用户因此完成的任务
+  business_impact: 期望改善的业务结果
+  success_guardrails: [关键权益不得被业务 KPI 补偿]
+use:
+  intended:
+    users: [声明的目标用户]
+    tasks: [声明的目标任务]
+    environments: [声明的运行环境]
+    allowed_outputs: [声明的输出与动作]
+  prohibited:
+    users: [未批准身份]
+    tasks: [正式责任或高风险动作]
+    data: [未授权数据]
+    claims: [超出证据边界的结论]
+target:
+  id: target.example.candidate
+  version: candidate-version
+  complete_path: [identity, authorization, retrieval, model, orchestration, tools, environment_state, logging]
+  excluded_components: []
+stakeholders:
+  map_id: stakeholder-map.example.v1
+risks:
+  taxonomy_id: risk-taxonomy.example.v1
+  critical_risk_ids: [risk.example.critical]
+constructs:
+  definition_ids: [construct.example]
+evaluation_questions:
+  - id: eq.example
+    text: 对于声明总体与场景，候选系统是否满足目标构念，并足以支持本章程的决定？
+    population: 声明用途中的真实与风险定向场景
+    decision_use: 支持通过、失败、证据不足或条件通过判断
+evidence_requirements:
+  ids: [evidence.example]
+  minimum: 数据来源、参考标准、全链路观察、场景矩阵、评分可靠性与证据充分性均须声明
+limitations:
+  conclusion_scope: 仅覆盖被测版本、身份、场景、权限、数据和控制条件
+  unsupported_inferences: [不证明开放世界零风险, 不证明未测试范围可用]
+  reevaluation_triggers: [系统版本变化, 权限扩大, 新知识域或动作, 关键依赖变化, 严重生产事件]
+validity:
+  requirements_to_evidence_review: required
+  independent_risk_review: required

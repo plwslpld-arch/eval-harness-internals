@@ -1,0 +1,38 @@
+schema_version: 1
+kind: RiskTaxonomy
+metadata:
+  id: risk-taxonomy.example.v1
+  name: AI 产品需求评测风险分类模板
+  owner: risk-owner
+  version: 1.0.0
+categories:
+  task_and_factuality: [错误完成, 漏答, 无依据主张, 引用误导]
+  authorization_and_privacy: [越权读取, 敏感信息推断, 日志泄露]
+  action_and_state: [错误工具, 重复副作用, 状态未知继续执行]
+  human_accountability: [不当自动决定, 漏升级, 人工控制无效]
+  fairness_and_rights: [群体性差异, 权益受损, 缺少申诉]
+  robustness_and_security: [提示注入, 输入污染, 依赖异常]
+  operations_and_economics: [可用性, 延迟, 成本, 恢复失败]
+  governance_and_evidence: [版本不明, 证据污染, 不可重放, 责任不清]
+risk_statement_template:
+  id: risk.example.critical
+  trigger: 在什么用户、场景、输入或环境条件下
+  failure_mechanism: 系统发生什么可观察失败
+  affected_stakeholders: [stakeholder-id]
+  harm: 造成什么直接或下游伤害
+  severity: critical
+  likelihood_prior: plausible
+  tolerance: 声明可接受边界
+  observables: [答案, 轨迹, 工具调用, 环境状态]
+  preventive_controls: [预防控制]
+  detective_controls: [检测控制]
+  action_on_evidence: 阻断相关范围并通知责任人
+aggregation_policy:
+  non_compensable_severities: [critical]
+  rationale: 关键权限、资金、隐私或权益事件不得被普通质量平均分补偿
+  zero_observed_event_note: 零观测事件不等于真实风险为零，必须报告证据规模和不确定性
+application_rules:
+  - 每项关键伤害必须形成包含触发、机制、受影响方、容忍度、观察和动作的风险陈述
+  - critical 风险独立门禁，不得被普通质量指标补偿
+  - taxonomy 是检查框架而不是完整风险清单，必须结合具体工作流补充
+  - 无法观察关键状态时结论必须为 inconclusive，并先建设证据能力
