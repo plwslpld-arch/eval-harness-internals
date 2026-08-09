@@ -1,6 +1,6 @@
 schema_version: 2
 project: Evalorium
-updated_at: "2026-08-09T11:49:01Z"
+updated_at: "2026-08-09T16:49:09Z"
 
 repository:
   default_branch: main
@@ -31,8 +31,8 @@ program:
 current:
   phase: A
   chapter: A1
-  unit: A1.2
-  title: 从业务需求到评测问题
+  unit: A1.3
+  title: 评测对象、系统边界与版本
   status: in_progress
 
 learning_protocol:
@@ -43,26 +43,26 @@ learning_protocol:
 
 delivery:
   status: in_progress
-  current_unit: A1.2
+  current_unit: A1.3
 
 last_completed:
-  unit: A1.1
-  title: AI 评测的本质
+  unit: A1.2
+  title: 从业务需求到评测问题
   status: artifact_validated
-  validation_scope: structural_public_artifact_contract
-  artifact: academy/phase-a/chapter-a1/unit-a1-1/
-  content_commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
+  validation_scope: public_artifact_and_traceability_contract
+  artifact: academy/phase-a/chapter-a1/unit-a1-2/
+  content_commit: db4a82ce16a76e67136196e446bd0d4d987b9531
   verification:
     local_command: npm run check
-    local_tests: 15
-    remote_run_id: 31248603764
+    local_tests: 31
+    remote_run_id: 31324732289
     remote_status: passed
-    remote_url: https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764
+    remote_url: https://github.com/plwslpld-arch/evalorium/actions/runs/31324732289
 
 next_actions:
-  - 学习 A1.2：把业务目标、使用场景和风险容忍度转化为可验证的评测问题
-  - 建立决策问题、风险陈述、构念定义和证据需求之间的追踪关系
-  - 完成 A1.2 的正式课程、工程模板、案例、HTML 和单元合同验证
+  - 开始 A1.3：定义被测对象、完整系统边界、版本与配置身份
+  - 区分基础模型、RAG、Agent 与端到端产品的证据边界和可支持结论
+  - 在完成循序学习后，再交付 A1.3 的正式课程与工程成果
 
 product_decisions:
   primary_product: 企业级 AI 质量工程、评测、门禁、监控与治理平台
@@ -77,7 +77,7 @@ maturity:
 
 handoff:
   path: handoffs/CURRENT.md
-  based_on_commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
+  based_on_commit: db4a82ce16a76e67136196e446bd0d4d987b9531
 
 quality_gate:
   command: npm run check

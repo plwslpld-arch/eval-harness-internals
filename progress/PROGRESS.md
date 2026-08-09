@@ -1,15 +1,15 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.3 current_status=in_progress last_completed=A1.2 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
 - 章节：A1
-- 当前知识单元：A1.2《从业务需求到评测问题》
+- 当前知识单元：A1.3《评测对象、系统边界与版本》
 - 当前状态：学习中
-- 公开成果结构合同已验证知识单元：1
-- 最近完成：A1.1《AI 评测的本质》
+- 公开成果合同已验证知识单元：2
+- 最近完成：A1.2《从业务需求到评测问题》
 
 ## A1.1 公开成果结构合同已验证
 
@@ -20,6 +20,17 @@
 - Academy 单元合同验证器及对应自动化测试
 - 内容提交：[`b8bb47b`](https://github.com/plwslpld-arch/evalorium/commit/b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8)
 - 远程验证：[Documentation Quality run 31248603764](https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764)
+
+## A1.2 公开成果与追踪合同已验证
+
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-2/README.md)与[独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-2/index.html)
+- Evaluation Charter、Stakeholder Impact Map、Risk Taxonomy、Construct Definition、Evidence Requirements、Requirements Traceability 共 6 类模板
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个 requirements-to-evidence 完整案例
+- Manifest 驱动的单元 profile、规范单元绑定、双向引用与孤儿实体检查
+- Node 24 本地 `npm run check`：31 项测试、品牌检查和仓库验证通过
+- 内容提交：[`db4a82c`](https://github.com/plwslpld-arch/evalorium/commit/db4a82ce16a76e67136196e446bd0d4d987b9531)
+- 远程验证：[Documentation Quality run 31324732289](https://github.com/plwslpld-arch/evalorium/actions/runs/31324732289)
+- 限制：验证证明公开成果合同与内部追踪完整，不证明真实 Harness 结果、科学效度或个人掌握程度
 
 ## 完整范围
 
@@ -40,14 +51,8 @@
 
 公开仓库只保存正式成果，不保存对话、个人回答、错误历史、私人学习笔记或中间草稿。单元状态描述的是开源交付物，不用于公开判断个人能力。
 
-## A1.2 学习目标
+## A1.3 下一步
 
-1. 从业务目标和使用场景识别真正需要支持的决策。
-2. 将利益相关方、伤害、严重性、概率和容忍度写成可操作的风险陈述。
-3. 把抽象需求转化为构念、可观察证据、评测问题和验收边界。
-4. 识别代理指标、对象漂移、场景遗漏和不可验证需求。
-5. 产出可追溯的 Evaluation Charter 与需求到证据映射。
-
-## 下一步
-
-开始 A1.2 第一部分：为什么“提升准确率”“减少幻觉”“保证安全”都还不是合格的评测问题。
+1. 定义被测对象、完整系统边界、版本和配置身份。
+2. 区分基础模型、RAG、Agent 与端到端产品的证据边界。
+3. 继续采用循序渐进的完整讲解，不提前交付 A1.3 正式成果。

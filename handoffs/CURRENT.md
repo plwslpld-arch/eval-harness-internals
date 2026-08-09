@@ -1,6 +1,6 @@
 # Current Handoff
 
-<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.3 current_status=in_progress last_completed=A1.2 last_status=artifact_validated -->
 
 ## 已确认决策
 
@@ -20,8 +20,8 @@
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
-- 当前单元：A1.2《从业务需求到评测问题》
-- 已验证单元：A1.1《AI 评测的本质》（公开成果结构合同）
+- 当前单元：A1.3《评测对象、系统边界与版本》（尚未交付单元成果）
+- 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》
 
 ## A1.1 交付证据
 
@@ -34,12 +34,23 @@
 - 内容提交：[`b8bb47b`](https://github.com/plwslpld-arch/evalorium/commit/b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8)。
 - Linux 远程门禁：[Documentation Quality run 31248603764](https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764)。
 
+## A1.2 交付证据
+
+- 正式 Markdown 课程与独立 HTML 阅读版；桌面和 390px 窄屏实际检查通过，无横向溢出。
+- Evaluation Charter、Stakeholder Impact Map、Risk Taxonomy、Construct Definition、Evidence Requirements、Requirements Traceability 共 6 类模板。
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个端到端案例；同一句模糊需求分别推导到不同决定、风险、构念、场景和证据。
+- 单元验证器支持 canonical profile，保留 A1.1 完整合同，并检查不安全路径、清单完整性、双向引用与孤儿实体。
+- Node 24 本地 `npm run check` 共 31 项自动化测试通过，品牌检查和仓库验证通过。
+- 内容提交：[`db4a82c`](https://github.com/plwslpld-arch/evalorium/commit/db4a82ce16a76e67136196e446bd0d4d987b9531)。
+- Linux 远程门禁：[Documentation Quality run 31324732289](https://github.com/plwslpld-arch/evalorium/actions/runs/31324732289)。
+- 证据边界：只证明公开成果与追踪合同，不证明真实评测效度、生产效果或个人能力等级。
+
 ## 下一次准确动作
 
-1. 从 A1.2 第一部分开始：区分业务愿望、产品目标、风险陈述、决策问题和评测问题。
-2. 用退款 Agent、合同审查 Agent 和企业知识助手展示同一句模糊需求如何导出不同评测设计。
-3. 深入 Evaluation Charter、risk taxonomy、stakeholder-impact mapping、construct operationalization 和 evidence requirement。
-4. 学完后交付 A1.2 的正式课程、HTML、模板、案例和自动化验证，再进入 A1.3。
+1. 从 A1.3 第一部分开始前，重新只读确认 `main`、工作树与最新远端门禁。
+2. 循序讲解评测对象、完整系统边界、版本与配置身份，不重复 A1.2。
+3. 区分基础模型、RAG、Agent 与端到端产品能够支持的证据结论。
+4. A1.3 仍必须完成正式课程、HTML、模板、案例、自动验证和两阶段远端门禁后，才能标记完成。
 
 ## 未解决问题与风险
 
@@ -50,8 +61,8 @@
 
 ## Git 状态语义
 
-- 本 Handoff 的完成证据基于内容提交 `b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8`。
-- 对应远程证据为 [Documentation Quality run 31248603764](https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764)。
+- 本 Handoff 的完成证据基于 A1.2 内容提交 `db4a82ce16a76e67136196e446bd0d4d987b9531`。
+- 对应远程证据为 [Documentation Quality run 31324732289](https://github.com/plwslpld-arch/evalorium/actions/runs/31324732289)。
 - Handoff 与状态元数据提交本身的远程运行号不做递归自引用；在最终交接中读取最新 GitHub Actions 即可。
 - 当前仓库的准确 HEAD、同步状态和远程门禁必须在恢复时通过 Git 与 `gh` 实时读取，不把会变化的 HEAD 或 run ID 固化为“当前值”。
 - 完整换机步骤见 [`docs/workflows/cross-device-github.md`](../docs/workflows/cross-device-github.md)。

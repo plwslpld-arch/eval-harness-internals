@@ -1,13 +1,13 @@
 # Competency Evidence Matrix
 
-<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.3 current_status=in_progress last_completed=A1.2 last_status=artifact_validated -->
 
 Only evidence-supported capability is recorded. Reading a topic is not equivalent to designing or validating a system.
 
 | Capability domain | Target level | Current level | Required evidence | Evidence path | Last verified | Limitation |
 |---|---|---|---|---|---|---|
-| AI quality standards | Validation | Not assessed | Quality baseline, risk taxonomy, policy review, and gate outcome | A1.1 public artifact package | 2026-08-09 | The structural artifact contract passed; no executable evaluation or personal competency evidence is claimed |
-| Evaluation methodology | Validation | Learning | Multi-dimensional design, statistical report, and boundary analysis | `academy/phase-a/chapter-a1/unit-a1-1/` and `progress/state.yaml` | 2026-08-09 | A1.1 structural artifact contract validated; A1.2 active; no independent learner assessment or validation-level evidence |
+| AI quality standards | Validation | Not assessed | Quality baseline, risk taxonomy, policy review, and gate outcome | A1.1 and A1.2 public artifact packages | 2026-08-09 | Artifact contracts passed; no executable evaluation or personal competency evidence is claimed |
+| Evaluation methodology | Validation | Learning | Multi-dimensional design, statistical report, and boundary analysis | `academy/phase-a/chapter-a1/unit-a1-1/`, `academy/phase-a/chapter-a1/unit-a1-2/`, and `progress/state.yaml` | 2026-08-09 | A1.1 and A1.2 artifact contracts validated; A1.3 active; no independent learner assessment or validation-level evidence |
 | LLM-as-Judge | Validation | Not started | Calibration, bias analysis, and human comparison | Not available | Not verified | No study completed |
 | Human evaluation | Design | Not started | Annotation protocol, sampling, adjudication, and agreement | Not available | Not verified | No study completed |
 | Agent evaluation | Validation | Not started | Environment, trajectory, state assertion, fault injection, and scorer | Not available | Not verified | Harness is planned |

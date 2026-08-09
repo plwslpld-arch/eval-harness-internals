@@ -1,6 +1,6 @@
 # Evalorium Academy
 
-<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.3 current_status=in_progress last_completed=A1.2 last_status=artifact_validated -->
 
 Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的一部分交付。
 
@@ -9,6 +9,7 @@ Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的�
 | 单元 | 主题 | 可读课程 | 工程资产 | 状态 |
 |---|---|---|---|---|
 | A1.1 | AI 评测的本质 | [Markdown](phase-a/chapter-a1/unit-a1-1/README.md) · [HTML](phase-a/chapter-a1/unit-a1-1/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-1/artifact-manifest.yaml) | 公开成果结构合同已验证 |
+| A1.2 | 从业务需求到评测问题 | [Markdown](phase-a/chapter-a1/unit-a1-2/README.md) · [HTML](phase-a/chapter-a1/unit-a1-2/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-2/artifact-manifest.yaml) | 公开成果与追踪合同已验证 |
 
 ## 单元交付标准
 

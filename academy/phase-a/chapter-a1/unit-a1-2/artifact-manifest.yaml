@@ -5,7 +5,7 @@ unit:
   phase: A
   chapter: A1
 publication:
-  status: candidate
+  status: validated
   audience: AI 质量工程师、评测工程师、产品负责人、风险负责人和 Agent Harness 工程师
   language: zh-CN
   formats: [markdown, html, yaml]
