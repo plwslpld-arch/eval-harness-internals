@@ -1,15 +1,17 @@
 # 项目与学习进度
 
+<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+
 ## 当前状态
 
 - 阶段：A
 - 章节：A1
 - 当前知识单元：A1.2《从业务需求到评测问题》
 - 当前状态：学习中
-- 已验证知识单元：1
+- 公开成果结构合同已验证知识单元：1
 - 最近完成：A1.1《AI 评测的本质》
 
-## A1.1 已验证成果
+## A1.1 公开成果结构合同已验证
 
 - [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-1/README.md)
 - [独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-1/index.html)

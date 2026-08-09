@@ -1,5 +1,7 @@
 # Current Handoff
 
+<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+
 ## 已确认决策
 
 1. Evalorium 是独立、开源、企业级的 AI 质量工程平台，与 Loopward、Rein、Vein 解耦。
@@ -12,12 +14,14 @@
 ## 当前状态
 
 - 当前分支：`main`
+- 跨设备策略：GitHub `origin/main` 单一事实源、同一时间一个 active writer、只在远端门禁通过的提交边界换机。
+- 规范运行时：最新 Node 24 LTS（见 `.nvmrc`）。
 - 公开仓库：<https://github.com/plwslpld-arch/evalorium>
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
 - 当前单元：A1.2《从业务需求到评测问题》
-- 已验证单元：A1.1《AI 评测的本质》
+- 已验证单元：A1.1《AI 评测的本质》（公开成果结构合同）
 
 ## A1.1 交付证据
 
@@ -49,3 +53,5 @@
 - 本 Handoff 的完成证据基于内容提交 `b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8`。
 - 对应远程证据为 [Documentation Quality run 31248603764](https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764)。
 - Handoff 与状态元数据提交本身的远程运行号不做递归自引用；在最终交接中读取最新 GitHub Actions 即可。
+- 当前仓库的准确 HEAD、同步状态和远程门禁必须在恢复时通过 Git 与 `gh` 实时读取，不把会变化的 HEAD 或 run ID 固化为“当前值”。
+- 完整换机步骤见 [`docs/workflows/cross-device-github.md`](../docs/workflows/cross-device-github.md)。

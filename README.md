@@ -1,3 +1,5 @@
+<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+
 <p align="center">
   <img src="docs/assets/brand/evalorium-logo.svg" alt="Evalorium" width="420">
 </p>
@@ -37,16 +39,16 @@ Most evaluation tools answer a narrow question: *how did a model score on this d
 
 | Track | Purpose | Current state |
 |---|---|---|
-| **Academy** | Learn evaluation science through instruction, practice, assessment, and capstones | Learning |
+| **Academy** | Publish validated learning artifacts and support separate competency evidence | Learning |
 | **Platform** | Implement the methods as an enterprise evaluation and quality control plane | Planned |
 
-Academy content follows a strict unit gate:
+Public Academy artifacts follow a strict unit gate:
 
 ```text
-learn → explain → practice → assess → document after passing → verify → commit → next unit
+study → explain with cases → curate publishable artifacts → verify → commit → next unit
 ```
 
-Curriculum maps may be planned in advance. Completed lesson bodies and competency evidence are written only after the learner passes the corresponding unit assessment.
+Curriculum maps may be planned in advance. A unit is published only when its formal course, engineering templates, examples, HTML, and validation contract are committed and verified. Artifact delivery does not claim personal mastery; competency claims require separate evidence at the claimed level.
 
 ## Target capability map
 
@@ -88,7 +90,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1 is active; no unit is completed |
+| Academy curriculum | Learning | A1.1 public artifact contract validated; A1.2 is active |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 
@@ -118,6 +120,7 @@ The scope is not reduced to fit a one-month learning rhythm. Time is a pacing co
 - [Job competency map](docs/JD_COMPETENCY_MAP.md)
 - [Brand guide](docs/BRAND.md)
 - [Resume work on another computer](START_HERE.md)
+- [Cross-device GitHub execution protocol](docs/workflows/cross-device-github.md)
 
 ## Contributing and security
 

@@ -28,8 +28,11 @@ const TEXT_EXTENSIONS = new Set([
 
 const TEXT_BASENAMES = new Set([
   ".editorconfig",
+  ".env",
+  ".env.local",
   ".gitattributes",
   ".gitignore",
+  ".npmrc",
   "LICENSE",
 ]);
 
@@ -52,14 +55,32 @@ const STATE_PATHS = [
   "current.unit",
   "current.status",
   "delivery.status",
+  "toolchain.node",
+  "synchronization.source_of_truth",
   "next_actions",
   "publication.repository",
 ];
 
 const CREDENTIAL_PATTERNS = [
-  /gho_[A-Za-z0-9]{20,}/g,
+  /gh[opusr]_[A-Za-z0-9]{20,}/g,
   /github_pat_[A-Za-z0-9_]{20,}/g,
+  /npm_[A-Za-z0-9]{20,}/g,
+  /AKIA[0-9A-Z]{16}/g,
   /sk-[A-Za-z0-9_-]{20,}/g,
+  /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g,
+  /\/\/[^\s=]+\/:_authToken\s*=\s*[^${\s][^\s]*/g,
+];
+
+const PROGRESS_MIRROR_PATHS = [
+  "README.md",
+  "README.zh-CN.md",
+  "START_HERE.md",
+  "academy/README.md",
+  "academy/curriculum/README.md",
+  "docs/PROJECT_MATURITY.md",
+  "progress/PROGRESS.md",
+  "progress/competency-matrix.md",
+  "handoffs/CURRENT.md",
 ];
 
 function relative(rootDir, filePath) {
@@ -180,6 +201,39 @@ async function verifyStateYaml(rootDir, errors) {
   }
 }
 
+async function verifyProgressMirrors(rootDir, errors) {
+  const statePath = path.join(rootDir, "progress", "state.yaml");
+  if (!(await pathExists(statePath))) return;
+
+  let state;
+  try {
+    state = parseYaml(await readFile(statePath, "utf8"));
+  } catch {
+    return;
+  }
+
+  const expectedMarker = [
+    "<!-- evalorium-progress",
+    `current=${state?.current?.unit}`,
+    `current_status=${state?.current?.status}`,
+    `last_completed=${state?.last_completed?.unit}`,
+    `last_status=${state?.last_completed?.status}`,
+    "-->",
+  ].join(" ");
+
+  for (const mirrorPath of PROGRESS_MIRROR_PATHS) {
+    const absolutePath = path.join(rootDir, mirrorPath);
+    if (!(await pathExists(absolutePath))) {
+      errors.push(`${mirrorPath}: missing required progress mirror`);
+      continue;
+    }
+    const source = await readFile(absolutePath, "utf8");
+    if (!source.includes(expectedMarker)) {
+      errors.push(`${mirrorPath}: missing or stale progress marker ${expectedMarker}`);
+    }
+  }
+}
+
 async function verifySvgSafety(rootDir, files, errors) {
   const unsafePattern = /<script\b|<foreignObject\b|\son[a-z]+\s*=|javascript:|(?:href|src)\s*=\s*["']https?:|data:image/i;
   for (const filePath of files.filter((file) => path.extname(file) === ".svg")) {
@@ -240,6 +294,7 @@ export async function verifyRepository(rootDir) {
   await verifyUtf8(resolvedRoot, files, errors);
   await verifyMarkdownLinks(resolvedRoot, files, errors);
   await verifyStateYaml(resolvedRoot, errors);
+  await verifyProgressMirrors(resolvedRoot, errors);
   await verifySvgSafety(resolvedRoot, files, errors);
   await verifyBrandFiles(resolvedRoot, errors);
   await verifyCredentialPatterns(resolvedRoot, files, errors);

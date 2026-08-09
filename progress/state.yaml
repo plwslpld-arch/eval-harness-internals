@@ -1,11 +1,24 @@
 schema_version: 2
 project: Evalorium
-updated_at: "2026-08-08T16:33:02+08:00"
+updated_at: "2026-08-09T11:49:01Z"
 
 repository:
   default_branch: main
   visibility: public
   license: Apache-2.0
+
+toolchain:
+  node: 24.x LTS
+  version_file: .nvmrc
+  package_manager: npm
+
+synchronization:
+  source_of_truth: origin/main
+  owner_workflow: direct_main
+  active_writers_maximum: 1
+  handoff_boundary: pushed_commit_with_passing_actions
+  fast_forward_only: true
+  force_push_allowed: false
 
 program:
   phases: 8
@@ -36,6 +49,7 @@ last_completed:
   unit: A1.1
   title: AI 评测的本质
   status: artifact_validated
+  validation_scope: structural_public_artifact_contract
   artifact: academy/phase-a/chapter-a1/unit-a1-1/
   content_commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
   verification:
@@ -65,16 +79,11 @@ handoff:
   path: handoffs/CURRENT.md
   based_on_commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
 
-verification:
+quality_gate:
   command: npm run check
-  status: passed
-  local_tests: 15
-  remote_workflow:
-    name: Documentation Quality
-    run_id: 31248603764
-    commit: b8bb47b41b0f68e9f51968fac3aeffb7cd6825f8
-    status: passed
-    url: https://github.com/plwslpld-arch/evalorium/actions/runs/31248603764
+  canonical_node: 24.x LTS
+  remote_workflow: Documentation Quality
+  evidence_policy: derive_current_result_from_github_actions_for_exact_head
 
 publication:
   repository: https://github.com/plwslpld-arch/evalorium

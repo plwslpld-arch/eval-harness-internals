@@ -30,4 +30,4 @@
 
 ## Git 状态
 
-记录 Handoff 所依据的提交、分支、远程同步状态，以及如何取得当前真实 HEAD。Handoff 使用 `based_on_commit`，不声称能在一次提交内记录自身 SHA。
+记录 active writer 状态、工作分支、base SHA、内容提交、远程同步状态、准确提交对应的 Actions 结果，以及如何取得当前真实 HEAD。仓库所有者直改 `main` 时必须遵守 single-writer 和 fast-forward-only 规则。Handoff 使用 `based_on_commit`，不声称能在一次提交内记录自身 SHA。

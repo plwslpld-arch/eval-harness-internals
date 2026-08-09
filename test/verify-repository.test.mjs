@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -25,7 +25,8 @@ async function write(root, relativePath, content) {
 
 async function createValidFixture() {
   const root = await mkdtemp(path.join(tmpdir(), "evalorium-verify-"));
-  await write(root, "README.md", "# Fixture\n\n[Docs](docs/README.md)\n");
+  const progressMarker = "<!-- evalorium-progress current=A1.1 current_status=in_progress last_completed=undefined last_status=undefined -->";
+  await write(root, "README.md", `# Fixture\n\n${progressMarker}\n\n[Docs](docs/README.md)\n`);
   await write(root, "docs/README.md", "# Docs\n");
   await write(
     root,
@@ -41,12 +42,29 @@ current:
   status: in_progress
 delivery:
   status: in_progress
+toolchain:
+  node: 24.x LTS
+synchronization:
+  source_of_truth: origin/main
 next_actions:
   - learn A1.1
 publication:
   repository: https://github.com/example/evalorium
 `,
   );
+
+  for (const mirrorPath of [
+    "README.zh-CN.md",
+    "START_HERE.md",
+    "academy/README.md",
+    "academy/curriculum/README.md",
+    "docs/PROJECT_MATURITY.md",
+    "progress/PROGRESS.md",
+    "progress/competency-matrix.md",
+    "handoffs/CURRENT.md",
+  ]) {
+    await write(root, mirrorPath, `# Fixture\n\n${progressMarker}\n`);
+  }
 
   const brandRoot = "docs/assets/brand";
   for (const name of [
@@ -109,6 +127,37 @@ test("public progress state uses artifact delivery status rather than personal a
   assert.doesNotMatch(errors.join("\n"), /delivery\.status/);
 });
 
+test("a stale progress mirror is reported", async () => {
+  const root = await createValidFixture();
+  await write(root, "docs/PROJECT_MATURITY.md", "# Maturity\n\nNo current unit.\n");
+
+  const errors = await verifyRepository(root);
+
+  assert.match(errors.join("\n"), /docs\/PROJECT_MATURITY\.md: missing or stale progress marker/);
+});
+
+test("a semantically reversed progress marker is reported even when both unit IDs exist", async () => {
+  const root = await createValidFixture();
+  await write(
+    root,
+    "docs/PROJECT_MATURITY.md",
+    "# Maturity\n\n<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->\n",
+  );
+
+  const errors = await verifyRepository(root);
+
+  assert.match(errors.join("\n"), /docs\/PROJECT_MATURITY\.md: missing or stale progress marker/);
+});
+
+test("a missing required progress mirror is reported", async () => {
+  const root = await createValidFixture();
+  await rm(path.join(root, "academy", "curriculum", "README.md"));
+
+  const errors = await verifyRepository(root);
+
+  assert.match(errors.join("\n"), /academy\/curriculum\/README\.md: missing required progress mirror/);
+});
+
 test("unsafe SVG content is reported", async () => {
   const root = await createValidFixture();
   await write(
@@ -126,6 +175,16 @@ test("credential-shaped content is reported", async () => {
   const root = await createValidFixture();
   const syntheticCredential = "gho_" + "x".repeat(24);
   await write(root, "leak.md", `unsafe example: ${syntheticCredential}\n`);
+
+  const errors = await verifyRepository(root);
+
+  assert.match(errors.join("\n"), /possible credential/);
+});
+
+test("a private key header is reported", async () => {
+  const root = await createValidFixture();
+  const syntheticPrivateKeyHeader = ["-----BEGIN", "PRIVATE KEY-----"].join(" ");
+  await write(root, ".env.local", `${syntheticPrivateKeyHeader}\nsynthetic\n`);
 
   const errors = await verifyRepository(root);
 

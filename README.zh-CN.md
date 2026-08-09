@@ -1,3 +1,5 @@
+<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+
 <p align="center">
   <img src="docs/assets/brand/evalorium-logo.svg" alt="Evalorium" width="420">
 </p>
@@ -37,16 +39,16 @@ Evalorium 将 AI 系统的质量要求和风险转化为可复现评测、发布
 
 | 主线 | 目的 | 当前状态 |
 |---|---|---|
-| **Academy** | 通过学习、实践、测评和 Capstone 掌握 AI 评测与质量工程 | 学习中 |
+| **Academy** | 发布经过验证的学习成果，并为独立能力证据提供体系 | 学习中 |
 | **Platform** | 将方法实现为企业级评测与质量控制平台 | 计划中 |
 
-Academy 的每个知识单元必须依次经过：
+Academy 公开成果的每个知识单元必须依次经过：
 
 ```text
-学习 → 复述确认 → 实践 → 测评 → 通过后整理文档 → 验证 → 提交 → 下一单元
+系统学习 → 完整解释与案例 → 校订可发布成果 → 验证 → 提交 → 下一单元
 ```
 
-课程地图和学习目标可以预先规划，但正式课程正文和能力证据只能在对应单元测评通过后写入。
+课程地图和学习目标可以预先规划。正式课程、工程模板、案例、HTML 和验证合同只有在提交并通过门禁后才算公开交付完成。成果交付状态不代表个人已经掌握；个人能力声明需要与声明等级相匹配的独立证据。
 
 ## 目标能力地图
 
@@ -88,7 +90,7 @@ Agent Environment Harness 是 Evalorium 内部的深度核心能力。它负责�
 | 领域 | 状态 | 证据 |
 |---|---|---|
 | 仓库与品牌基础 | 已实现 | 版本化资产和本地验证 |
-| Academy 课程 | 学习中 | A1.1 正在进行，尚无完成单元 |
+| Academy 课程 | 学习中 | A1.1 公开成果结构合同已验证，A1.2 正在进行 |
 | Platform 运行时 | 计划中 | 只有设计和路线图 |
 | 生产采用 | 未声明 | 需要真实组织的外部证据 |
 
@@ -118,6 +120,7 @@ Agent Environment Harness 是 Evalorium 内部的深度核心能力。它负责�
 - [岗位能力映射](docs/JD_COMPETENCY_MAP.md)
 - [品牌规范](docs/BRAND.md)
 - [在另一台电脑恢复学习](START_HERE.md)
+- [多电脑 GitHub 同步执行协议](docs/workflows/cross-device-github.md)
 
 ## 贡献与安全
 

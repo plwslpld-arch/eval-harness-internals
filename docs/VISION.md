@@ -34,7 +34,7 @@ For any proposed or deployed AI change, Evalorium should help answer:
 
 Evalorium combines evaluation science, Agent Environment Harness engineering, release governance, production quality monitoring, and Eval-to-RL evidence flow. It also delivers the learning process as Academy artifacts so that design decisions remain explainable and teachable.
 
-Public Academy lessons are validated learning records. A curriculum map may be planned in advance, but a unit body becomes a completed artifact only after study, practice, and assessment.
+Public Academy lessons are versioned learning artifacts. A curriculum map may be planned in advance, but a unit becomes a completed public artifact only after its required course, templates, examples, HTML, limitations, and validation contract are committed and verified. Personal competency requires separate evidence.
 
 ## Long-term outcome
 

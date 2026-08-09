@@ -27,6 +27,7 @@
 - [Security](../SECURITY.md)
 - [Code of conduct](../CODE_OF_CONDUCT.md)
 - [Cross-device resume](../START_HERE.md)
+- [Cross-device GitHub execution protocol](workflows/cross-device-github.md)
 
 ## Project design history
 

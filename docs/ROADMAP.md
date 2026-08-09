@@ -8,7 +8,7 @@ Roadmap completion is evidence-based. Dates may guide pacing, but a milestone ex
 
 **Deliverables:** curriculum map, unit protocol, assessments, labs, competency matrix, handoff workflow, bilingual project documentation, and repository quality gate.
 
-**Evidence:** every completed unit has passed assessment, versioned artifacts, and traceable progress state.
+**Evidence:** every completed public unit has versioned artifacts, a passing artifact contract, documented limitations, and traceable progress state. Personal competency assessment is tracked separately when such a claim is needed.
 
 **Exit:** foundation process is reproducible on another computer and the initial phase capstone can begin.
 

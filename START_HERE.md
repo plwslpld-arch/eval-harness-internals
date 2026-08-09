@@ -1,5 +1,7 @@
 # Evalorium：跨设备恢复入口
 
+<!-- evalorium-progress current=A1.2 current_status=in_progress last_completed=A1.1 last_status=artifact_validated -->
+
 本文件是所有电脑、新任务和贡献者的统一恢复入口。对话用于交互，Git 仓库是持久事实来源。
 
 ## 产品目标
@@ -10,13 +12,24 @@ Evalorium 是独立、开源、企业级的 AI 质量工程平台，目标覆盖
 
 ## 每次恢复的固定顺序
 
-开始前执行：
+GitHub `main` 是跨电脑唯一可交接的事实源；同一时间只能有一台电脑作为 active writer。开始前先确认当前目录、登录身份、分支和工作树：
 
-```powershell
-git pull --rebase
+```bash
+gh auth status
+git branch --show-current
+git status --short
+git fetch origin
+git rev-parse HEAD
+git rev-parse origin/main
 ```
 
-然后依次读取：
+只有在当前分支为 `main`、工作树为空且没有本地未推送提交时，才执行：
+
+```bash
+git pull --ff-only origin main
+```
+
+只要存在本地修改、未推送提交、rebase/merge 状态，或 `HEAD` 与 `origin/main` 分叉，就停止恢复流程，不得用另一台电脑覆盖现场。然后依次读取：
 
 1. `START_HERE.md`
 2. `progress/state.yaml`
@@ -24,6 +37,8 @@ git pull --rebase
 4. `handoffs/CURRENT.md`
 
 严格从 `progress/state.yaml` 的 `next_actions` 继续。不要把对话记忆当成仓库状态，也不要重复生成已经通过验证的单元。
+
+完整的开工、提交、冲突恢复与换机规则见 [`docs/workflows/cross-device-github.md`](docs/workflows/cross-device-github.md)。
 
 ## 新任务恢复提示词
 
@@ -51,11 +66,12 @@ handoffs/CURRENT.md，恢复 Evalorium 的产品决策、当前单元、已验�
 ## 每次结束的固定顺序
 
 1. 根据实际结果更新 `progress/state.yaml`。
-2. 同步更新 `progress/PROGRESS.md`、Academy 导航和 `handoffs/CURRENT.md`。
-3. 运行 `npm ci` 和 `npm run check`。
+2. 同步更新 `progress/PROGRESS.md`、Academy 导航、成熟度镜像和 `handoffs/CURRENT.md`。
+3. 使用 `.nvmrc` 指定的 Node 24 LTS，运行 `npm ci` 和 `npm run check`。
 4. 检查差异、相对链接、示例数据和敏感信息。
-5. commit 并 push。
-6. 确认对应远程 GitHub Actions 在该提交上通过。
+5. 再次 `git fetch origin`；只有 `origin/main` 仍等于本次开工记录的 base SHA 时才 commit 和 push。
+6. 查出刚推送 SHA 对应的 run ID，再用 `gh run watch <run-id> --exit-status` 确认远端 GitHub Actions 通过。
+7. 确认工作树为空，且本地 `HEAD` 等于 `origin/main`，再允许换电脑继续。
 
 发生状态冲突时，停止进入下一单元，通过 Git 历史、最近验证证据和 Handoff 修复，不得静默覆盖。
 
@@ -64,4 +80,5 @@ handoffs/CURRENT.md，恢复 Evalorium 的产品决策、当前单元、已验�
 - 禁止提交 API Key、Token、密码、Cookie、个人数据或本地登录文件。
 - 禁止提交 `.env`、`.codex/`、`.superpowers/` 和 `auth.json`。
 - 每台电脑分别使用 `gh auth login` 完成安全授权。
+- 推荐使用浏览器设备授权；用 `gh auth status` 核对账号，不把 Token 写入命令、remote URL、配置文件或对话。
 - 曾出现在对话、日志、Issue 或提交中的 Token 必须撤销并轮换。
