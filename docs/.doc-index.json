@@ -1,7 +1,7 @@
 {
   "version": 1,
   "generated_by": "doc-superpowers",
-  "generated_at": "2026-08-09T16:52:34Z",
+  "generated_at": "2026-08-10T04:13:39Z",
   "build_commit": "7efadaee4c60d45e8dd3fd1cc6f7dccdbd867bcd",
   "docs": {
     "AGENTS.md": {
@@ -12,15 +12,15 @@
         "package.json",
         ".github/workflows/docs-quality.yml"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "operations",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "START_HERE.md": {
-      "content_hash": "sha256:1538fadd51542e8ef5a8bbe6c7738f6344fe2e5ba873b3b2539729af6530b4bd",
+      "content_hash": "sha256:6144152b08a7fa22ea1eff89a90f58a06ace8a4a29b10a7db9c217edb0193622",
       "code_refs": [
         "progress/state.yaml",
         "progress/PROGRESS.md",
@@ -28,12 +28,12 @@
         "package.json",
         ".github/workflows/docs-quality.yml"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "operations",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "CONTRIBUTING.md": {
       "content_hash": "sha256:27c49cd862db896719a8c260070295e57e0311817564d0fdc1bbfbfd8599d29e",
@@ -42,64 +42,64 @@
         ".github/workflows/docs-quality.yml",
         "progress/state.yaml"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "governance",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "README.md": {
-      "content_hash": "sha256:fef18a9e7a0e1e1e00c620e381be59ee5cbafb70c027e34f50e4cc46ea8d3d03",
+      "content_hash": "sha256:624839577d5bcbd97498034727af6b5d3cfa22d3c391588ffd6213b270a6795d",
       "code_refs": [
         "progress/state.yaml",
         "academy/README.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "overview",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "README.zh-CN.md": {
-      "content_hash": "sha256:3fe1c9d348785a204495247057448e3f7c60152dcd46b7c330101fbd4f511273",
+      "content_hash": "sha256:aa7fb1e38712f78b0c8336f831d55f3b5fe498d660da342d0c608e434c331267",
       "code_refs": [
         "progress/state.yaml",
         "academy/README.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "overview",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "academy/README.md": {
-      "content_hash": "sha256:dc8a76184c6f9ee546d0fe04d76fe626fa798b22e2b0bbbde7bac56f3d0338e6",
+      "content_hash": "sha256:2de07538dfff2e81b1382b9a05625e2d98ca5c772380978414a2264a81beee6f",
       "code_refs": [
         "progress/state.yaml",
         "scripts/verify-academy-unit.mjs"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "academy",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "academy/curriculum/README.md": {
-      "content_hash": "sha256:ec70bd89ef71b742a464064e230fd154fc1682f0510f2951a0f133af3003fcb1",
+      "content_hash": "sha256:f2612e9b155ae1dd5f01e0986c1aeff6d233c1f70bb720699448bd3bc9cd304e",
       "code_refs": [
         "progress/state.yaml",
         "academy/README.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "curriculum",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/ARCHITECTURE.md": {
       "content_hash": "sha256:9db7ef184024bf67a3be8c88c0eb6250c1905f88345188dbd240d66aa26f3e17",
@@ -107,12 +107,12 @@
         "docs/SCOPE.md",
         "progress/state.yaml"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "architecture",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/BRAND.md": {
       "content_hash": "sha256:5711a2be25e33f9ef0558f9ca5a55a6f694e7ec3ff0978a5827c1cfa623aa340",
@@ -133,12 +133,12 @@
         "progress/state.yaml",
         "progress/competency-matrix.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "competency",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/MASTERY_STANDARD.md": {
       "content_hash": "sha256:f6bf9fddeeec4f61df1842b2001e4190566eaf9e66483133813e06cc361dee36",
@@ -146,25 +146,25 @@
         "progress/state.yaml",
         "progress/competency-matrix.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "competency",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/PROJECT_MATURITY.md": {
-      "content_hash": "sha256:36236d582afb871e68b5f0d97e667b4d8648fa3ad6832160da4651aa853620f5",
+      "content_hash": "sha256:0adfde968085eaced390a02ffc7aaa251bdfa37c4153aff66e869a6b898dadee",
       "code_refs": [
         "progress/state.yaml",
         "scripts/verify-repository.mjs"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "maturity",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/README.md": {
       "content_hash": "sha256:eda6ec0f5101e1ac7ca00d0b3e67e112a751945c1e2ce95a8cd97fe997614c87",
@@ -180,12 +180,12 @@
         "progress/",
         "academy/README.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "index",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/ROADMAP.md": {
       "content_hash": "sha256:74c94a7bb028b8b2703f8b58927b443b491f6bc54fa7633b6503823042ebf962",
@@ -193,12 +193,12 @@
         "progress/state.yaml",
         "academy/"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "roadmap",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/SCOPE.md": {
       "content_hash": "sha256:cd9874cfcc0ca2a430367b20002c58a19b8e114405143d5fc6e62b73a2ad1d65",
@@ -206,12 +206,12 @@
         "docs/ARCHITECTURE.md",
         "progress/state.yaml"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "scope",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/VISION.md": {
       "content_hash": "sha256:38bebba41cae3d75ebb5e9ddedcab1c35804e4a991f83d05fe9124ad001e175e",
@@ -219,12 +219,12 @@
         "progress/state.yaml",
         "docs/ROADMAP.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "vision",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/workflows/cross-device-github.md": {
       "content_hash": "sha256:0ab6047bba3b5264ba90d6eadeae9b51da8ab42c942cbd974b2e71328c0b1547",
@@ -234,51 +234,51 @@
         "package.json",
         ".github/workflows/docs-quality.yml"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "operations",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "progress/PROGRESS.md": {
-      "content_hash": "sha256:26a5ddc479fb529154c434af191c1de30523134b07c4dbdf3e6607078b5fcece",
+      "content_hash": "sha256:c2fa61342aa1949df66eabb54b3b8f280d0c4023d153ec29da053b97de1e08cb",
       "code_refs": [
         "progress/state.yaml",
         "academy/README.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "progress",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "progress/competency-matrix.md": {
-      "content_hash": "sha256:99f4610c667e577c80f12bb0ba64fe4a4da92db687eafa471caf197d31306e43",
+      "content_hash": "sha256:ffc1164b3016355c33a73aa7ed1fa5d85fcf1ba95bcd59134155399d6db35841",
       "code_refs": [
         "progress/state.yaml",
         "academy/"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "progress",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "handoffs/CURRENT.md": {
-      "content_hash": "sha256:3c48500ab75ea1f0ead7ad4a9585807a7d3093ff34f77a2de0052ced3b7d9e94",
+      "content_hash": "sha256:10ab0a37eb8b54e0f48c9116f8bf820eeee616066f4a7a57f510b8816ae4f72d",
       "code_refs": [
         "progress/state.yaml",
         "progress/PROGRESS.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "handoff",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "handoffs/TEMPLATE.md": {
       "content_hash": "sha256:45c99f7fcc24776ff0ce532ac24fb4ff41fb78c5fbc4508238b2f9b2e4255d26",
@@ -286,12 +286,12 @@
         "AGENTS.md",
         "START_HERE.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "handoff",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/plans/2026-08-09-cross-device-sync-audit-report.md": {
       "content_hash": "sha256:0bc20326a12a439598d7cef21591bb0792c829ea0cce23e4c4d888d4a7d4ae43",
@@ -301,12 +301,12 @@
         "progress/state.yaml",
         "scripts/verify-repository.mjs"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "audit",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/superpowers/plans/2026-08-08-open-source-brand-docs-implementation.md": {
       "content_hash": "sha256:0298b1280f1716f3f10f9471af83d9a8ab3325697e11577f26cb34a609832bd9",
@@ -314,12 +314,12 @@
         "docs/superpowers/specs/2026-08-08-open-source-brand-docs-design.md",
         "progress/state.yaml"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "history",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     },
     "docs/superpowers/specs/2026-08-08-open-source-brand-docs-design.md": {
       "content_hash": "sha256:2b796e1ed846ac81001595ed4a15fec5ff01ecd242777e22f4de2963d7328000",
@@ -327,12 +327,12 @@
         "progress/state.yaml",
         "docs/ARCHITECTURE.md"
       ],
-      "code_commit": "bc373f89c1aca00252dc1148ed894e9fe555890c",
+      "code_commit": "eda11e86e2f0856c16b28818585c605fb4e5afd0",
       "doc_type": "history",
       "status": "current",
       "replaces": null,
       "superseded_by": null,
-      "last_verified": "2026-08-09T16:52:34Z"
+      "last_verified": "2026-08-10T04:13:39Z"
     }
   }
 }
