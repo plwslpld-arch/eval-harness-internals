@@ -1,0 +1,27 @@
+schema_version: 1
+kind: GateDecision
+metadata: {id: decision.refund.a18, name: 退款 Agent 设计阶段质量决定, version: 1.0.0}
+gate_evaluation_id: evaluation.refund.a18
+quality_baseline_id: baseline.refund.a18
+gate_policy_id: policy.refund.release.a18
+evidence_manifest_id: evidence.refund.a18
+target_identity_id: target.refund-agent.candidate
+status: blocked
+scope:
+  evaluated: {languages: [zh-CN], jurisdictions: [CN], task_families: [eligible_refund, policy_boundary]}
+  allowed: null
+  prohibited: {actions: [production_release, production_canary, system_quality_claim]}
+reasons:
+  type: evidence_not_materialized
+  blocking_check_ids: [check.refund.identity.a18, check.refund.data.a18, check.refund.harness.a18, check.refund.scorer.a18, check.refund.metric.a18, check.refund.capability.a18, check.refund.unauthorized.a18, check.refund.coverage.a18]
+supersession:
+  immutable: true
+  supersedes: null
+  replacement_must_create_new_decision: true
+validity:
+  effective: false
+  expires_at: null
+  invalidate_on: [target_identity_change, evidence_manifest_change, gate_policy_change, scope_expansion]
+claims:
+  allowed: [质量决策设计合同存在]
+  prohibited: [系统 ready, 真实评测已执行, 候选优于基线, 系统可发布, 生产质量, 个人能力]

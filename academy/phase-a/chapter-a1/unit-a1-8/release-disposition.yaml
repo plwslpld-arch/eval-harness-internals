@@ -1,0 +1,26 @@
+schema_version: 1
+kind: ReleaseDisposition
+metadata: {id: disposition.refund.a18, name: 退款 Agent 设计阶段发布处置, version: 1.0.0}
+gate_decision_id: decision.refund.a18
+waiver_request_id: waiver.refund.a18
+target_identity_id: target.refund-agent.candidate
+quality_status: blocked
+status: prohibited
+authorization:
+  real_deployment_authorization: false
+  environments: []
+  traffic_fraction: 0
+  allowed_users: []
+  allowed_actions: []
+  prohibited_actions: [production_release, production_canary, real_refund_write]
+controls:
+  monitoring_required: true
+  rollback_required: true
+  kill_switch_required: true
+  human_approval_required: true
+validity:
+  effective: false
+  not_before: null
+  expires_at: null
+  revoke_on: [gate_decision_change, waiver_expiration, target_identity_change, scope_expansion, critical_production_event]
+next_steps: [materialize evaluation evidence, execute all prerequisite gates, create a new immutable decision]

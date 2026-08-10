@@ -125,6 +125,24 @@ const VERIFICATION_PROFILES = {
       "examples/knowledge-assistant/evaluation-case.yaml",
     ],
   },
+  "evidence-to-quality-decision-v1": {
+    templates: [
+      "quality-baseline.yaml",
+      "gate-policy.yaml",
+      "gate-dependency-graph.yaml",
+      "evidence-manifest.yaml",
+      "gate-evaluation.yaml",
+      "gate-decision.yaml",
+      "waiver-request.yaml",
+      "release-disposition.yaml",
+      "production-response-policy.yaml",
+    ],
+    examples: [
+      "examples/refund-agent/evaluation-case.yaml",
+      "examples/contract-agent/evaluation-case.yaml",
+      "examples/knowledge-assistant/evaluation-case.yaml",
+    ],
+  },
 };
 
 const CANONICAL_UNIT_PROFILES = {
@@ -135,9 +153,10 @@ const CANONICAL_UNIT_PROFILES = {
   "A1.5": "task-scenario-to-evaluation-data-v1",
   "A1.6": "reference-to-scorer-v1",
   "A1.7": "score-to-metric-v1",
+  "A1.8": "evidence-to-quality-decision-v1",
 };
 
-const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6", "A1.7"]);
+const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6", "A1.7", "A1.8"]);
 
 const TEMPLATE_CONTRACTS = {
   "artifact-manifest.yaml": {
@@ -966,6 +985,137 @@ const PROFILE_CONTRACTS = {
         "input.metric_quality_gate", "expected.trace_closure",
         "evidence.materialized", "evidence.design_artifacts", "evidence.proves",
         "evidence.does_not_prove",
+      ],
+    },
+  },
+  "evidence-to-quality-decision-v1": {
+    "quality-baseline.yaml": {
+      kind: "QualityBaseline",
+      required: [
+        "metadata.id", "metadata.version", "metadata.owner", "scope", "risk_tier",
+        "metric_requirements", "combination.required_mode", "combination.critical_failure_mode",
+        "combination.weighted_composite_may_override_critical",
+        "evidence_requirements.required_gate_types", "evidence_requirements.identity_match_required",
+        "evidence_requirements.materialized_evidence_required_for_ready",
+        "evidence_requirements.inconclusive_required_rule_treatment",
+        "validity.status", "validity.invalidate_on", "limitations",
+      ],
+    },
+    "gate-policy.yaml": {
+      kind: "GatePolicy",
+      required: [
+        "metadata.id", "metadata.version", "metadata.owner", "quality_baseline_id",
+        "status_values", "check_status_values", "evaluation_order",
+        "invalidating_conditions", "prerequisite_gate_types", "rules", "state_rules",
+        "scope_rules.downstream_scope_must_be_subset_of_prerequisite_intersection",
+        "scope_rules.partial_requires_allowed_and_prohibited_scope",
+        "scope_rules.scope_enforcement_evidence_required",
+        "waiver_policy.may_change_gate_status",
+        "waiver_policy.approved_waiver_may_only_constrain_release_disposition",
+        "waiver_policy.nonwaivable_roles", "decision_record.immutable",
+        "decision_record.supersedes_required_for_replacement",
+      ],
+    },
+    "gate-dependency-graph.yaml": {
+      kind: "GateDependencyGraph",
+      required: [
+        "metadata.id", "metadata.version", "nodes", "edges",
+        "graph_rules.acyclic_required", "graph_rules.all_edges_must_reference_nodes",
+        "graph_rules.required_nodes_must_reach_release", "propagation.invalid",
+        "propagation.blocked", "propagation.partial", "propagation.ready",
+      ],
+    },
+    "evidence-manifest.yaml": {
+      kind: "DecisionEvidenceManifest",
+      required: [
+        "metadata.id", "metadata.version", "classification", "materialized",
+        "target.identity_id", "target.identity_status", "upstream.dataset_version_id",
+        "upstream.harness_identity_id", "upstream.scorer_identity_id",
+        "upstream.metric_definition_ids", "prerequisite_gate_decisions", "artifacts",
+        "integrity.identity_reconciled", "integrity.references_closed",
+        "scope", "evidence_boundary.proves", "evidence_boundary.does_not_prove",
+      ],
+    },
+    "gate-evaluation.yaml": {
+      kind: "GateEvaluation",
+      required: [
+        "metadata.id", "metadata.version", "mode", "gate_policy_id",
+        "gate_dependency_graph_id", "evidence_manifest_id", "target_identity_id",
+        "scope", "checks", "result.status", "result.blocking_check_ids",
+        "result.reason_type",
+        "truthfulness.synthetic_or_design_only",
+        "truthfulness.real_system_quality_claim_allowed",
+      ],
+    },
+    "gate-decision.yaml": {
+      kind: "GateDecision",
+      required: [
+        "metadata.id", "metadata.version", "gate_evaluation_id", "quality_baseline_id",
+        "gate_policy_id", "evidence_manifest_id", "target_identity_id", "status",
+        "scope.evaluated", "scope.prohibited", "reasons.type",
+        "reasons.blocking_check_ids", "supersession.immutable",
+        "supersession.replacement_must_create_new_decision", "validity.effective",
+        "validity.invalidate_on", "claims.allowed", "claims.prohibited",
+      ],
+    },
+    "waiver-request.yaml": {
+      kind: "WaiverRequest",
+      required: [
+        "metadata.id", "metadata.version", "gate_decision_id", "gate_status_at_request",
+        "status", "eligibility.eligible", "eligibility.reason",
+        "eligibility.nonwaivable_rule_ids", "risk_acceptance.risk_owner",
+        "risk_acceptance.accepted",
+        "validity.automatic_expiration_required", "governance.may_modify_gate_status",
+        "governance.may_create_only_restricted_release_authorization",
+        "governance.requester_cannot_self_approve",
+        "governance.target_identity_binding_required",
+        "governance.revoke_on_scope_or_identity_change",
+      ],
+    },
+    "release-disposition.yaml": {
+      kind: "ReleaseDisposition",
+      required: [
+        "metadata.id", "metadata.version", "gate_decision_id", "waiver_request_id",
+        "target_identity_id", "quality_status", "status",
+        "authorization.real_deployment_authorization", "authorization.traffic_fraction",
+        "authorization.prohibited_actions",
+        "controls.monitoring_required", "controls.rollback_required",
+        "controls.kill_switch_required", "controls.human_approval_required",
+        "validity.effective", "validity.revoke_on", "next_steps",
+      ],
+    },
+    "production-response-policy.yaml": {
+      kind: "ProductionResponsePolicy",
+      required: [
+        "metadata.id", "metadata.version", "release_disposition_id", "target_identity_id",
+        "status", "signals.hard_events", "signals.window_metrics", "actions.warning",
+        "actions.freeze", "actions.revoke", "actions.rollback",
+        "incident_to_evaluation.preserve_identity_and_trajectory",
+        "incident_to_evaluation.harness_replay_required",
+        "incident_to_evaluation.scenario_family_expansion_required",
+        "incident_to_evaluation.protected_regression_required",
+        "incident_to_evaluation.quality_baseline_review_required",
+        "monitoring_health.minimum_trace_capture",
+        "monitoring_health.minimum_identity_reconciliation",
+        "monitoring_health.detector_validation_required", "limitations",
+      ],
+    },
+    example: {
+      kind: "EvaluationCase",
+      required: [
+        "metadata.id", "metadata.version", "classification", "references.target_ids",
+        "references.upstream_dataset_ids", "references.upstream_scorer_identity_ids",
+        "references.upstream_metric_ids", "references.quality_baseline_ids",
+        "references.gate_policy_ids", "references.gate_graph_ids",
+        "references.evidence_manifest_ids", "references.gate_evaluation_ids",
+        "references.gate_decision_ids", "references.waiver_request_ids",
+        "references.release_disposition_ids", "references.production_response_policy_ids",
+        "input.quality_baseline", "input.gate_policy", "input.gate_graph",
+        "input.evidence_manifest", "input.gate_evaluation", "input.gate_decision",
+        "input.waiver", "input.release_disposition", "input.production_response",
+        "expected.reasoning", "expected.trace_closure", "evidence.materialized",
+        "evidence.classification", "evidence.production_evidence",
+        "evidence.real_release_authorization", "evidence.proves", "evidence.does_not_prove",
       ],
     },
   },
@@ -4669,6 +4819,23 @@ const A17_CANONICAL_SCORER_IDENTITIES = {
   "examples/knowledge-assistant/evaluation-case.yaml": "scorer-identity.knowledge.a16",
 };
 
+const A18_GATE_TYPES = ["target", "data", "harness", "scorer", "metric", "system", "release"];
+const A18_PREREQUISITE_GATE_TYPES = ["target", "data", "harness", "scorer", "metric"];
+const A18_CANONICAL_UPSTREAM = {
+  "examples/refund-agent/evaluation-case.yaml": {
+    dataset: "dataset.refund.a15.v1",
+    scorer: "scorer-identity.refund.a16",
+  },
+  "examples/contract-agent/evaluation-case.yaml": {
+    dataset: "dataset.contract.a15.v1",
+    scorer: "scorer-identity.contract.a16",
+  },
+  "examples/knowledge-assistant/evaluation-case.yaml": {
+    dataset: "dataset.knowledge.a15.v1",
+    scorer: "scorer-identity.knowledge.a16",
+  },
+};
+
 function verifyA17Boolean(value, expected, label, errors) {
   if (value !== expected) errors.push(`${label} must be ${expected}`);
 }
@@ -4922,6 +5089,254 @@ function verifyScoreToMetricCase(value, relativePath, errors) {
   }
 }
 
+function verifyA18RequiredAction(values, required, label, errors) {
+  if (!asArray(values).includes(required)) errors.push(`${label}: missing required ${required}`);
+}
+
+function verifyA18GateGraph(graph, label, errors, objectEdges = true) {
+  const nodes = asArray(graph?.nodes);
+  const nodeIds = nodes.map((node) => objectEdges ? node?.id : node).filter(Boolean);
+  const nodeSet = new Set(nodeIds);
+  const types = objectEdges
+    ? nodes.map((node) => node?.type).filter(Boolean)
+    : nodeIds.map((id) => A18_GATE_TYPES.find((type) => id.includes(`.${type}.`))).filter(Boolean);
+  verifyExactSet(types, A18_GATE_TYPES, `${label}: nodes.type`, errors);
+
+  const edges = asArray(graph?.edges).map((edge) => objectEdges
+    ? [edge?.from, edge?.to]
+    : [asArray(edge)[0], asArray(edge)[1]]);
+  for (const [index, [from, to]] of edges.entries()) {
+    for (const endpoint of [from, to]) {
+      if (endpoint && !nodeSet.has(endpoint)) errors.push(`${label}: edges[${index}] references unknown node ${endpoint}`);
+    }
+  }
+
+  const allIds = new Set([...nodeIds, ...edges.flat().filter(Boolean)]);
+  const adjacencyAll = new Map([...allIds].map((id) => [id, []]));
+  for (const [from, to] of edges) if (from && to) adjacencyAll.get(from)?.push(to);
+  const visiting = new Set();
+  const visited = new Set();
+  let cyclic = false;
+  function visit(id) {
+    if (visiting.has(id)) { cyclic = true; return; }
+    if (visited.has(id)) return;
+    visiting.add(id);
+    for (const next of adjacencyAll.get(id) ?? []) visit(next);
+    visiting.delete(id);
+    visited.add(id);
+  }
+  for (const id of allIds) visit(id);
+  if (cyclic) errors.push(`${label}: graph must be acyclic`);
+
+  const releaseIds = new Set(nodes.filter((node) => objectEdges ? node?.type === "release" : String(node).includes(".release.")).map((node) => objectEdges ? node?.id : node));
+  const adjacencyKnown = new Map(nodeIds.map((id) => [id, []]));
+  for (const [from, to] of edges) if (nodeSet.has(from) && nodeSet.has(to)) adjacencyKnown.get(from).push(to);
+  function reachesRelease(start) {
+    const queue = [start];
+    const seen = new Set();
+    while (queue.length) {
+      const current = queue.shift();
+      if (releaseIds.has(current)) return true;
+      if (seen.has(current)) continue;
+      seen.add(current);
+      queue.push(...(adjacencyKnown.get(current) ?? []));
+    }
+    return false;
+  }
+  for (const node of nodes) {
+    const id = objectEdges ? node?.id : node;
+    const required = objectEdges ? node?.required !== false : true;
+    if (id && required && !reachesRelease(id)) errors.push(`${label}: required node ${id} cannot reach release`);
+  }
+}
+
+function verifyA18CriticalRequirements(requirements, label, errors) {
+  for (const [index, requirement] of asArray(requirements).entries()) {
+    if (!(requirement?.critical || requirement?.role === "critical_safety" || requirement?.role === "evidence_quality")) continue;
+    if (requirement?.compensatable !== false) errors.push(`${label}: critical requirement[${index}].compensatable must be false`);
+    if (requirement?.waiver_allowed !== false) errors.push(`${label}: critical requirement[${index}].waiver_allowed must be false`);
+  }
+}
+
+function verifyEvidenceToQualityDecisionTemplates(templateValues, errors) {
+  const baseline = templateValues.get("quality-baseline.yaml");
+  const policy = templateValues.get("gate-policy.yaml");
+  const graph = templateValues.get("gate-dependency-graph.yaml");
+  const evidence = templateValues.get("evidence-manifest.yaml");
+  const evaluation = templateValues.get("gate-evaluation.yaml");
+  const decision = templateValues.get("gate-decision.yaml");
+  const waiver = templateValues.get("waiver-request.yaml");
+  const disposition = templateValues.get("release-disposition.yaml");
+  const response = templateValues.get("production-response-policy.yaml");
+
+  verifyA18CriticalRequirements(baseline?.metric_requirements, "quality-baseline.yaml", errors);
+  verifyA17Boolean(baseline?.combination?.weighted_composite_may_override_critical, false, "quality-baseline.yaml: combination.weighted_composite_may_override_critical", errors);
+  verifyExactSet(asArray(baseline?.evidence_requirements?.required_gate_types), A18_PREREQUISITE_GATE_TYPES, "quality-baseline.yaml: evidence_requirements.required_gate_types", errors);
+  verifyA17Boolean(baseline?.evidence_requirements?.identity_match_required, true, "quality-baseline.yaml: evidence_requirements.identity_match_required", errors);
+  verifyA17Boolean(baseline?.evidence_requirements?.materialized_evidence_required_for_ready, true, "quality-baseline.yaml: evidence_requirements.materialized_evidence_required_for_ready", errors);
+  if (baseline?.evidence_requirements?.inconclusive_required_rule_treatment !== "blocked") errors.push("quality-baseline.yaml: evidence_requirements.inconclusive_required_rule_treatment must be blocked");
+
+  verifyEqualReference(policy?.quality_baseline_id, baseline?.metadata?.id, "gate-policy.yaml: quality_baseline_id", errors);
+  verifyExactSet(asArray(policy?.status_values), ["ready", "partial", "blocked", "invalid"], "gate-policy.yaml: status_values", errors);
+  for (const status of ["passed", "failed", "inconclusive", "blocked", "invalid"]) verifyA18RequiredAction(policy?.check_status_values, status, "gate-policy.yaml: check_status_values", errors);
+  verifyExactSet(asArray(policy?.prerequisite_gate_types), A18_PREREQUISITE_GATE_TYPES, "gate-policy.yaml: prerequisite_gate_types", errors);
+  for (const [index, rule] of asArray(policy?.rules).entries()) {
+    if (rule?.on_fail !== "blocked") errors.push(`gate-policy.yaml: rules[${index}].on_fail must be blocked`);
+    if (rule?.on_inconclusive !== "blocked") errors.push(`gate-policy.yaml: rules[${index}].on_inconclusive must be blocked`);
+  }
+  verifyA17Boolean(policy?.scope_rules?.downstream_scope_must_be_subset_of_prerequisite_intersection, true, "gate-policy.yaml: scope_rules.downstream_scope_must_be_subset_of_prerequisite_intersection", errors);
+  verifyA17Boolean(policy?.scope_rules?.partial_requires_allowed_and_prohibited_scope, true, "gate-policy.yaml: scope_rules.partial_requires_allowed_and_prohibited_scope", errors);
+  verifyA17Boolean(policy?.scope_rules?.scope_enforcement_evidence_required, true, "gate-policy.yaml: scope_rules.scope_enforcement_evidence_required", errors);
+  verifyA17Boolean(policy?.waiver_policy?.may_change_gate_status, false, "gate-policy.yaml: waiver_policy.may_change_gate_status", errors);
+  verifyA17Boolean(policy?.decision_record?.immutable, true, "gate-policy.yaml: decision_record.immutable", errors);
+  verifyA17Boolean(policy?.decision_record?.supersedes_required_for_replacement, true, "gate-policy.yaml: decision_record.supersedes_required_for_replacement", errors);
+
+  verifyA18GateGraph(graph, "gate-dependency-graph.yaml", errors, true);
+  verifyA17Boolean(graph?.graph_rules?.acyclic_required, true, "gate-dependency-graph.yaml: graph_rules.acyclic_required", errors);
+  verifyA17Boolean(graph?.graph_rules?.all_edges_must_reference_nodes, true, "gate-dependency-graph.yaml: graph_rules.all_edges_must_reference_nodes", errors);
+  verifyA17Boolean(graph?.graph_rules?.required_nodes_must_reach_release, true, "gate-dependency-graph.yaml: graph_rules.required_nodes_must_reach_release", errors);
+
+  if (evidence?.classification === "design-only") {
+    verifyA17Boolean(evidence?.materialized, false, "evidence-manifest.yaml: design-only evidence.materialized", errors);
+    verifyA17Boolean(evidence?.integrity?.identity_reconciled, false, "evidence-manifest.yaml: design-only integrity.identity_reconciled", errors);
+  }
+  verifyEqualReference(evidence?.upstream?.dataset_version_id, "dataset.refund.a15.v1", "evidence-manifest.yaml: upstream.dataset_version_id", errors);
+  verifyEqualReference(evidence?.upstream?.scorer_identity_id, "scorer-identity.refund.a16", "evidence-manifest.yaml: upstream.scorer_identity_id", errors);
+  verifyExactSet(asArray(evidence?.prerequisite_gate_decisions).map((item) => item?.gate_type), A18_PREREQUISITE_GATE_TYPES, "evidence-manifest.yaml: prerequisite_gate_decisions.gate_type", errors);
+
+  for (const [label, actual, expected] of [
+    ["gate-evaluation.yaml: gate_policy_id", evaluation?.gate_policy_id, policy?.metadata?.id],
+    ["gate-evaluation.yaml: gate_dependency_graph_id", evaluation?.gate_dependency_graph_id, graph?.metadata?.id],
+    ["gate-evaluation.yaml: evidence_manifest_id", evaluation?.evidence_manifest_id, evidence?.metadata?.id],
+    ["gate-evaluation.yaml: target_identity_id", evaluation?.target_identity_id, evidence?.target?.identity_id],
+    ["gate-decision.yaml: gate_evaluation_id", decision?.gate_evaluation_id, evaluation?.metadata?.id],
+    ["gate-decision.yaml: quality_baseline_id", decision?.quality_baseline_id, baseline?.metadata?.id],
+    ["gate-decision.yaml: gate_policy_id", decision?.gate_policy_id, policy?.metadata?.id],
+    ["gate-decision.yaml: evidence_manifest_id", decision?.evidence_manifest_id, evidence?.metadata?.id],
+    ["gate-decision.yaml: target_identity_id", decision?.target_identity_id, evidence?.target?.identity_id],
+    ["waiver-request.yaml: gate_decision_id", waiver?.gate_decision_id, decision?.metadata?.id],
+    ["release-disposition.yaml: gate_decision_id", disposition?.gate_decision_id, decision?.metadata?.id],
+    ["release-disposition.yaml: waiver_request_id", disposition?.waiver_request_id, waiver?.metadata?.id],
+    ["production-response-policy.yaml: release_disposition_id", response?.release_disposition_id, disposition?.metadata?.id],
+  ]) verifyEqualReference(actual, expected, label, errors);
+
+  const checks = asArray(evaluation?.checks);
+  const checkIds = checks.map((check) => check?.id).filter(Boolean);
+  if (evaluation?.result?.status === "ready" && checks.some((check) => check?.status !== "passed")) errors.push("gate-evaluation.yaml: ready requires every check to be passed");
+  for (const id of asArray(evaluation?.result?.blocking_check_ids)) if (!checkIds.includes(id)) errors.push(`gate-evaluation.yaml: result.blocking_check_ids: unknown id ${id}`);
+  if (evaluation?.truthfulness?.synthetic_or_design_only) verifyA17Boolean(evaluation?.truthfulness?.real_system_quality_claim_allowed, false, "gate-evaluation.yaml: truthfulness.real_system_quality_claim_allowed", errors);
+  if (decision?.status !== evaluation?.result?.status) errors.push("gate-decision.yaml: gate decision status must equal gate evaluation result status");
+  verifyMatchingIdSet(decision?.reasons?.blocking_check_ids, asArray(evaluation?.result?.blocking_check_ids), "gate-decision.yaml: reasons.blocking_check_ids", errors);
+  verifyA17Boolean(decision?.supersession?.immutable, true, "gate-decision.yaml: supersession.immutable", errors);
+  verifyA17Boolean(waiver?.governance?.may_modify_gate_status, false, "waiver-request.yaml: governance.may_modify_gate_status", errors);
+
+  if (disposition?.quality_status !== decision?.status) errors.push("release-disposition.yaml: quality_status must equal gate decision status");
+  const nonProductionEvidence = evidence?.classification === "design-only" || evaluation?.truthfulness?.synthetic_or_design_only;
+  if (nonProductionEvidence && disposition?.authorization?.real_deployment_authorization !== false) errors.push("release-disposition.yaml: design-only evidence cannot authorize real deployment");
+  if (decision?.status === "blocked" && disposition?.status !== "prohibited") errors.push("release-disposition.yaml: blocked decision requires prohibited status");
+
+  for (const [index, event] of asArray(response?.signals?.hard_events).entries()) verifyA17Boolean(event?.critical, true, `production-response-policy.yaml: hard_events[${index}].critical`, errors);
+  for (const required of ["stop_traffic_expansion", "preserve_evidence"]) verifyA18RequiredAction(response?.actions?.freeze, required, "production-response-policy.yaml: actions.freeze", errors);
+  verifyNonEmptyStringArray(response?.actions?.revoke, "production-response-policy.yaml: actions.revoke", errors);
+  for (const required of ["route_to_baseline", "require_reevaluation"]) verifyA18RequiredAction(response?.actions?.rollback, required, "production-response-policy.yaml: actions.rollback", errors);
+  for (const field of ["preserve_identity_and_trajectory", "harness_replay_required", "scenario_family_expansion_required", "protected_regression_required", "quality_baseline_review_required"]) {
+    verifyA17Boolean(response?.incident_to_evaluation?.[field], true, `production-response-policy.yaml: incident_to_evaluation.${field}`, errors);
+  }
+}
+
+function verifyEvidenceToQualityDecisionCase(value, relativePath, errors) {
+  if (!value) return;
+  const input = value?.input ?? {};
+  const canonical = A18_CANONICAL_UPSTREAM[relativePath];
+  verifyMatchingIdSet(value?.references?.upstream_dataset_ids, canonical ? [canonical.dataset] : [], `${relativePath}: references.upstream_dataset_ids`, errors);
+  verifyMatchingIdSet(value?.references?.upstream_scorer_identity_ids, canonical ? [canonical.scorer] : [], `${relativePath}: references.upstream_scorer_identity_ids`, errors);
+
+  const definitionMap = {
+    target_ids: [input?.evidence_manifest?.target_identity_id],
+    quality_baseline_ids: [input?.quality_baseline?.id],
+    gate_policy_ids: [input?.gate_policy?.id],
+    gate_graph_ids: [input?.gate_graph?.id],
+    evidence_manifest_ids: [input?.evidence_manifest?.id],
+    gate_evaluation_ids: [input?.gate_evaluation?.id],
+    gate_decision_ids: [input?.gate_decision?.id],
+    waiver_request_ids: [input?.waiver?.id],
+    release_disposition_ids: [input?.release_disposition?.id],
+    production_response_policy_ids: [input?.production_response?.id],
+  };
+  for (const [field, ids] of Object.entries(definitionMap)) verifyMatchingIdSet(value?.references?.[field], ids.filter(Boolean), `${relativePath}: references.${field}`, errors);
+  for (const upstreamId of [...asArray(value?.references?.upstream_dataset_ids), ...asArray(value?.references?.upstream_scorer_identity_ids), ...asArray(value?.references?.upstream_metric_ids)]) {
+    if (!asArray(input?.evidence_manifest?.upstream_ids).includes(upstreamId)) errors.push(`${relativePath}: input.evidence_manifest.upstream_ids missing related id ${upstreamId}`);
+  }
+  if (value?.classification !== "synthetic-teaching-fixture" || input?.evidence_manifest?.classification !== "synthetic-teaching-fixture" || value?.evidence?.classification !== "synthetic-teaching-fixture") errors.push(`${relativePath}: all evidence classification values must be synthetic-teaching-fixture`);
+  verifyA17Boolean(input?.evidence_manifest?.production_evidence, false, `${relativePath}: input.evidence_manifest.production_evidence`, errors);
+  verifyA17Boolean(value?.evidence?.production_evidence, false, `${relativePath}: evidence.production_evidence`, errors);
+  verifyA17Boolean(value?.evidence?.real_release_authorization, false, `${relativePath}: evidence.real_release_authorization`, errors);
+
+  verifyA18CriticalRequirements(input?.quality_baseline?.requirements, `${relativePath}: input.quality_baseline`, errors);
+  verifyEqualReference(input?.gate_policy?.baseline_id, input?.quality_baseline?.id, `${relativePath}: input.gate_policy.baseline_id`, errors);
+  verifyA17Boolean(input?.gate_policy?.waiver_may_change_gate_status, false, `${relativePath}: input.gate_policy.waiver_may_change_gate_status`, errors);
+  verifyA18GateGraph(input?.gate_graph, `${relativePath}: input.gate_graph`, errors, false);
+  verifyEqualReference(input?.gate_evaluation?.evidence_manifest_id, input?.evidence_manifest?.id, `${relativePath}: input.gate_evaluation.evidence_manifest_id`, errors);
+  verifyEqualReference(input?.gate_decision?.evaluation_id, input?.gate_evaluation?.id, `${relativePath}: input.gate_decision.evaluation_id`, errors);
+  verifyEqualReference(input?.waiver?.decision_id, input?.gate_decision?.id, `${relativePath}: input.waiver.decision_id`, errors);
+  verifyEqualReference(input?.release_disposition?.decision_id, input?.gate_decision?.id, `${relativePath}: input.release_disposition.decision_id`, errors);
+  verifyEqualReference(input?.release_disposition?.waiver_id, input?.waiver?.id, `${relativePath}: input.release_disposition.waiver_id`, errors);
+  verifyEqualReference(input?.production_response?.disposition_id, input?.release_disposition?.id, `${relativePath}: input.production_response.disposition_id`, errors);
+
+  const checks = asArray(input?.gate_evaluation?.checks);
+  const blockingCriticalIds = checks.filter((check) => check?.critical && ["failed", "inconclusive", "blocked", "invalid"].includes(check?.status)).map((check) => check?.id);
+  if (blockingCriticalIds.length > 0 && input?.gate_evaluation?.result?.status !== "blocked") errors.push(`${relativePath}: critical failed or inconclusive check requires blocked`);
+  if (blockingCriticalIds.length > 0) verifyMatchingIdSet(input?.gate_evaluation?.result?.blocking_check_ids, blockingCriticalIds, `${relativePath}: result.blocking_check_ids`, errors);
+  if (input?.gate_decision?.status !== input?.gate_evaluation?.result?.status) errors.push(`${relativePath}: gate decision status must equal gate evaluation result status`);
+  verifyA17Boolean(input?.gate_decision?.immutable, true, `${relativePath}: input.gate_decision.immutable`, errors);
+  verifyA17Boolean(input?.gate_decision?.system_release_claim_allowed, false, `${relativePath}: system_release_claim_allowed must be false for synthetic evidence`, errors);
+
+  if (input?.gate_evaluation?.result?.status === "partial") {
+    const resultAllowed = verifyNonEmptyStringArray(input?.gate_evaluation?.result?.allowed_scope, `${relativePath}: partial allowed_scope`, errors);
+    verifyNonEmptyStringArray(input?.gate_evaluation?.result?.prohibited_scope, `${relativePath}: partial prohibited_scope`, errors);
+    const decisionAllowed = verifyNonEmptyStringArray(input?.gate_decision?.allowed_scope, `${relativePath}: gate decision allowed_scope`, errors);
+    verifyNonEmptyStringArray(input?.gate_decision?.prohibited_scope, `${relativePath}: gate decision prohibited_scope`, errors);
+    verifyNonEmptyStringArray(input?.gate_decision?.scope_enforcement_controls, `${relativePath}: scope_enforcement_controls`, errors);
+    verifyMatchingIdSet(decisionAllowed, resultAllowed, `${relativePath}: gate decision allowed_scope`, errors);
+    const prerequisiteScopes = asArray(input?.evidence_manifest?.prerequisite_gates).map((gate) => new Set(asArray(gate?.allowed_scope)));
+    const intersection = prerequisiteScopes.length ? [...prerequisiteScopes[0]].filter((item) => prerequisiteScopes.every((scope) => scope.has(item))) : [];
+    for (const item of decisionAllowed) if (!intersection.includes(item)) errors.push(`${relativePath}: gate decision allowed_scope outside prerequisite intersection: ${item}`);
+  }
+
+  verifyA17Boolean(input?.waiver?.may_modify_gate_status, false, `${relativePath}: waiver.may_modify_gate_status`, errors);
+  const nonwaivableCritical = asArray(input?.quality_baseline?.requirements).some((requirement) => requirement?.critical && requirement?.waiver_allowed === false && ["failed", "inconclusive"].includes(checks.find((check) => check?.role === requirement?.role)?.status));
+  if (input?.waiver?.status === "approved") {
+    if (nonwaivableCritical) errors.push(`${relativePath}: nonwaivable critical requirement cannot have an approved waiver`);
+    verifyNonEmptyString(input?.waiver?.expires_at, `${relativePath}: approved waiver requires expires_at`, errors);
+  }
+
+  if (input?.release_disposition?.quality_status !== input?.gate_decision?.status) errors.push(`${relativePath}: release quality_status must equal gate decision status`);
+  if (input?.release_disposition?.real_deployment_authorization !== false) errors.push(`${relativePath}: synthetic evidence cannot authorize real deployment`);
+  const decisionProhibited = new Set(asArray(input?.gate_decision?.prohibited_scope));
+  const releaseOnlyOperationalScopes = new Set(["synthetic_shadow_no_side_effects", "internal_legal_team", "offline_root_cause_analysis", "isolated_harness_replay"]);
+  const decisionAllowed = new Set(asArray(input?.gate_decision?.allowed_scope));
+  for (const item of asArray(input?.release_disposition?.allowed_scope)) {
+    if (decisionProhibited.has(item) || (!decisionAllowed.has(item) && !releaseOnlyOperationalScopes.has(item))) errors.push(`${relativePath}: release allowed_scope outside gate decision: ${item}`);
+  }
+
+  for (const required of ["freeze", "revoke", "rollback", "preserve_evidence", "require_reevaluation"]) verifyA18RequiredAction(input?.production_response?.hard_event_actions, required, `${relativePath}: input.production_response.hard_event_actions`, errors);
+  for (const required of ["harness_replay", "scenario_family_expansion", "protected_regression"]) {
+    const items = asArray(input?.production_response?.incident_to_evaluation);
+    const present = required === "scenario_family_expansion" ? items.some((item) => String(item).includes("scenario_family_expansion")) : required === "protected_regression" ? items.some((item) => String(item).includes("protected") && String(item).includes("regression")) : items.includes(required);
+    if (!present) errors.push(`${relativePath}: input.production_response.incident_to_evaluation missing required ${required}`);
+  }
+
+  const knownIds = collectNestedIds(input);
+  for (const ids of Object.values(value?.references ?? {})) for (const id of asArray(ids)) knownIds.add(id);
+  const tracedIds = new Set();
+  for (const [index, trace] of asArray(value?.expected?.trace_closure).entries()) {
+    verifyNonEmptyString(trace?.id, `${relativePath}: expected.trace_closure[${index}].id`, errors);
+    const links = verifyStringIdList(trace?.links, `${relativePath}: expected.trace_closure[${index}].links`, errors);
+    verifyReferencesKnown(links, knownIds, `${relativePath}: expected.trace_closure[${index}].links`, errors, tracedIds);
+  }
+  for (const ids of Object.values(value?.references ?? {})) for (const id of asArray(ids)) if (!tracedIds.has(id)) errors.push(`${relativePath}: reference ${id} is not covered by expected.trace_closure`);
+}
+
 function verifyA16GlobalScorerIdentityUniqueness(exampleValues, errors) {
   const seen = new Map();
   for (const [relativePath, value] of exampleValues) {
@@ -5070,6 +5485,8 @@ export async function verifyAcademyUnit(unitDir) {
       verifyReferenceToScorerCase(value, examplePath, errors);
     } else if (profileName === "score-to-metric-v1") {
       verifyScoreToMetricCase(value, examplePath, errors);
+    } else if (profileName === "evidence-to-quality-decision-v1") {
+      verifyEvidenceToQualityDecisionCase(value, examplePath, errors);
     }
   }
 
@@ -5090,12 +5507,14 @@ export async function verifyAcademyUnit(unitDir) {
     verifyReferenceToScorerTemplates(templateValues, errors);
   } else if (profileName === "score-to-metric-v1") {
     verifyScoreToMetricTemplates(templateValues, errors);
+  } else if (profileName === "evidence-to-quality-decision-v1") {
+    verifyEvidenceToQualityDecisionTemplates(templateValues, errors);
   }
 
   await verifyHtml(
     resolvedUnitDir,
     errors,
-    ["task-scenario-to-evaluation-data-v1", "reference-to-scorer-v1", "score-to-metric-v1"].includes(profileName),
+    ["task-scenario-to-evaluation-data-v1", "reference-to-scorer-v1", "score-to-metric-v1", "evidence-to-quality-decision-v1"].includes(profileName),
   );
   return errors;
 }

@@ -1,0 +1,32 @@
+schema_version: 1
+kind: GateEvaluation
+metadata: {id: evaluation.refund.a18, name: 退款 Agent 设计阶段门禁评估, version: 1.0.0}
+mode: design-only
+gate_policy_id: policy.refund.release.a18
+gate_dependency_graph_id: graph.refund.a18
+evidence_manifest_id: evidence.refund.a18
+target_identity_id: target.refund-agent.candidate
+scope:
+  languages: [zh-CN]
+  jurisdictions: [CN]
+  task_families: [eligible_refund, policy_boundary]
+checks:
+  - {id: check.refund.identity.a18, rule_id: prerequisite.target, category: prerequisite, critical: true, status: blocked, reason_type: evidence_not_materialized, evidence_ids: []}
+  - {id: check.refund.data.a18, rule_id: prerequisite.data, category: prerequisite, critical: true, status: blocked, reason_type: evidence_not_materialized, evidence_ids: []}
+  - {id: check.refund.harness.a18, rule_id: prerequisite.harness, category: prerequisite, critical: true, status: blocked, reason_type: evidence_not_materialized, evidence_ids: []}
+  - {id: check.refund.scorer.a18, rule_id: prerequisite.scorer, category: prerequisite, critical: true, status: blocked, reason_type: evidence_not_materialized, evidence_ids: []}
+  - {id: check.refund.metric.a18, rule_id: prerequisite.metric, category: prerequisite, critical: true, status: blocked, reason_type: evidence_not_materialized, evidence_ids: []}
+  - {id: check.refund.capability.a18, rule_id: rule.refund.capability.a18, category: primary, critical: false, status: blocked, reason_type: estimate_not_materialized, evidence_ids: []}
+  - {id: check.refund.unauthorized.a18, rule_id: rule.refund.unauthorized.a18, category: critical_safety, critical: true, status: blocked, reason_type: estimate_not_materialized, evidence_ids: []}
+  - {id: check.refund.coverage.a18, rule_id: rule.refund.coverage.a18, category: evidence_quality, critical: true, status: blocked, reason_type: estimate_not_materialized, evidence_ids: []}
+result:
+  status: blocked
+  blocking_check_ids: [check.refund.identity.a18, check.refund.data.a18, check.refund.harness.a18, check.refund.scorer.a18, check.refund.metric.a18, check.refund.capability.a18, check.refund.unauthorized.a18, check.refund.coverage.a18]
+  failed_check_ids: []
+  inconclusive_check_ids: []
+  invalid_check_ids: []
+  partial_scope: null
+  reason_type: evidence_not_materialized
+truthfulness:
+  synthetic_or_design_only: true
+  real_system_quality_claim_allowed: false

@@ -1,0 +1,28 @@
+schema_version: 1
+kind: GateDependencyGraph
+metadata: {id: graph.refund.a18, name: 退款 Agent 多层质量门禁依赖图, version: 1.0.0}
+nodes:
+  - {id: gate.target.refund.a18, type: target, required: true}
+  - {id: gate.data.refund.a18, type: data, required: true}
+  - {id: gate.harness.refund.a18, type: harness, required: true}
+  - {id: gate.scorer.refund.a18, type: scorer, required: true}
+  - {id: gate.metric.refund.a18, type: metric, required: true}
+  - {id: gate.system.refund.a18, type: system, required: true}
+  - {id: gate.release.refund.a18, type: release, required: true}
+edges:
+  - {from: gate.target.refund.a18, to: gate.data.refund.a18, relationship: prerequisite}
+  - {from: gate.target.refund.a18, to: gate.harness.refund.a18, relationship: prerequisite}
+  - {from: gate.data.refund.a18, to: gate.metric.refund.a18, relationship: evidence_scope}
+  - {from: gate.harness.refund.a18, to: gate.scorer.refund.a18, relationship: evidence_input}
+  - {from: gate.scorer.refund.a18, to: gate.metric.refund.a18, relationship: score_validity}
+  - {from: gate.metric.refund.a18, to: gate.system.refund.a18, relationship: estimate_validity}
+  - {from: gate.system.refund.a18, to: gate.release.refund.a18, relationship: quality_decision}
+graph_rules:
+  acyclic_required: true
+  all_edges_must_reference_nodes: true
+  required_nodes_must_reach_release: true
+propagation:
+  invalid: downstream_invalid
+  blocked: downstream_cannot_be_ready
+  partial: downstream_scope_intersection
+  ready: downstream_requires_independent_evaluation

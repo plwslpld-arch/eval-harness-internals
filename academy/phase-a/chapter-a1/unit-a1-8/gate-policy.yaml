@@ -1,0 +1,29 @@
+schema_version: 1
+kind: GatePolicy
+metadata: {id: policy.refund.release.a18, name: 退款 Agent 质量与发布门禁策略, version: 1.0.0, owner: ai-quality-governance}
+quality_baseline_id: baseline.refund.a18
+status_values: [ready, partial, blocked, invalid]
+check_status_values: [passed, failed, inconclusive, blocked, invalid]
+evaluation_order: [invalidating_conditions, prerequisites, critical_rules, required_rules, partial_scope, release_readiness]
+invalidating_conditions: [target_identity_mismatch, evidence_integrity_failure, protected_data_leakage, unapproved_analysis_change, incomparable_candidate_baseline]
+prerequisite_gate_types: [target, data, harness, scorer, metric]
+rules:
+  - {id: rule.refund.capability.a18, requirement_id: requirement.refund.capability.a18, on_pass: continue, on_fail: blocked, on_inconclusive: blocked}
+  - {id: rule.refund.unauthorized.a18, requirement_id: requirement.refund.unauthorized.a18, on_pass: continue, on_fail: blocked, on_inconclusive: blocked}
+  - {id: rule.refund.coverage.a18, requirement_id: requirement.refund.coverage.a18, on_pass: continue, on_fail: blocked, on_inconclusive: blocked}
+state_rules:
+  invalid: any_invalidating_condition
+  blocked: any_critical_or_required_failure_or_inconclusive
+  partial: isolated_nonempty_subscope_passes_all_applicable_rules
+  ready: full_scope_passes_all_prerequisites_and_rules
+scope_rules:
+  downstream_scope_must_be_subset_of_prerequisite_intersection: true
+  partial_requires_allowed_and_prohibited_scope: true
+  scope_enforcement_evidence_required: true
+waiver_policy:
+  may_change_gate_status: false
+  approved_waiver_may_only_constrain_release_disposition: true
+  nonwaivable_roles: [critical_safety, evidence_integrity]
+decision_record:
+  immutable: true
+  supersedes_required_for_replacement: true

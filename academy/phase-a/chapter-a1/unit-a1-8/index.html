@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Evalorium A1.8：从评测证据到可审计、可执行、可回滚的企业 AI 质量决策。">
+  <title>A1.8 从评测证据到质量决策 · Evalorium</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07111f; --panel:#101d30; --line:#29405d; --text:#eaf2ff; --muted:#a9bad0; --cyan:#4de1d2; --amber:#ffc766; --red:#ff7c8d; --blue:#82adff; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; font-family:Inter,"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif; background:radial-gradient(circle at 80% 0,#18345d 0,transparent 32rem),var(--bg); color:var(--text); line-height:1.72; }
+    a { color:var(--cyan); }
+    header,main,footer { width:min(1120px,calc(100% - 32px)); margin:auto; }
+    header { padding:72px 0 34px; }
+    .eyebrow { color:var(--cyan); font-weight:750; letter-spacing:.14em; text-transform:uppercase; }
+    h1 { max-width:850px; margin:.35rem 0 1rem; font-size:clamp(2.25rem,7vw,5rem); line-height:1.04; letter-spacing:-.04em; }
+    h2 { margin:0 0 1rem; font-size:clamp(1.45rem,3vw,2.15rem); }
+    h3 { margin:.3rem 0; }
+    p { color:var(--muted); }
+    .lead { max-width:780px; font-size:1.16rem; }
+    .notice { border-left:4px solid var(--amber); padding:12px 16px; background:#ffc76612; color:#ffe4ad; }
+    nav { display:flex; flex-wrap:wrap; gap:9px; margin-top:26px; }
+    nav a,.tag { border:1px solid var(--line); border-radius:999px; padding:7px 12px; text-decoration:none; color:var(--text); background:#ffffff08; }
+    section { margin:24px 0; padding:clamp(22px,4vw,40px); border:1px solid var(--line); border-radius:24px; background:linear-gradient(145deg,#13243aaa,#0b1728e8); box-shadow:0 18px 50px #0005; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(235px,1fr)); gap:14px; }
+    .card { padding:18px; border:1px solid var(--line); border-radius:16px; background:#07132199; }
+    .card p { margin:.35rem 0 0; }
+    .flow { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; align-items:stretch; }
+    .step { position:relative; padding:16px 10px; border:1px solid #356082; border-radius:13px; background:#102841; text-align:center; font-weight:700; }
+    .step:not(:last-child)::after { content:"→"; position:absolute; right:-13px; z-index:2; color:var(--cyan); }
+    .status-ready { border-top:3px solid var(--cyan); }
+    .status-partial { border-top:3px solid var(--amber); }
+    .status-blocked { border-top:3px solid var(--red); }
+    .status-invalid { border-top:3px solid var(--blue); }
+    table { width:100%; border-collapse:collapse; overflow:hidden; }
+    th,td { padding:11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:var(--cyan); }
+    code { color:#bce7ff; }
+    .contract-list { columns:2; padding-left:1.2rem; }
+    footer { padding:34px 0 58px; color:var(--muted); }
+    @media (max-width:760px) { .flow { grid-template-columns:1fr; } .step:not(:last-child)::after { content:"↓"; right:auto; bottom:-20px; left:50%; } .contract-list { columns:1; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Evalorium Academy · A1.8</div>
+    <h1>从评测证据到质量决策</h1>
+    <p class="lead">把模型分数升级为可审计的 Gate Decision，把 Gate Decision 接入发布授权、生产监控与事故回流。</p>
+    <p class="notice">本页使用合成教学材料。它不表示任何真实系统已通过评测或获得生产发布授权。</p>
+    <nav aria-label="页面导航">
+      <a href="#chain">决策链</a><a href="#baseline">质量基线</a><a href="#dag">Gate DAG</a><a href="#governance">治理</a><a href="#cases">案例</a><a href="#contracts">契约</a><a href="README.md">完整教程</a>
+    </nav>
+  </header>
+  <main>
+    <section id="chain">
+      <h2>一条结果，不能直接变成发布决定</h2>
+      <div class="flow" aria-label="质量决策链">
+        <div class="step">Estimate</div><div class="step">Evidence<br>Assessment</div><div class="step">Gate<br>Evaluation</div><div class="step">Gate<br>Decision</div><div class="step">Release<br>Action</div>
+      </div>
+      <p>统计估计回答能力或风险问题；证据评估确认样本与评测链是否有效；门禁依据预先批准的策略计算；质量决定形成不可变记录；发布动作再叠加权限、环境和运行控制。</p>
+    </section>
+    <section id="baseline">
+      <h2>Quality Baseline + Gate Policy</h2>
+      <div class="grid">
+        <article class="card"><h3>Primary</h3><p>核心能力达到预设目标，按问题类型使用差值、阈值和不确定性判定。</p></article>
+        <article class="card"><h3>Critical Safety</h3><p>关键安全风险采用否决规则，不允许由高平均分补偿。</p></article>
+        <article class="card"><h3>Evidence Quality</h3><p>覆盖率、缺失率、有效样本与身份一致性决定证据是否可用。</p></article>
+        <article class="card"><h3>Required Slice</h3><p>重要语言、用户群、任务和边界场景必须独立受约束。</p></article>
+      </div>
+      <p>阈值应在查看候选结果前批准。点估计越线但置信区间仍跨越阈值时，结论是 <code>inconclusive</code>，不是勉强通过。</p>
+    </section>
+    <section>
+      <h2>三值检查，四值质量状态</h2>
+      <div class="grid">
+        <article class="card status-ready"><h3>ready</h3><p>身份与证据有效，所有必需检查通过。</p></article>
+        <article class="card status-partial"><h3>partial</h3><p>只有可强制隔离且完整通过的子范围可用。</p></article>
+        <article class="card status-blocked"><h3>blocked</h3><p>要求失败，或关键要求证据不足。</p></article>
+        <article class="card status-invalid"><h3>invalid</h3><p>候选、数据、Harness、Scorer、Metric 或作用域身份不一致。</p></article>
+      </div>
+      <p><code>passed / failed / inconclusive</code> 描述单项检查；<code>ready / partial / blocked / invalid</code> 描述整体质量状态。关键检查的 <code>inconclusive</code> 必须阻断发布，但后续动作通常是补证据，而不是把它伪装成失败。</p>
+    </section>
+    <section id="dag">
+      <h2>Gate DAG：阻止坏证据向下游传播</h2>
+      <table>
+        <thead><tr><th>Gate</th><th>验证对象</th><th>典型失效</th></tr></thead>
+        <tbody>
+          <tr><td>Target</td><td>候选模型、提示、工具和配置身份</td><td>评测对象与拟发布对象不同</td></tr>
+          <tr><td>Data</td><td>数据版本、覆盖、污染与适用范围</td><td>过期、泄漏或关键切片缺失</td></tr>
+          <tr><td>Harness</td><td>环境、执行语义、隔离与追踪</td><td>工具副作用或复验不一致</td></tr>
+          <tr><td>Scorer</td><td>评分器身份、校准和适用条件</td><td>Judge 漂移或偏差超限</td></tr>
+          <tr><td>Metric</td><td>聚合、区间和决策问题</td><td>用错分母或只看点估计</td></tr>
+          <tr><td>System</td><td>跨能力、安全、稳定性与成本要求</td><td>局部通过被错误推广</td></tr>
+          <tr><td>Release</td><td>授权、范围、灰度和回滚条件</td><td>质量结论被当成部署权限</td></tr>
+        </tbody>
+      </table>
+      <p>上游 <code>invalid</code> 或 <code>blocked</code> 时，下游不能 <code>ready</code>；上游 <code>partial</code> 时，下游允许范围只能取所有前置范围的交集。</p>
+    </section>
+    <section id="governance">
+      <h2>Partial 和 Waiver 不是放宽标准</h2>
+      <div class="grid">
+        <article class="card"><h3>Partial</h3><p>要求允许范围、禁止范围和可验证的隔离控制。允许范围不能超过任何前置 Gate。</p></article>
+        <article class="card"><h3>Waiver</h3><p>独立记录临时风险接受，包含负责人、最小范围、补偿控制和到期时间；不能改写 Gate。</p></article>
+        <article class="card"><h3>Override</h3><p>有权限主体改变自动化动作，必须罕见、强审计，并保留原始证据与决定。</p></article>
+        <article class="card"><h3>Risk Acceptance</h3><p>治理主体明确接受剩余风险，不等于评测通过，也不能用于不可豁免风险。</p></article>
+      </div>
+    </section>
+    <section>
+      <h2>CI/CD 与生产质量闭环</h2>
+      <p>流水线应冻结候选身份、选择匹配资产、运行 Harness、物化证据、等待异步评测、验证闭环、生成不可变决定，再由独立发布授权执行受限发布或禁止。生产硬事件直接触发冻结、撤销、回滚和证据保全；事故经过脱敏与场景族扩展后回流为评测和回归资产。</p>
+    </section>
+    <section id="cases">
+      <h2>三个合成决策案例</h2>
+      <div class="grid">
+        <article class="card status-blocked"><h3>退款 Agent · blocked</h3><p>核心能力通过，但未授权退款率的关键证据不足。</p><a href="examples/refund-agent/evaluation-case.yaml">查看案例</a></article>
+        <article class="card status-partial"><h3>合同 Agent · partial</h3><p>仅中文、正文、机器可读、风险初筛子范围完整通过并可隔离。</p><a href="examples/contract-agent/evaluation-case.yaml">查看案例</a></article>
+        <article class="card status-blocked"><h3>知识助手 · blocked</h3><p>答案质量通过，但 ACL 关键检查失败且不可豁免。</p><a href="examples/knowledge-assistant/evaluation-case.yaml">查看案例</a></article>
+      </div>
+    </section>
+    <section id="contracts">
+      <h2>可复用机器契约</h2>
+      <ul class="contract-list">
+        <li><a href="quality-baseline.yaml">Quality Baseline</a></li>
+        <li><a href="gate-policy.yaml">Gate Policy</a></li>
+        <li><a href="gate-dependency-graph.yaml">Gate Dependency Graph</a></li>
+        <li><a href="evidence-manifest.yaml">Evidence Manifest</a></li>
+        <li><a href="gate-evaluation.yaml">Gate Evaluation</a></li>
+        <li><a href="gate-decision.yaml">Gate Decision</a></li>
+        <li><a href="waiver-request.yaml">Waiver Request</a></li>
+        <li><a href="release-disposition.yaml">Release Disposition</a></li>
+        <li><a href="production-response-policy.yaml">Production Response Policy</a></li>
+      </ul>
+    </section>
+  </main>
+  <footer>Evidence boundary: public lesson + machine-readable contracts + synthetic fixtures; no real evaluation, release, production, or personal-certification claim.</footer>
+</body>
+</html>

@@ -1,0 +1,40 @@
+schema_version: 1
+kind: DecisionEvidenceManifest
+metadata: {id: evidence.refund.a18, name: 退款 Agent 质量决策证据清单, version: 1.0.0}
+classification: design-only
+materialized: false
+target:
+  identity_id: target.refund-agent.candidate
+  identity_status: planned-not-materialized
+upstream:
+  dataset_version_id: dataset.refund.a15.v1
+  harness_identity_id: harness.refund.a18.planned
+  scorer_identity_id: scorer-identity.refund.a16
+  scorer_quality_gate_id: gate.refund.scorer.a16
+  metric_definition_ids: [metric.refund.eligible-completion.a17, metric.refund.unauthorized-rate.a17, metric.refund.scorable-coverage.a17]
+  estimate_record_ids: [estimate.refund.rc3.a17]
+  comparison_report_ids: [comparison.refund.rc3-vs-v1.a17]
+  metric_quality_gate_ids: [gate.refund.metric.a17]
+prerequisite_gate_decisions:
+  - {id: decision.target.refund.a18.planned, gate_type: target, status: blocked}
+  - {id: decision.data.refund.a18.planned, gate_type: data, status: blocked}
+  - {id: decision.harness.refund.a18.planned, gate_type: harness, status: blocked}
+  - {id: decision.scorer.refund.a18.planned, gate_type: scorer, status: blocked}
+  - {id: decision.metric.refund.a18.planned, gate_type: metric, status: blocked}
+artifacts:
+  score_bundle: not-materialized
+  estimate_bundle: not-materialized
+  execution_bundle: not-materialized
+  integrity_hashes: []
+integrity:
+  identity_reconciled: false
+  references_closed: true
+  protected_reference_isolated: design-contract-only
+  evidence_independent_from_policy_approval: false
+scope:
+  languages: [zh-CN]
+  jurisdictions: [CN]
+  task_families: [eligible_refund, policy_boundary]
+evidence_boundary:
+  proves: [质量决策所需证据身份与接口已定义]
+  does_not_prove: [真实评测已执行, 真实 Estimate 有效, 系统可发布, 生产质量, 个人能力]

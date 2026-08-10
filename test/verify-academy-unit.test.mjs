@@ -140,6 +140,11 @@ const A17_UNIT = path.resolve(
   "../academy/phase-a/chapter-a1/unit-a1-7",
 );
 
+const A18_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a1/unit-a1-8",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -2744,4 +2749,196 @@ test("A1.7 HTML cannot link to a missing local artifact", async () => {
   const htmlPath = path.join(root, "index.html");
   await writeFile(htmlPath, (await readFile(htmlPath, "utf8")).replace("metric-definition.yaml", "missing-metric.yaml"));
   assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-metric\.yaml/);
+});
+
+test("an A1.8 evidence-to-quality-decision profile requires every template and domain case", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    `schema_version: 1
+unit: {id: A1.8, title: 从评测证据到质量决策, phase: A, chapter: A1}
+publication: {status: candidate, language: zh-CN, formats: [markdown, html, yaml]}
+contents:
+  lesson: README.md
+  html: index.html
+  templates: []
+  examples: []
+verification: {profile: evidence-to-quality-decision-v1}
+`,
+  );
+
+  const report = (await verifyAcademyUnit(root)).join("\n");
+
+  assert.match(report, /profile evidence-to-quality-decision-v1 requires quality-baseline\.yaml/);
+  assert.match(report, /profile evidence-to-quality-decision-v1 requires gate-dependency-graph\.yaml/);
+  assert.match(report, /profile evidence-to-quality-decision-v1 requires production-response-policy\.yaml/);
+  assert.match(report, /profile evidence-to-quality-decision-v1 requires examples\/knowledge-assistant\/evaluation-case\.yaml/);
+});
+
+test("the complete A1.8 evidence-to-quality-decision candidate is accepted", async () => {
+  assert.deepEqual(await verifyAcademyUnit(A18_UNIT), []);
+});
+
+test("A1.8 keeps critical requirements noncompensatory and nonwaivable", async () => {
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-baseline-");
+  await mutateYaml(root, "quality-baseline.yaml", (value) => {
+    value.metric_requirements[1].compensatable = true;
+    value.metric_requirements[1].waiver_allowed = true;
+    value.combination.weighted_composite_may_override_critical = true;
+    value.evidence_requirements.materialized_evidence_required_for_ready = false;
+    value.evidence_requirements.inconclusive_required_rule_treatment = "passed";
+  });
+  await mutateYaml(root, "gate-policy.yaml", (value) => {
+    value.waiver_policy.may_change_gate_status = true;
+    value.decision_record.immutable = false;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /critical requirement.*compensatable must be false/);
+  assert.match(report, /critical requirement.*waiver_allowed must be false/);
+  assert.match(report, /weighted_composite_may_override_critical must be false/);
+  assert.match(report, /materialized_evidence_required_for_ready must be true/);
+  assert.match(report, /inconclusive_required_rule_treatment must be blocked/);
+  assert.match(report, /waiver_policy\.may_change_gate_status must be false/);
+  assert.match(report, /decision_record\.immutable must be true/);
+});
+
+test("A1.8 Gate DAG rejects cycles, dangling edges and missing release paths", async () => {
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-dag-");
+  await mutateYaml(root, "gate-dependency-graph.yaml", (value) => {
+    value.edges.push({from: "gate.release.refund.a18", to: "gate.target.refund.a18", relationship: "cycle"});
+    value.edges.push({from: "gate.unknown.refund.a18", to: "gate.release.refund.a18", relationship: "dangling"});
+    value.nodes = value.nodes.filter((node) => node.type !== "system");
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /nodes\.type: missing related id system/);
+  assert.match(report, /edges.*unknown node gate\.unknown\.refund\.a18/);
+  assert.match(report, /graph must be acyclic/);
+  assert.match(report, /required node.*cannot reach release/);
+});
+
+test("A1.8 design-only evidence cannot create a ready decision or real release authorization", async () => {
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-truth-");
+  await mutateYaml(root, "evidence-manifest.yaml", (value) => {
+    value.materialized = true;
+    value.integrity.identity_reconciled = true;
+  });
+  await mutateYaml(root, "gate-evaluation.yaml", (value) => {
+    value.result.status = "ready";
+    value.result.blocking_check_ids = [];
+    value.truthfulness.real_system_quality_claim_allowed = true;
+  });
+  await mutateYaml(root, "gate-decision.yaml", (value) => {
+    value.status = "blocked";
+    value.validity.effective = true;
+    value.reasons.blocking_check_ids = [];
+  });
+  await mutateYaml(root, "release-disposition.yaml", (value) => {
+    value.quality_status = "ready";
+    value.status = "authorized";
+    value.authorization.real_deployment_authorization = true;
+    value.validity.effective = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /design-only evidence\.materialized must be false/);
+  assert.match(report, /ready requires every check to be passed/);
+  assert.match(report, /real_system_quality_claim_allowed must be false/);
+  assert.match(report, /gate decision status must equal gate evaluation result status/);
+  assert.match(report, /design-only evidence cannot authorize real deployment/);
+});
+
+test("A1.8 case references preserve canonical upstream identities and trace closure", async () => {
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-case-trace-");
+  await mutateYaml(root, relativePath, (value) => {
+    value.references.upstream_scorer_identity_ids = ["scorer-identity.contract.a16"];
+    value.expected.trace_closure[0].links = value.expected.trace_closure[0].links.filter(
+      (id) => id !== value.references.upstream_dataset_ids[0],
+    );
+    value.expected.trace_closure[0].links.push("decision.unknown.a18");
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /references\.upstream_scorer_identity_ids.*scorer-identity\.refund\.a16/);
+  assert.match(report, /reference dataset\.refund\.a15\.v1 is not covered by expected\.trace_closure/);
+  assert.match(report, /expected\.trace_closure\[0\]\.links: unknown id decision\.unknown\.a18/);
+});
+
+test("A1.8 critical failed or inconclusive checks block the case decision", async () => {
+  const relativePath = "examples/knowledge-assistant/evaluation-case.yaml";
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-critical-");
+  await mutateYaml(root, relativePath, (value) => {
+    value.input.gate_evaluation.result.status = "ready";
+    value.input.gate_evaluation.result.blocking_check_ids = [];
+    value.input.gate_decision.status = "ready";
+    value.input.gate_decision.system_release_claim_allowed = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /critical failed or inconclusive check requires blocked/);
+  assert.match(report, /result\.blocking_check_ids: missing required id check\.knowledge\.acl\.case\.a18/);
+  assert.match(report, /system_release_claim_allowed must be false for synthetic evidence/);
+});
+
+test("A1.8 partial decisions require enforceable nonexpanding scope", async () => {
+  const relativePath = "examples/contract-agent/evaluation-case.yaml";
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-partial-");
+  await mutateYaml(root, relativePath, (value) => {
+    value.input.gate_evaluation.result.prohibited_scope = [];
+    value.input.gate_decision.allowed_scope.push("en");
+    value.input.gate_decision.scope_enforcement_controls = [];
+    value.input.release_disposition.allowed_scope.push("external_release");
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /partial prohibited_scope: must be a non-empty array/);
+  assert.match(report, /gate decision allowed_scope.*outside prerequisite intersection: en/);
+  assert.match(report, /scope_enforcement_controls: must be a non-empty array/);
+  assert.match(report, /release allowed_scope.*outside gate decision: external_release/);
+});
+
+test("A1.8 waivers cannot rewrite gates or approve nonwaivable critical risk", async () => {
+  const relativePath = "examples/knowledge-assistant/evaluation-case.yaml";
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-waiver-");
+  await mutateYaml(root, relativePath, (value) => {
+    value.input.waiver.status = "approved";
+    value.input.waiver.eligible = true;
+    value.input.waiver.may_modify_gate_status = true;
+    value.input.waiver.expires_at = null;
+    value.input.release_disposition.quality_status = "ready";
+    value.input.release_disposition.status = "authorized";
+    value.input.release_disposition.real_deployment_authorization = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /nonwaivable critical requirement cannot have an approved waiver/);
+  assert.match(report, /waiver\.may_modify_gate_status must be false/);
+  assert.match(report, /approved waiver requires expires_at/);
+  assert.match(report, /release quality_status must equal gate decision status/);
+  assert.match(report, /synthetic evidence cannot authorize real deployment/);
+});
+
+test("A1.8 production response preserves evidence and feeds incidents back into evaluation", async () => {
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-production-");
+  await mutateYaml(root, "production-response-policy.yaml", (value) => {
+    value.signals.hard_events[0].critical = false;
+    value.actions.freeze = ["notify_only"];
+    value.actions.revoke = [];
+    value.actions.rollback = ["route_to_baseline"];
+    value.incident_to_evaluation.harness_replay_required = false;
+    value.incident_to_evaluation.protected_regression_required = false;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /hard_events\[0\]\.critical must be true/);
+  assert.match(report, /actions\.freeze.*preserve_evidence/);
+  assert.match(report, /actions\.revoke: must be a non-empty array/);
+  assert.match(report, /actions\.rollback.*require_reevaluation/);
+  assert.match(report, /harness_replay_required must be true/);
+  assert.match(report, /protected_regression_required must be true/);
+});
+
+test("A1.8 HTML cannot link to a missing local artifact", async () => {
+  const root = await copyUnit(A18_UNIT, "evalorium-a1-8-html-href-");
+  const htmlPath = path.join(root, "index.html");
+  await writeFile(
+    htmlPath,
+    (await readFile(htmlPath, "utf8")).replace("quality-baseline.yaml", "missing-baseline.yaml"),
+  );
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-baseline\.yaml/);
 });

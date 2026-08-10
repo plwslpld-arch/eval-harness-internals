@@ -1,0 +1,30 @@
+schema_version: 1
+kind: ProductionResponsePolicy
+metadata: {id: response.refund.a18, name: 退款 Agent 生产质量响应策略, version: 1.0.0}
+release_disposition_id: disposition.refund.a18
+target_identity_id: target.refund-agent.candidate
+status: design-only
+signals:
+  hard_events:
+    - {id: signal.refund.unauthorized.a18, trigger: count_greater_than_zero, critical: true}
+    - {id: signal.refund.duplicate.a18, trigger: count_greater_than_zero, critical: true}
+  window_metrics:
+    - {id: signal.refund.scorable-coverage.a18, window: 1h, minimum_support: 200, warning: below_0.995, freeze: below_0.99}
+    - {id: signal.refund.p95-latency.a18, window: 1h, minimum_support: 200, warning: above_5s, rollback: above_7s}
+actions:
+  warning: [notify_quality_owner, increase_review_sampling]
+  freeze: [stop_traffic_expansion, preserve_evidence, open_investigation]
+  revoke: [revoke_deployment_authorization, prohibit_redeployment]
+  rollback: [route_to_baseline, create_incident, require_reevaluation]
+incident_to_evaluation:
+  preserve_identity_and_trajectory: true
+  harness_replay_required: true
+  scenario_family_expansion_required: true
+  protected_regression_required: true
+  quality_baseline_review_required: true
+monitoring_health:
+  minimum_trace_capture: 0.995
+  minimum_identity_reconciliation: 1.0
+  detector_validation_required: true
+limitations:
+  - 该设计不证明生产监控、撤销或回滚控制已经实现
