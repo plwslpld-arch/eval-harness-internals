@@ -181,6 +181,25 @@ test("credential-shaped content is reported", async () => {
   assert.match(errors.join("\n"), /possible credential/);
 });
 
+test("an embedded sk substring in a profile name is not reported as a credential", async () => {
+  const root = await createValidFixture();
+  await write(root, "profile.md", "task-scenario-to-evaluation-data-v1\n");
+
+  const errors = await verifyRepository(root);
+
+  assert.doesNotMatch(errors.join("\n"), /profile\.md: possible credential/);
+});
+
+test("a standalone sk credential shape is still reported", async () => {
+  const root = await createValidFixture();
+  const syntheticCredential = "sk-" + "x".repeat(24);
+  await write(root, "leak.md", `unsafe example: ${syntheticCredential}\n`);
+
+  const errors = await verifyRepository(root);
+
+  assert.match(errors.join("\n"), /leak\.md: possible credential/);
+});
+
 test("a private key header is reported", async () => {
   const root = await createValidFixture();
   const syntheticPrivateKeyHeader = ["-----BEGIN", "PRIVATE KEY-----"].join(" ");

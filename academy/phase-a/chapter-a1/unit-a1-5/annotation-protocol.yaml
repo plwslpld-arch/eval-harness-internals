@@ -1,0 +1,45 @@
+schema_version: 1
+kind: AnnotationProtocol
+metadata: {id: annotation-protocol.example.v1, name: 独立盲标、分歧与仲裁模板, owner: annotation-lead, version: 1.0.0}
+dataset_charter_id: dataset-charter.example.v1
+reference_standard_id: reference-standard.example.v1
+traceability: {question_ids: [eq.example], risk_ids: [risk.example], task_ids: [task.example.v1], reference_item_ids: [reference.example.normal.v1]}
+annotation_units:
+  - {id: unit.example.task, level: task-opportunity, input_fields: [task-input, declared-state, authorized-source-spans], output_scope: labels-and-evidence-links, parent_key: parent-or-entity-id}
+label_schema:
+  - id: label.example.outcome
+    definition: 按参考标准判断预期结果类别，不评分候选系统表现
+    values: [complete, clarify, refuse, escalate, unresolved]
+    evidence_required: [reference-item-id, supporting-span-or-state, rationale]
+  - id: label.example.risk
+    definition: 该数据项覆盖的风险触发与失败机制
+    values: [present, absent, uncertain]
+    evidence_required: [risk-id, trigger-span-or-state]
+instructions:
+  preparation: [隐藏候选系统身份与输出, 固定参考标准版本, 随机化展示顺序, 提供最小授权上下文]
+  decision_rule: 只依据声明材料和不变量；缺失、冲突或越界时选择 unresolved 并记录原因
+  prohibited: [猜测缺失事实, 查看其他标注者结果, 用模型分数替代自身判断, 复制敏感原文到非授权字段]
+annotators:
+  qualification: {domain: documented-domain-competence, protocol_training: passed-calibration-set, conflicts_disclosed: true}
+  assignment: 不把同一 parent、实体或文档族的全部记录集中给单一标注者
+blind_independent_passes:
+  required_annotators: 2
+  blind_to: [candidate-system, candidate-output, other-annotator-label, split-destination]
+  independence_check: 每位标注者独立提交后才开放分歧信息
+disagreement:
+  detection: label-value-or-evidence-link-diff
+  categories: [instruction-ambiguity, source-conflict, missing-context, domain-judgment, clerical-error]
+  preserve_raw_labels: true
+  resolution_input: [raw-independent-labels, cited-evidence, disagreement-category]
+arbitration:
+  required_for: [critical-risk-disagreement, unresolved-source-conflict, split-protected-gate-item]
+  arbitrator_qualification: senior-domain-reviewer-without-original-label
+  method: 复核原始独立标签、权威材料和协议，不以多数票自动覆盖可解释分歧
+  outputs: [adjudicated-label, rationale, evidence-links, protocol-defect-if-any, refresh-action]
+quality_control:
+  calibration: 版本化校准集仅用于培训与监控，不进入受保护评测 split
+  audits: [随机双审, 关键风险全量双审, 证据链接完整性, 盲法与身份日志]
+  drift_action: 暂停批次、重新校准、评估受影响标签并生成新协议版本
+privacy_handling: {minimum_fields_only: true, redaction_before_assignment: true, access_logged: true, export_restricted: true}
+outputs: {record_fields: [item_id, annotator_pseudonym, protocol_version, labels, evidence_links, confidence_reason, submitted_at], adjudication_fields: [item_id, raw_label_ids, arbitrator, final_labels, rationale, evidence_links]}
+limitations: [协议定义标注过程但不证明标注已经完成, 一致性不等于效度, 本模板不实现 Scorer 或 Judge]

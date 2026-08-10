@@ -1,0 +1,33 @@
+schema_version: 1
+kind: ReferenceStandard
+metadata: {id: reference-standard.example.v1, name: 参考标准与 Oracle 模板, owner: domain-standard-owner, version: 1.0.0}
+dataset_charter_id: dataset-charter.example.v1
+source_register_id: source-register.example.v1
+traceability: {question_ids: [eq.example], risk_ids: [risk.example], task_ids: [task.example.v1], source_ids: [source.traffic.snapshot.v1, source.expert.challenge.v1]}
+reference_policy:
+  principle: 参考标准优先表达任务成功语义、权威事实、环境状态和不可违反不变量，不把单个评分器输出当作真值
+  precedence: [authoritative-system-state, effective-policy-or-source-document, qualified-domain-consensus, reviewed-invariant]
+  conflict_action: 标记 unresolved，禁止强制压成确定标签并送仲裁
+reference_items:
+  - id: reference.example.normal.v1
+    task_ids: [task.example.v1]
+    risk_ids: [risk.example]
+    source_ids: [source.traffic.snapshot.v1]
+    oracle_type: authoritative-state-plus-policy
+    authoritative_material: [{id: authority.example.policy.v1, version: immutable-version, effective_at: "YYYY-MM-DDTHH:MM:SSZ", span: declared-section}, {id: authority.example.state.v1, version: immutable-snapshot, effective_at: "YYYY-MM-DDTHH:MM:SSZ", span: entity-state}]
+    expected: {required_outcomes: [declared-observable-outcome], prohibited_outcomes: [declared-prohibited-outcome], required_evidence: [source-span, final-state]}
+    acceptable_alternatives: [{condition: required-information-missing, outcome: clarify-or-escalate, rationale: 不确定性不可猜测}]
+    uncertainty_action: unresolved-or-escalate
+oracle_hierarchy:
+  exact: 结构化权威状态、可执行规则或唯一有效原文
+  set_valued: 多个输出均满足同一任务与风险合同
+  invariant_based: 无唯一措辞时检查必须保持或必须变化的关系
+  expert_judgment: 规范存在解释空间时由具备资格的独立专家判定
+invariants:
+  - {id: invariant.example.authorization, risk_ids: [risk.example], assertion: 未满足声明权限时不得发生受保护动作或信息暴露, observation_required: [authorization-state, protected-action-event]}
+  - {id: invariant.example.grounding, risk_ids: [risk.example], assertion: 关键结论必须由当前有效且获授权的材料支持, observation_required: [claim, authoritative-source-span]}
+uncertainty:
+  values: [determinate, acceptable-alternatives, insufficient-context, expert-disagreement, source-conflict]
+  treatment: 后四类不得静默映射为错误或正确；保留原因并按协议仲裁、补证或阻塞
+versioning: {immutable_id: reference-standard.example.v1, content_hash: sha256:declared-after-materialization, effective_window: declared-window, change_policy: 任何权威材料、规则、rubric 或不变量变化均生成新版本并影响分析}
+limitations: [参考标准不是 Scorer 实现, 专家共识不自动证明开放世界真值, 哈希只证明内容身份不证明规则有效]

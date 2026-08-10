@@ -74,6 +74,23 @@ const VERIFICATION_PROFILES = {
       "examples/knowledge-assistant/evaluation-case.yaml",
     ],
   },
+  "task-scenario-to-evaluation-data-v1": {
+    templates: [
+      "dataset-charter.yaml",
+      "source-register.yaml",
+      "sampling-plan.yaml",
+      "reference-standard.yaml",
+      "annotation-protocol.yaml",
+      "split-manifest.yaml",
+      "dataset-manifest.yaml",
+      "data-quality-gate.yaml",
+    ],
+    examples: [
+      "examples/refund-agent/evaluation-case.yaml",
+      "examples/contract-agent/evaluation-case.yaml",
+      "examples/knowledge-assistant/evaluation-case.yaml",
+    ],
+  },
 };
 
 const CANONICAL_UNIT_PROFILES = {
@@ -81,9 +98,10 @@ const CANONICAL_UNIT_PROFILES = {
   "A1.2": "requirements-to-evidence-v1",
   "A1.3": "target-boundary-version-v1",
   "A1.4": "question-to-task-scenario-v1",
+  "A1.5": "task-scenario-to-evaluation-data-v1",
 };
 
-const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4"]);
+const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5"]);
 
 const TEMPLATE_CONTRACTS = {
   "artifact-manifest.yaml": {
@@ -195,6 +213,38 @@ const TEMPLATE_CONTRACTS = {
   "coverage-matrix.yaml": {
     kind: "CoverageMatrix",
     required: ["metadata.id", "scenario_space_id", "task_spec_id", "test_case_id", "items"],
+  },
+  "dataset-charter.yaml": {
+    kind: "DatasetCharter",
+    required: ["metadata.id", "purpose", "target_population", "unit_of_analysis", "partitions"],
+  },
+  "source-register.yaml": {
+    kind: "SourceRegister",
+    required: ["metadata.id", "dataset_charter_id", "sources"],
+  },
+  "sampling-plan.yaml": {
+    kind: "SamplingPlan",
+    required: ["metadata.id", "dataset_charter_id", "source_register_id", "sampling_frame", "allocation"],
+  },
+  "reference-standard.yaml": {
+    kind: "ReferenceStandard",
+    required: ["metadata.id", "dataset_charter_id", "reference_policy", "reference_items", "invariants", "uncertainty"],
+  },
+  "annotation-protocol.yaml": {
+    kind: "AnnotationProtocol",
+    required: ["metadata.id", "dataset_charter_id", "reference_standard_id", "label_schema", "blind_independent_passes", "disagreement", "arbitration"],
+  },
+  "split-manifest.yaml": {
+    kind: "SplitManifest",
+    required: ["metadata.id", "dataset_charter_id", "sampling_plan_id", "grouping_keys", "leakage_controls", "splits"],
+  },
+  "dataset-manifest.yaml": {
+    kind: "DatasetManifest",
+    required: ["metadata.id", "dataset_charter_id", "dataset_identity", "contents", "versioning", "drift_and_refresh"],
+  },
+  "data-quality-gate.yaml": {
+    kind: "DataQualityGate",
+    required: ["metadata.id", "dataset_manifest_id", "status_values", "checks", "decision.status"],
   },
 };
 
@@ -532,6 +582,86 @@ const PROFILE_CONTRACTS = {
         "evidence.requirements",
         "evidence.traceability",
         "evidence.limitations",
+      ],
+    },
+  },
+  "task-scenario-to-evaluation-data-v1": {
+    "dataset-charter.yaml": {
+      kind: "DatasetCharter",
+      required: [
+        "metadata.id", "metadata.version", "traceability.target_ids",
+        "traceability.construct_ids", "traceability.question_ids", "traceability.risk_ids",
+        "traceability.scenario_family_ids", "traceability.task_ids", "purpose", "target_population",
+        "unit_of_analysis", "sampling_frame", "partitions", "scope_controls",
+        "evidence_boundary",
+      ],
+    },
+    "source-register.yaml": {
+      kind: "SourceRegister",
+      required: ["metadata.id", "metadata.version", "dataset_charter_id", "traceability", "sources", "source_governance"],
+    },
+    "sampling-plan.yaml": {
+      kind: "SamplingPlan",
+      required: [
+        "metadata.id", "metadata.version", "dataset_charter_id", "source_register_id",
+        "traceability", "population", "sampling_frame", "strata", "selection",
+        "allocation", "deduplication", "weighting", "partition_assignment", "limitations",
+      ],
+    },
+    "reference-standard.yaml": {
+      kind: "ReferenceStandard",
+      required: [
+        "metadata.id", "metadata.version", "dataset_charter_id", "source_register_id",
+        "traceability", "reference_policy", "reference_items", "oracle_hierarchy",
+        "invariants", "uncertainty", "versioning", "limitations",
+      ],
+    },
+    "annotation-protocol.yaml": {
+      kind: "AnnotationProtocol",
+      required: [
+        "metadata.id", "metadata.version", "dataset_charter_id", "reference_standard_id",
+        "traceability", "annotation_units", "label_schema", "instructions", "annotators",
+        "blind_independent_passes", "disagreement", "arbitration", "quality_control",
+        "privacy_handling", "outputs", "limitations",
+      ],
+    },
+    "split-manifest.yaml": {
+      kind: "SplitManifest",
+      required: [
+        "metadata.id", "metadata.version", "dataset_charter_id", "sampling_plan_id",
+        "source_register_id", "traceability", "split_policy", "grouping_keys",
+        "leakage_controls", "splits", "assignment_audit", "limitations",
+      ],
+    },
+    "dataset-manifest.yaml": {
+      kind: "DatasetManifest",
+      required: [
+        "metadata.id", "metadata.version", "dataset_charter_id", "source_register_id",
+        "sampling_plan_id", "reference_standard_id", "annotation_protocol_id",
+        "split_manifest_id", "traceability", "dataset_identity", "contents", "item_schema",
+        "joins", "views.target", "views.harness", "views.scorer", "views.audit",
+        "partition_summary", "provenance_summary", "versioning",
+        "drift_and_refresh", "evidence_boundary", "limitations",
+      ],
+    },
+    "data-quality-gate.yaml": {
+      kind: "DataQualityGate",
+      required: [
+        "metadata.id", "metadata.version", "dataset_manifest_id", "traceability",
+        "status_values", "check_status_values", "checks", "decision.status", "exceptions", "limitations",
+      ],
+    },
+    example: {
+      kind: "EvaluationCase",
+      required: [
+        "metadata.id", "references.target_ids", "references.construct_ids",
+        "references.question_ids", "references.risk_ids", "references.scenario_family_ids",
+        "references.task_ids", "references.dataset_charter_ids", "references.source_ids",
+        "references.partition_ids", "references.reference_item_ids",
+        "references.annotation_protocol_ids", "references.split_ids",
+        "references.dataset_version_ids", "references.quality_gate_ids", "references.trace_ids",
+        "input", "expected.trace_closure", "expected.next_actions",
+        "evidence.design_artifacts", "evidence.traceability", "evidence.limitations",
       ],
     },
   },
@@ -2075,6 +2205,1194 @@ function verifyQuestionTaskScenarioCase(value, relativePath, errors) {
   }
 }
 
+const DATA_ROLES = new Set(["distribution", "challenge", "regression"]);
+const DATA_GATE_STATUSES = new Set(["ready", "partial", "blocked", "invalid"]);
+const DATA_CHECK_STATUSES = new Set(["passed", "partial", "blocked", "failed"]);
+const A15_UPSTREAM_FIELDS = [
+  "target_ids",
+  "construct_ids",
+  "question_ids",
+  "risk_ids",
+  "scenario_family_ids",
+  "task_ids",
+];
+const A15_CANONICAL_UPSTREAM = {
+  "examples/refund-agent/evaluation-case.yaml": {
+    target_ids: ["target.refund-agent.candidate"],
+    construct_ids: ["construct.refund.authorization", "construct.refund.state-safety"],
+    question_ids: ["eq.refund.safe"],
+    risk_ids: ["risk.refund.unauthorized", "risk.refund.duplicate"],
+    scenario_family_ids: [
+      "family.refund.normal",
+      "family.refund.boundary",
+      "family.refund.concurrent",
+    ],
+    task_ids: ["task.refund.execute"],
+  },
+  "examples/contract-agent/evaluation-case.yaml": {
+    target_ids: ["target.contract-agent.candidate"],
+    construct_ids: ["construct.contract.critical-recall", "construct.contract.span-grounding"],
+    question_ids: ["eq.contract.screen"],
+    risk_ids: ["risk.contract.omission", "risk.contract.fabrication"],
+    scenario_family_ids: [
+      "family.contract.explicit",
+      "family.contract.cross",
+      "family.contract.missing",
+    ],
+    task_ids: ["task.contract.screen"],
+  },
+  "examples/knowledge-assistant/evaluation-case.yaml": {
+    target_ids: ["target.knowledge-assistant.candidate"],
+    construct_ids: [
+      "construct.knowledge.groundedness",
+      "construct.knowledge.access-isolation",
+    ],
+    question_ids: ["eq.knowledge.answer"],
+    risk_ids: ["risk.knowledge.ungrounded", "risk.knowledge.acl"],
+    scenario_family_ids: [
+      "family.knowledge.current",
+      "family.knowledge.conflict",
+      "family.knowledge.unauthorized",
+    ],
+    task_ids: ["task.knowledge.answer"],
+  },
+};
+
+function verifyDecisionContainer(value, label, errors) {
+  if (typeof value === "string") return verifyNonEmptyString(value, label, errors);
+  if (Array.isArray(value)) return verifyNonEmptyArray(value, label, errors);
+  if (isNonEmptyObject(value)) return true;
+  errors.push(`${label}: must be a non-empty string, array or object`);
+  return false;
+}
+
+function verifyDataRoles(value, label, errors) {
+  if (!verifyNonEmptyArray(value, label, errors)) return [];
+  const roles = [];
+  for (const [index, entry] of value.entries()) {
+    const role = typeof entry === "string" ? entry : entry?.role ?? entry?.id;
+    if (!DATA_ROLES.has(role)) {
+      errors.push(`${label}[${index}]: role must be distribution, challenge or regression`);
+      continue;
+    }
+    roles.push(role);
+    if (isNonEmptyObject(entry)) {
+      verifyNonEmptyString(entry.purpose, `${label}[${index}].purpose`, errors);
+    }
+  }
+  for (const role of DATA_ROLES) {
+    if (!roles.includes(role)) errors.push(`${label}: missing required role ${role}`);
+  }
+  return roles;
+}
+
+function verifyAccessViews(value, label, errors) {
+  if (!verifyNonEmptyObject(value, label, errors)) return;
+  for (const view of ["target", "harness", "scorer", "audit"]) {
+    const viewValue = value[view];
+    if (verifyNonEmptyObject(viewValue, `${label}.${view}`, errors)) {
+      const allowed = verifyNonEmptyStringArray(
+        viewValue.allowed_fields,
+        `${label}.${view}.allowed_fields`,
+        errors,
+      );
+      const prohibited = verifyNonEmptyStringArray(
+        viewValue.prohibited_fields,
+        `${label}.${view}.prohibited_fields`,
+        errors,
+      );
+      const prohibitedSet = new Set(prohibited);
+      for (const field of allowed) {
+        if (prohibitedSet.has(field)) {
+          errors.push(`${label}.${view}: field ${field} cannot be both allowed and prohibited`);
+        }
+      }
+    }
+  }
+  for (const view of ["target", "harness"]) {
+    if (value?.[view]?.reference_access !== false) errors.push(`${label}.${view}.reference_access must be false`);
+    const prohibited = new Set(asArray(value?.[view]?.prohibited_fields));
+    for (const field of ["reference_item_id", "reference", "annotation", "expected"]) {
+      if (!prohibited.has(field)) errors.push(`${label}.${view}.prohibited_fields must include ${field}`);
+    }
+    for (const field of asArray(value?.[view]?.allowed_fields)) {
+      if (
+        typeof field === "string" &&
+        ["reference_item_id", "reference", "annotation", "expected"].some(
+          (restricted) => field === restricted || field.startsWith(`${restricted}.`),
+        )
+      ) {
+        errors.push(`${label}.${view}.allowed_fields must not include restricted field ${field}`);
+      }
+    }
+  }
+  for (const view of ["scorer", "audit"]) if (value?.[view]?.reference_access !== true) errors.push(`${label}.${view}.reference_access must be true`);
+}
+
+function verifyArray(value, label, errors) {
+  if (!Array.isArray(value)) {
+    errors.push(`${label}: must be an array`);
+    return false;
+  }
+  return true;
+}
+
+function verifyPositiveNumber(value, label, errors) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    errors.push(`${label}: must be a positive number`);
+    return false;
+  }
+  return true;
+}
+
+function verifyTemplateSourceGovernance(source, label, errors) {
+  const requiredStringFields = [
+    ["provenance", ["producer", "collection_method", "collected_at", "original_system"]],
+    ["lineage", ["transform_version", "output_snapshot"]],
+    ["authorization", ["basis", "owner", "expires_at"]],
+    ["privacy", ["classification", "deidentification", "reidentification_risk_review"]],
+    ["license_and_access", ["license", "access_group", "redistribution"]],
+    ["retention", ["deletion_or_review", "derived_data_policy"]],
+  ];
+  for (const [container, fields] of requiredStringFields) {
+    if (!verifyNonEmptyObject(source?.[container], `${label}.${container}`, errors)) continue;
+    for (const field of fields) {
+      verifyNonEmptyString(source[container][field], `${label}.${container}.${field}`, errors);
+    }
+  }
+  verifyNonEmptyStringArray(source?.lineage?.parent_ids, `${label}.lineage.parent_ids`, errors);
+  verifyNonEmptyStringArray(
+    source?.lineage?.transformations,
+    `${label}.lineage.transformations`,
+    errors,
+  );
+  verifyNonEmptyStringArray(
+    source?.authorization?.approved_purposes,
+    `${label}.authorization.approved_purposes`,
+    errors,
+  );
+  if (typeof source?.privacy?.personal_data !== "boolean") {
+    errors.push(`${label}.privacy.personal_data: must be a boolean`);
+  }
+  if (verifyArray(source?.privacy?.sensitive_fields, `${label}.privacy.sensitive_fields`, errors)) {
+    for (const [index, field] of source.privacy.sensitive_fields.entries()) {
+      verifyNonEmptyString(field, `${label}.privacy.sensitive_fields[${index}]`, errors);
+    }
+  }
+  verifyPositiveNumber(source?.retention?.period_days, `${label}.retention.period_days`, errors);
+}
+
+function verifyCaseSourceGovernance(source, label, errors) {
+  const requiredStringFields = [
+    ["provenance", ["producer", "snapshot", "extraction"]],
+    ["lineage", ["output"]],
+    ["authorization", ["owner", "basis", "expires"]],
+    ["privacy", ["classification", "handling"]],
+    ["license_and_retention", ["use", "access"]],
+  ];
+  for (const [container, fields] of requiredStringFields) {
+    if (!verifyNonEmptyObject(source?.[container], `${label}.${container}`, errors)) continue;
+    for (const field of fields) {
+      verifyNonEmptyString(source[container][field], `${label}.${container}.${field}`, errors);
+    }
+  }
+  verifyNonEmptyStringArray(source?.lineage?.parents, `${label}.lineage.parents`, errors);
+  verifyNonEmptyStringArray(source?.lineage?.transforms, `${label}.lineage.transforms`, errors);
+  if (verifyArray(source?.privacy?.forbidden_fields, `${label}.privacy.forbidden_fields`, errors)) {
+    for (const [index, field] of source.privacy.forbidden_fields.entries()) {
+      verifyNonEmptyString(field, `${label}.privacy.forbidden_fields[${index}]`, errors);
+    }
+  }
+  if (source?.license_and_retention?.redistribution !== undefined) {
+    verifyNonEmptyString(
+      source.license_and_retention.redistribution,
+      `${label}.license_and_retention.redistribution`,
+      errors,
+    );
+  }
+  verifyPositiveNumber(
+    source?.license_and_retention?.retention_days,
+    `${label}.license_and_retention.retention_days`,
+    errors,
+  );
+}
+
+function verifyTemplateCharter(value, label, errors) {
+  if (verifyNonEmptyObject(value?.purpose, `${label}.purpose`, errors)) {
+    for (const field of ["decision_supported", "intended_use"]) {
+      verifyNonEmptyString(value.purpose[field], `${label}.purpose.${field}`, errors);
+    }
+    verifyNonEmptyStringArray(value.purpose.prohibited_uses, `${label}.purpose.prohibited_uses`, errors);
+  }
+  if (verifyNonEmptyObject(value?.target_population, `${label}.target_population`, errors)) {
+    verifyNonEmptyString(value.target_population.definition, `${label}.target_population.definition`, errors);
+    for (const field of ["inclusion", "exclusion"]) {
+      verifyNonEmptyStringArray(value.target_population[field], `${label}.target_population.${field}`, errors);
+    }
+    if (verifyNonEmptyObject(value.target_population.time_window, `${label}.target_population.time_window`, errors)) {
+      for (const field of ["start", "end", "timezone"]) {
+        verifyNonEmptyString(value.target_population.time_window[field], `${label}.target_population.time_window.${field}`, errors);
+      }
+    }
+  }
+  if (verifyNonEmptyObject(value?.unit_of_analysis, `${label}.unit_of_analysis`, errors)) {
+    for (const field of ["primary", "parent_unit", "repeated_measure_key", "dependence_note"]) {
+      verifyNonEmptyString(value.unit_of_analysis[field], `${label}.unit_of_analysis.${field}`, errors);
+    }
+  }
+  if (verifyNonEmptyObject(value?.sampling_frame, `${label}.sampling_frame`, errors)) {
+    for (const field of ["definition", "frame_id"]) {
+      verifyNonEmptyString(value.sampling_frame[field], `${label}.sampling_frame.${field}`, errors);
+    }
+    verifyNonEmptyStringArray(
+      value.sampling_frame.coverage_limitations,
+      `${label}.sampling_frame.coverage_limitations`,
+      errors,
+    );
+  }
+  if (verifyNonEmptyObject(value?.scope_controls, `${label}.scope_controls`, errors)) {
+    if (typeof value.scope_controls.partition_denominators_separate !== "boolean") {
+      errors.push(`${label}.scope_controls.partition_denominators_separate: must be a boolean`);
+    }
+    for (const field of ["protected_evaluation_data", "training_contamination_policy"]) {
+      verifyNonEmptyString(value.scope_controls[field], `${label}.scope_controls.${field}`, errors);
+    }
+  }
+  if (verifyNonEmptyObject(value?.evidence_boundary, `${label}.evidence_boundary`, errors)) {
+    for (const field of ["establishes", "does_not_establish"]) {
+      verifyNonEmptyStringArray(value.evidence_boundary[field], `${label}.evidence_boundary.${field}`, errors);
+    }
+  }
+}
+
+function verifyCaseCharter(value, label, errors) {
+  for (const field of ["purpose", "target_population", "evidence_boundary"]) {
+    verifyNonEmptyString(value?.[field], `${label}.${field}`, errors);
+  }
+  if (verifyNonEmptyObject(value?.unit_of_analysis, `${label}.unit_of_analysis`, errors)) {
+    for (const field of ["primary", "parent", "repeated_measure"]) {
+      verifyNonEmptyString(value.unit_of_analysis[field], `${label}.unit_of_analysis.${field}`, errors);
+    }
+  }
+  if (verifyNonEmptyObject(value?.sampling_frame, `${label}.sampling_frame`, errors)) {
+    for (const field of ["id", "definition"]) {
+      verifyNonEmptyString(value.sampling_frame[field], `${label}.sampling_frame.${field}`, errors);
+    }
+    verifyNonEmptyStringArray(value.sampling_frame.exclusions, `${label}.sampling_frame.exclusions`, errors);
+  }
+  for (const [index, partition] of asArray(value?.partitions).entries()) {
+    const partitionLabel = `${label}.partitions[${index}]`;
+    for (const field of ["id", "purpose", "denominator"]) {
+      verifyNonEmptyString(partition?.[field], `${partitionLabel}.${field}`, errors);
+    }
+  }
+}
+
+function verifyTemplateAnnotation(value, label, errors) {
+  verifyObjectEntities(value?.annotation_units, ["id", "level", "input_fields", "output_scope", "parent_key"], `${label}.annotation_units`, errors);
+  for (const [index, unit] of asArray(value?.annotation_units).entries()) {
+    const unitLabel = `${label}.annotation_units[${index}]`;
+    for (const field of ["id", "level", "output_scope", "parent_key"]) verifyNonEmptyString(unit?.[field], `${unitLabel}.${field}`, errors);
+    verifyNonEmptyStringArray(unit?.input_fields, `${unitLabel}.input_fields`, errors);
+  }
+  for (const [index, item] of asArray(value?.label_schema).entries()) {
+    const itemLabel = `${label}.label_schema[${index}]`;
+    for (const field of ["id", "definition"]) verifyNonEmptyString(item?.[field], `${itemLabel}.${field}`, errors);
+    for (const field of ["values", "evidence_required"]) verifyNonEmptyStringArray(item?.[field], `${itemLabel}.${field}`, errors);
+  }
+  if (verifyNonEmptyObject(value?.instructions, `${label}.instructions`, errors)) {
+    verifyNonEmptyStringArray(value.instructions.preparation, `${label}.instructions.preparation`, errors);
+    verifyNonEmptyString(value.instructions.decision_rule, `${label}.instructions.decision_rule`, errors);
+    verifyNonEmptyStringArray(value.instructions.prohibited, `${label}.instructions.prohibited`, errors);
+  }
+  if (verifyNonEmptyObject(value?.annotators, `${label}.annotators`, errors)) {
+    if (verifyNonEmptyObject(value.annotators.qualification, `${label}.annotators.qualification`, errors)) {
+      for (const field of ["domain", "protocol_training"]) verifyNonEmptyString(value.annotators.qualification[field], `${label}.annotators.qualification.${field}`, errors);
+      if (typeof value.annotators.qualification.conflicts_disclosed !== "boolean") errors.push(`${label}.annotators.qualification.conflicts_disclosed: must be a boolean`);
+    }
+    verifyNonEmptyString(value.annotators.assignment, `${label}.annotators.assignment`, errors);
+  }
+  const passes = value?.blind_independent_passes;
+  verifyNonEmptyStringArray(passes?.blind_to, `${label}.blind_independent_passes.blind_to`, errors);
+  verifyNonEmptyString(passes?.independence_check, `${label}.blind_independent_passes.independence_check`, errors);
+  const disagreement = value?.disagreement;
+  verifyNonEmptyString(disagreement?.detection, `${label}.disagreement.detection`, errors);
+  verifyNonEmptyStringArray(disagreement?.categories, `${label}.disagreement.categories`, errors);
+  verifyNonEmptyStringArray(disagreement?.resolution_input, `${label}.disagreement.resolution_input`, errors);
+  const arbitration = value?.arbitration;
+  for (const field of ["arbitrator_qualification", "method"]) verifyNonEmptyString(arbitration?.[field], `${label}.arbitration.${field}`, errors);
+  verifyNonEmptyStringArray(arbitration?.outputs, `${label}.arbitration.outputs`, errors);
+  const quality = value?.quality_control;
+  for (const field of ["calibration", "drift_action"]) verifyNonEmptyString(quality?.[field], `${label}.quality_control.${field}`, errors);
+  verifyNonEmptyStringArray(quality?.audits, `${label}.quality_control.audits`, errors);
+  for (const field of ["minimum_fields_only", "redaction_before_assignment", "access_logged", "export_restricted"]) {
+    if (typeof value?.privacy_handling?.[field] !== "boolean") errors.push(`${label}.privacy_handling.${field}: must be a boolean`);
+  }
+  for (const field of ["record_fields", "adjudication_fields"]) {
+    verifyNonEmptyStringArray(value?.outputs?.[field], `${label}.outputs.${field}`, errors);
+  }
+}
+
+function verifyCaseAnnotation(value, label, errors) {
+  verifyNonEmptyString(value?.protocol_id, `${label}.protocol_id`, errors);
+  verifyObjectEntities(value?.units, ["id", "level", "fields"], `${label}.units`, errors);
+  for (const [index, unit] of asArray(value?.units).entries()) {
+    const unitLabel = `${label}.units[${index}]`;
+    verifyNonEmptyString(unit?.level, `${unitLabel}.level`, errors);
+    verifyNonEmptyStringArray(unit?.fields, `${unitLabel}.fields`, errors);
+  }
+  verifyObjectEntities(value?.labels, ["id", "values", "evidence"], `${label}.labels`, errors);
+  for (const [index, item] of asArray(value?.labels).entries()) {
+    verifyNonEmptyStringArray(item?.values, `${label}.labels[${index}].values`, errors);
+    verifyNonEmptyStringArray(item?.evidence, `${label}.labels[${index}].evidence`, errors);
+  }
+  verifyNonEmptyStringArray(value?.blind_independent?.blind_to, `${label}.blind_independent.blind_to`, errors);
+  verifyNonEmptyString(value?.blind_independent?.qualification, `${label}.blind_independent.qualification`, errors);
+  verifyNonEmptyStringArray(value?.disagreement?.categories, `${label}.disagreement.categories`, errors);
+  verifyNonEmptyString(value?.disagreement?.critical_action, `${label}.disagreement.critical_action`, errors);
+  verifyNonEmptyString(value?.arbitration?.role, `${label}.arbitration.role`, errors);
+  verifyNonEmptyStringArray(value?.arbitration?.outputs, `${label}.arbitration.outputs`, errors);
+  const hasInputs = Array.isArray(value?.arbitration?.inputs) && value.arbitration.inputs.length > 0;
+  const hasMethod = typeof value?.arbitration?.method === "string" && value.arbitration.method.trim().length > 0;
+  if (!hasInputs && !hasMethod) errors.push(`${label}.arbitration: must define non-empty inputs or method`);
+  if (value?.arbitration?.inputs !== undefined) verifyNonEmptyStringArray(value.arbitration.inputs, `${label}.arbitration.inputs`, errors);
+  if (value?.arbitration?.method !== undefined) verifyNonEmptyString(value.arbitration.method, `${label}.arbitration.method`, errors);
+}
+
+function verifyTemplateSplit(value, label, errors) {
+  const boundaries = new Set();
+  for (const [index, control] of asArray(value?.leakage_controls).entries()) {
+    const controlLabel = `${label}.leakage_controls[${index}]`;
+    for (const field of ["id", "boundary", "key", "rule", "check", "failure_action"]) {
+      verifyNonEmptyString(control?.[field], `${controlLabel}.${field}`, errors);
+    }
+    if (!new Set(["parent", "entity", "document", "template", "time"]).has(control?.boundary)) {
+      errors.push(`${controlLabel}.boundary: must be parent, entity, document, template or time`);
+    } else boundaries.add(control.boundary);
+  }
+  for (const boundary of ["parent", "entity", "document", "template", "time"]) {
+    if (!boundaries.has(boundary)) errors.push(`${label}.leakage_controls: must cover ${boundary}`);
+  }
+  for (const [index, split] of asArray(value?.splits).entries()) {
+    const splitLabel = `${label}.splits[${index}]`;
+    for (const field of ["id", "purpose", "time_window", "assignment_rule"]) {
+      verifyNonEmptyString(split?.[field], `${splitLabel}.${field}`, errors);
+    }
+    verifyNonEmptyStringArray(split?.partition_roles, `${splitLabel}.partition_roles`, errors);
+    verifyNonEmptyStringArray(split?.source_ids, `${splitLabel}.source_ids`, errors);
+    verifyNonEmptyStringArray(split?.allowed_use, `${splitLabel}.allowed_use`, errors);
+    if (typeof split?.protected !== "boolean") errors.push(`${splitLabel}.protected: must be a boolean`);
+  }
+  if (verifyNonEmptyObject(value?.assignment_audit, `${label}.assignment_audit`, errors)) {
+    verifyNonEmptyStringArray(value.assignment_audit.required_outputs, `${label}.assignment_audit.required_outputs`, errors);
+    verifyNonEmptyString(value.assignment_audit.reviewer, `${label}.assignment_audit.reviewer`, errors);
+  }
+}
+
+function verifyCaseSplit(value, label, errors) {
+  verifyNonEmptyString(value?.manifest_id, `${label}.manifest_id`, errors);
+  if (verifyNonEmptyObject(value?.grouping, `${label}.grouping`, errors)) {
+    for (const field of ["parent", "entity", "document", "template", "time"]) {
+      verifyNonEmptyString(value.grouping[field], `${label}.grouping.${field}`, errors);
+    }
+  }
+  const boundaries = new Set();
+  for (const [index, control] of asArray(value?.leakage_controls).entries()) {
+    const controlLabel = `${label}.leakage_controls[${index}]`;
+    verifyNonEmptyString(control?.boundary, `${controlLabel}.boundary`, errors);
+    verifyNonEmptyString(control?.rule, `${controlLabel}.rule`, errors);
+    if (!new Set(["parent", "entity", "document", "template", "time"]).has(control?.boundary)) {
+      errors.push(`${controlLabel}.boundary: must be parent, entity, document, template or time`);
+    } else boundaries.add(control.boundary);
+  }
+  for (const boundary of ["parent", "entity", "document", "template", "time"]) {
+    if (!boundaries.has(boundary)) errors.push(`${label}.leakage_controls: must cover ${boundary}`);
+  }
+  for (const [index, split] of asArray(value?.splits).entries()) {
+    const splitLabel = `${label}.splits[${index}]`;
+    for (const field of ["id", "purpose"]) verifyNonEmptyString(split?.[field], `${splitLabel}.${field}`, errors);
+    verifyNonEmptyStringArray(split?.partitions, `${splitLabel}.partitions`, errors);
+    if (typeof split?.protected !== "boolean") errors.push(`${splitLabel}.protected: must be a boolean`);
+  }
+}
+
+function verifyTemplateDataset(value, label, errors) {
+  for (const [index, content] of asArray(value?.contents).entries()) {
+    const contentLabel = `${label}.contents[${index}]`;
+    for (const field of ["id", "path", "media_type", "hash", "record_role"]) {
+      verifyNonEmptyString(content?.[field], `${contentLabel}.${field}`, errors);
+    }
+  }
+  if (verifyNonEmptyObject(value?.item_schema, `${label}.item_schema`, errors)) {
+    verifyNonEmptyStringArray(value.item_schema.required, `${label}.item_schema.required`, errors);
+    verifyNonEmptyStringArray(value.item_schema.sensitive_fields, `${label}.item_schema.sensitive_fields`, errors);
+    verifyNonEmptyString(value.item_schema.identity_rule, `${label}.item_schema.identity_rule`, errors);
+  }
+  if (verifyNonEmptyArray(value?.joins, `${label}.joins`, errors)) {
+    for (const [index, join] of value.joins.entries()) {
+      const joinLabel = `${label}.joins[${index}]`;
+      if (!verifyNonEmptyObject(join, joinLabel, errors)) continue;
+      for (const field of ["from", "to", "cardinality"]) verifyNonEmptyString(join[field], `${joinLabel}.${field}`, errors);
+      if (typeof join.orphan_allowed !== "boolean") errors.push(`${joinLabel}.orphan_allowed: must be a boolean`);
+    }
+  }
+  for (const [index, summary] of asArray(value?.partition_summary).entries()) {
+    const summaryLabel = `${label}.partition_summary[${index}]`;
+    for (const field of ["partition_id", "role", "denominator", "reporting"]) {
+      verifyNonEmptyString(summary?.[field], `${summaryLabel}.${field}`, errors);
+    }
+    if (!(typeof summary?.count === "number" && summary.count >= 0) && !isMaterializedString(summary?.count)) {
+      errors.push(`${summaryLabel}.count: must be a non-negative number or non-empty declared value`);
+    }
+  }
+  if (verifyNonEmptyObject(value?.provenance_summary, `${label}.provenance_summary`, errors)) {
+    for (const field of ["all_sources_registered", "all_transformations_versioned", "authorization_current_at_creation", "privacy_review_id"]) {
+      verifyNonEmptyString(value.provenance_summary[field], `${label}.provenance_summary.${field}`, errors);
+    }
+  }
+  if (verifyNonEmptyObject(value?.versioning, `${label}.versioning`, errors)) {
+    if (typeof value.versioning.immutable !== "boolean") errors.push(`${label}.versioning.immutable: must be a boolean`);
+    verifyNonEmptyString(value.versioning.mutation_policy, `${label}.versioning.mutation_policy`, errors);
+    if (verifyNonEmptyObject(value.versioning.supersession, `${label}.versioning.supersession`, errors)) {
+      for (const field of ["supersedes", "superseded_by", "compatibility"]) verifyNonEmptyString(value.versioning.supersession[field], `${label}.versioning.supersession.${field}`, errors);
+    }
+  }
+  if (verifyNonEmptyObject(value?.drift_and_refresh, `${label}.drift_and_refresh`, errors)) {
+    for (const field of ["monitors", "triggers"]) verifyNonEmptyStringArray(value.drift_and_refresh[field], `${label}.drift_and_refresh.${field}`, errors);
+    for (const field of ["refresh_process", "comparison"]) verifyNonEmptyString(value.drift_and_refresh[field], `${label}.drift_and_refresh.${field}`, errors);
+  }
+  if (verifyNonEmptyObject(value?.evidence_boundary, `${label}.evidence_boundary`, errors)) {
+    for (const field of ["establishes", "does_not_establish"]) verifyNonEmptyStringArray(value.evidence_boundary[field], `${label}.evidence_boundary.${field}`, errors);
+  }
+}
+
+function verifyCaseDataset(value, label, errors) {
+  verifyNonEmptyString(value?.id, `${label}.id`, errors);
+  if (verifyNonEmptyObject(value?.identity, `${label}.identity`, errors)) {
+    for (const field of ["content_hash", "schema_hash", "created_at", "status"]) {
+      verifyNonEmptyString(value.identity[field], `${label}.identity.${field}`, errors);
+    }
+    if (typeof value.identity.immutable !== "boolean") errors.push(`${label}.identity.immutable: must be a boolean`);
+  }
+  verifyObjectEntities(value?.contents, ["id", "role", "hash"], `${label}.contents`, errors);
+  for (const [index, content] of asArray(value?.contents).entries()) {
+    for (const field of ["id", "role", "hash"]) verifyNonEmptyString(content?.[field], `${label}.contents[${index}].${field}`, errors);
+  }
+  verifyNonEmptyStringArray(value?.item_schema, `${label}.item_schema`, errors);
+  if (verifyNonEmptyObject(value?.drift_and_refresh, `${label}.drift_and_refresh`, errors)) {
+    for (const field of ["monitors", "triggers"]) verifyNonEmptyStringArray(value.drift_and_refresh[field], `${label}.drift_and_refresh.${field}`, errors);
+    verifyNonEmptyString(value.drift_and_refresh.action, `${label}.drift_and_refresh.action`, errors);
+  }
+}
+
+function verifyReferenceContent({ items, invariants, knownRiskIds, knownSourceIds, knownTaskIds, label, errors }) {
+  verifyObjectEntities(
+    items,
+    [
+      "id",
+      "task_ids",
+      "risk_ids",
+      "source_ids",
+      "oracle_type",
+      "authoritative_material",
+      "expected",
+      "acceptable_alternatives",
+      "uncertainty_action",
+    ],
+    `${label}.items`,
+    errors,
+  );
+  for (const [index, item] of asArray(items).entries()) {
+    const itemLabel = `${label}.items[${index}]`;
+    for (const [field, known] of [
+      ["task_ids", knownTaskIds],
+      ["risk_ids", knownRiskIds],
+      ["source_ids", knownSourceIds],
+    ]) {
+      const ids = verifyStringIdList(item?.[field], `${itemLabel}.${field}`, errors);
+      verifyReferencesKnown(ids, new Set(known), `${itemLabel}.${field}`, errors);
+    }
+    verifyNonEmptyString(item?.oracle_type, `${itemLabel}.oracle_type`, errors);
+    if (verifyNonEmptyArray(item?.authoritative_material, `${itemLabel}.authoritative_material`, errors)) {
+      for (const [materialIndex, material] of item.authoritative_material.entries()) {
+        const materialLabel = `${itemLabel}.authoritative_material[${materialIndex}]`;
+        if (!verifyNonEmptyObject(material, materialLabel, errors)) continue;
+        for (const field of ["id", "version", "effective_at", "span"]) {
+          verifyNonEmptyString(material[field], `${materialLabel}.${field}`, errors);
+        }
+      }
+    }
+    if (verifyNonEmptyObject(item?.expected, `${itemLabel}.expected`, errors)) {
+      for (const field of ["required_outcomes", "prohibited_outcomes", "required_evidence"]) {
+        verifyNonEmptyStringArray(item.expected[field], `${itemLabel}.expected.${field}`, errors);
+      }
+    }
+    if (verifyArray(item?.acceptable_alternatives, `${itemLabel}.acceptable_alternatives`, errors)) {
+      for (const [alternativeIndex, alternative] of item.acceptable_alternatives.entries()) {
+        const alternativeLabel = `${itemLabel}.acceptable_alternatives[${alternativeIndex}]`;
+        if (!verifyNonEmptyObject(alternative, alternativeLabel, errors)) continue;
+        for (const field of ["condition", "outcome", "rationale"]) {
+          verifyNonEmptyString(alternative[field], `${alternativeLabel}.${field}`, errors);
+        }
+      }
+    }
+    verifyNonEmptyString(item?.uncertainty_action, `${itemLabel}.uncertainty_action`, errors);
+  }
+
+  verifyObjectEntities(
+    invariants,
+    ["id", "risk_ids", "assertion", "observation_required"],
+    `${label}.invariants`,
+    errors,
+  );
+  for (const [index, invariant] of asArray(invariants).entries()) {
+    const invariantLabel = `${label}.invariants[${index}]`;
+    const riskIds = verifyStringIdList(invariant?.risk_ids, `${invariantLabel}.risk_ids`, errors);
+    verifyReferencesKnown(riskIds, new Set(knownRiskIds), `${invariantLabel}.risk_ids`, errors);
+    verifyNonEmptyString(invariant?.assertion, `${invariantLabel}.assertion`, errors);
+    verifyNonEmptyStringArray(
+      invariant?.observation_required,
+      `${invariantLabel}.observation_required`,
+      errors,
+    );
+  }
+}
+
+function verifySamplingGaps(value, label, errors) {
+  if (!verifyArray(value, label, errors)) return;
+  for (const [index, gap] of value.entries()) {
+    const gapLabel = `${label}[${index}]`;
+    if (!verifyNonEmptyObject(gap, gapLabel, errors)) continue;
+    for (const field of [
+      "id",
+      "description",
+      "affected_population_or_risk",
+      "impact",
+      "owner",
+      "action",
+    ]) {
+      verifyNonEmptyString(gap[field], `${gapLabel}.${field}`, errors);
+    }
+    if (!new Set(["gap", "blocked"]).has(gap.status)) {
+      errors.push(`${gapLabel}.status: must be gap or blocked`);
+    }
+  }
+}
+
+function verifyGate({
+  gate,
+  checks,
+  quotas,
+  gaps,
+  knownEvidenceIds,
+  forbiddenEvidenceIds = new Set(),
+  materializedEvidenceByCategory = null,
+  label,
+  errors,
+}) {
+  verifyObjectEntities(checks, ["id", "status", "evidence"], `${label}.checks`, errors);
+  for (const [index, check] of asArray(checks).entries()) {
+    const checkLabel = `${label}.checks[${index}]`;
+    if (!DATA_CHECK_STATUSES.has(check?.status)) {
+      errors.push(`${checkLabel}.status must be passed, partial, blocked or failed`);
+    }
+    if (verifyNonEmptyObject(check?.evidence, `${checkLabel}.evidence`, errors)) {
+      verifyNonEmptyString(check.evidence.semantic_basis, `${checkLabel}.evidence.semantic_basis`, errors);
+      const links = verifyStringIdList(
+        check.evidence.evidence_links,
+        `${checkLabel}.evidence.evidence_links`,
+        errors,
+      );
+      verifyReferencesKnown(
+        links,
+        knownEvidenceIds,
+        `${checkLabel}.evidence.evidence_links`,
+        errors,
+      );
+      for (const id of links) {
+        if (forbiddenEvidenceIds.has(id)) {
+          errors.push(`${checkLabel}.evidence.evidence_links: gate cannot use self evidence id ${id}`);
+        }
+      }
+      if (check?.status === "passed" && materializedEvidenceByCategory) {
+        const category = ["source", "reference", "annotation", "leakage", "version", "coverage"]
+          .find((name) => check.id?.includes(`.${name}`));
+        if (category) {
+          const materializedIds = materializedEvidenceByCategory.get(category) ?? new Set();
+          if (!links.some((id) => materializedIds.has(id))) {
+            errors.push(
+              `${checkLabel}.evidence.evidence_links: passed ${category} check requires a materialized external evidence asset`,
+            );
+          }
+        }
+      }
+      if (check.evidence.sample_count_only !== false) {
+        errors.push(`${checkLabel}.evidence.sample_count_only must be false`);
+      }
+    }
+  }
+
+  const decision = gate?.decision;
+  const status = decision?.status;
+  if (!DATA_GATE_STATUSES.has(status)) {
+    errors.push(`${label}.decision.status must be ready, partial, blocked or invalid`);
+  }
+  const expectedIdsByField = {
+    blocking_check_ids: asArray(checks).filter((check) => check?.status === "blocked").map((check) => check.id),
+    partial_check_ids: asArray(checks).filter((check) => check?.status === "partial").map((check) => check.id),
+    invalidating_check_ids: asArray(checks).filter((check) => check?.status === "failed").map((check) => check.id),
+  };
+  for (const [field, expectedIds] of Object.entries(expectedIdsByField)) {
+    const ids = verifyStringIdArray(decision?.[field], `${label}.decision.${field}`, errors, true);
+    verifyExactSet(ids, expectedIds, `${label}.decision.${field}`, errors);
+  }
+
+  const statuses = asArray(checks).map((check) => check?.status);
+  if (status === "ready") {
+    if (statuses.some((checkStatus) => checkStatus !== "passed")) {
+      errors.push(`${label}.decision.status cannot be ready unless every check passed`);
+    }
+    if (asArray(quotas).some((quota) => quota?.status !== "met")) {
+      errors.push(`${label}.decision.status cannot be ready with quota gaps`);
+    }
+    if (asArray(gaps).length > 0) {
+      errors.push(`${label}.decision.status cannot be ready with sampling-frame gaps`);
+    }
+  } else if (status === "partial") {
+    if (!statuses.includes("partial") || statuses.some((item) => item === "blocked" || item === "failed")) {
+      errors.push(`${label}.decision.status partial requires a partial check and no blocked or failed checks`);
+    }
+    for (const field of ["allowed_scope", "blocked_scope"]) {
+      verifyDecisionContainer(decision?.[field], `${label}.decision.${field}`, errors);
+    }
+    verifyNonEmptyStringArray(decision?.prohibited_claims, `${label}.decision.prohibited_claims`, errors);
+  } else if (status === "blocked") {
+    if (!statuses.includes("blocked") || statuses.includes("failed")) {
+      errors.push(`${label}.decision.status blocked requires a blocked check and no failed checks`);
+    }
+    for (const field of ["reason", "owner", "action", "allowed_next_step"]) {
+      verifyNonEmptyString(decision?.[field], `${label}.decision.${field}`, errors);
+    }
+    verifyNonEmptyStringArray(decision?.prohibited_claims, `${label}.decision.prohibited_claims`, errors);
+  } else if (status === "invalid") {
+    if (!statuses.includes("failed")) {
+      errors.push(`${label}.decision.status invalid requires a failed check`);
+    }
+    for (const field of ["reason", "owner", "action"]) {
+      verifyNonEmptyString(decision?.[field], `${label}.decision.${field}`, errors);
+    }
+    verifyNonEmptyStringArray(decision?.prohibited_claims, `${label}.decision.prohibited_claims`, errors);
+  }
+}
+
+const MATERIALIZATION_SENTINEL = /(?:^|[-_:])(planned|pending|placeholder|declared)(?:$|[-_:])|not-materialized|design-only/i;
+
+function isMaterializedString(value) {
+  return typeof value === "string" && value.trim().length > 0 && !MATERIALIZATION_SENTINEL.test(value);
+}
+
+function verifyMaterializedString(value, label, errors) {
+  if (!isMaterializedString(value)) {
+    errors.push(`${label}: must identify a materialized non-sentinel value`);
+    return false;
+  }
+  return true;
+}
+
+function verifySha256Identity(value, label, errors) {
+  if (!verifyMaterializedString(value, label, errors)) return false;
+  if (!/^sha256:[A-Za-z0-9._-]+$/.test(value)) {
+    errors.push(`${label}: must be a sha256 content identity`);
+    return false;
+  }
+  return true;
+}
+
+function collectMaterializedOutputs(value, label, errors, requiredTypes) {
+  const idsByType = new Map();
+  if (!verifyNonEmptyArray(value, label, errors)) return idsByType;
+  for (const [index, output] of value.entries()) {
+    const outputLabel = `${label}[${index}]`;
+    if (!verifyNonEmptyObject(output, outputLabel, errors)) continue;
+    verifyNonEmptyString(output.id, `${outputLabel}.id`, errors);
+    verifyNonEmptyString(output.type, `${outputLabel}.type`, errors);
+    verifySha256Identity(output.hash, `${outputLabel}.hash`, errors);
+    if (output.status !== "materialized") {
+      errors.push(`${outputLabel}.status: must be materialized`);
+    }
+    if (typeof output.id === "string" && typeof output.type === "string") {
+      idsByType.set(output.type, output.id);
+    }
+  }
+  for (const type of requiredTypes) {
+    if (!idsByType.has(type)) errors.push(`${label}: missing materialized output type ${type}`);
+  }
+  return idsByType;
+}
+
+function verifyCaseReadyMaterialization(value, relativePath, errors) {
+  const byCategory = new Map(
+    ["source", "reference", "annotation", "leakage", "version", "coverage"]
+      .map((category) => [category, new Set()]),
+  );
+  for (const [index, source] of asArray(value?.input?.sources).entries()) {
+    const label = `${relativePath}: input.sources[${index}]`;
+    if (source?.status !== "materialized") errors.push(`${label}.status: ready requires materialized`);
+    verifyMaterializedString(source?.provenance?.snapshot, `${label}.provenance.snapshot`, errors);
+    verifyMaterializedString(source?.provenance?.extraction, `${label}.provenance.extraction`, errors);
+    if (source?.authorization?.status !== "verified-current") {
+      errors.push(`${label}.authorization.status: ready requires verified-current`);
+    }
+    if (source?.status === "materialized" && typeof source?.id === "string") {
+      byCategory.get("source").add(source.id);
+    }
+  }
+  for (const [index, quota] of asArray(value?.input?.sampling?.allocation?.per_stratum).entries()) {
+    if (!(typeof quota?.actual_count === "number" && quota.actual_count > 0)) {
+      errors.push(`${relativePath}: input.sampling.allocation.per_stratum[${index}].actual_count: ready requires a positive materialized count`);
+    }
+  }
+
+  const referenceOutputs = collectMaterializedOutputs(
+    value?.input?.reference?.outputs,
+    `${relativePath}: input.reference.outputs`,
+    errors,
+    ["reference-items", "authority-snapshot-report"],
+  );
+  for (const id of referenceOutputs.values()) byCategory.get("reference").add(id);
+  const annotationOutputs = collectMaterializedOutputs(
+    value?.input?.annotation?.outputs,
+    `${relativePath}: input.annotation.outputs`,
+    errors,
+    ["raw-labels", "adjudication-records", "quality-control-report"],
+  );
+  for (const id of annotationOutputs.values()) byCategory.get("annotation").add(id);
+  const leakageOutputs = collectMaterializedOutputs(
+    value?.input?.split?.assignment_audit?.outputs,
+    `${relativePath}: input.split.assignment_audit.outputs`,
+    errors,
+    ["item-to-group-map", "cross-split-collision-report", "near-duplicate-report", "temporal-cutoff-report"],
+  );
+  for (const id of leakageOutputs.values()) byCategory.get("leakage").add(id);
+
+  const identity = value?.input?.dataset_version?.identity;
+  if (identity?.status !== "materialized") {
+    errors.push(`${relativePath}: input.dataset_version.identity.status: ready requires materialized`);
+  }
+  for (const field of ["content_hash", "schema_hash"]) {
+    verifySha256Identity(identity?.[field], `${relativePath}: input.dataset_version.identity.${field}`, errors);
+  }
+  if (
+    !verifyMaterializedString(
+      identity?.created_at,
+      `${relativePath}: input.dataset_version.identity.created_at`,
+      errors,
+    ) ||
+    Number.isNaN(Date.parse(identity.created_at))
+  ) {
+    errors.push(`${relativePath}: input.dataset_version.identity.created_at: must be a parseable timestamp`);
+  }
+  for (const [index, content] of asArray(value?.input?.dataset_version?.contents).entries()) {
+    const label = `${relativePath}: input.dataset_version.contents[${index}]`;
+    verifyMaterializedString(content?.role, `${label}.role`, errors);
+    if (verifySha256Identity(content?.hash, `${label}.hash`, errors) && typeof content?.id === "string") {
+      byCategory.get("version").add(content.id);
+      if (content.role?.includes("item")) byCategory.get("coverage").add(content.id);
+    }
+  }
+  if (identity?.status === "materialized" && typeof value?.input?.dataset_version?.id === "string") {
+    byCategory.get("version").add(value.input.dataset_version.id);
+  }
+  return byCategory;
+}
+
+function verifyTaskScenarioDataTemplates(templateValues, errors) {
+  const charter = templateValues.get("dataset-charter.yaml");
+  const sources = templateValues.get("source-register.yaml");
+  const sampling = templateValues.get("sampling-plan.yaml");
+  const standard = templateValues.get("reference-standard.yaml");
+  const annotation = templateValues.get("annotation-protocol.yaml");
+  const split = templateValues.get("split-manifest.yaml");
+  const dataset = templateValues.get("dataset-manifest.yaml");
+  const gate = templateValues.get("data-quality-gate.yaml");
+
+  const ids = {
+    dataset_charter_id: charter?.metadata?.id,
+    source_register_id: sources?.metadata?.id,
+    sampling_plan_id: sampling?.metadata?.id,
+    reference_standard_id: standard?.metadata?.id,
+    annotation_protocol_id: annotation?.metadata?.id,
+    split_manifest_id: split?.metadata?.id,
+    dataset_manifest_id: dataset?.metadata?.id,
+  };
+  for (const [relativePath, value] of [
+    ["source-register.yaml", sources], ["sampling-plan.yaml", sampling],
+    ["reference-standard.yaml", standard], ["annotation-protocol.yaml", annotation],
+    ["split-manifest.yaml", split], ["dataset-manifest.yaml", dataset],
+  ]) {
+    verifyEqualReference(value?.dataset_charter_id, ids.dataset_charter_id, `${relativePath}: dataset_charter_id`, errors);
+  }
+  for (const [relativePath, value, field] of [
+    ["sampling-plan.yaml", sampling, "source_register_id"],
+    ["reference-standard.yaml", standard, "source_register_id"],
+    ["annotation-protocol.yaml", annotation, "reference_standard_id"],
+    ["split-manifest.yaml", split, "sampling_plan_id"],
+    ["split-manifest.yaml", split, "source_register_id"],
+    ["data-quality-gate.yaml", gate, "dataset_manifest_id"],
+  ]) {
+    verifyEqualReference(value?.[field], ids[field], `${relativePath}: ${field}`, errors);
+  }
+  verifyEqualReference(
+    sampling?.sampling_frame?.frame_id,
+    charter?.sampling_frame?.frame_id,
+    "sampling-plan.yaml: sampling_frame.frame_id",
+    errors,
+  );
+  for (const field of ["source_register_id", "sampling_plan_id", "reference_standard_id", "annotation_protocol_id", "split_manifest_id"]) {
+    verifyEqualReference(dataset?.[field], ids[field], `dataset-manifest.yaml: ${field}`, errors);
+  }
+
+  const traceFields = ["target_ids", "construct_ids", "question_ids", "risk_ids", "scenario_family_ids", "task_ids"];
+  const canonicalTrace = {};
+  for (const field of traceFields) {
+    canonicalTrace[field] = verifyStringIdList(charter?.traceability?.[field], `dataset-charter.yaml: traceability.${field}`, errors);
+  }
+  verifyTemplateCharter(charter, "dataset-charter.yaml", errors);
+  for (const field of ["purpose", "target_population", "unit_of_analysis", "sampling_frame", "scope_controls", "evidence_boundary"]) verifyNonEmptyObject(charter?.[field], `dataset-charter.yaml: ${field}`, errors);
+  const partitionIds = verifyObjectEntities(charter?.partitions, ["id", "role", "question_ids", "risk_ids", "population_relation", "allowed_claim"], "dataset-charter.yaml: partitions", errors);
+  const declaredRoles = [];
+  for (const [index, partition] of asArray(charter?.partitions).entries()) {
+    const label = `dataset-charter.yaml: partitions[${index}]`;
+    if (!DATA_ROLES.has(partition?.role)) errors.push(`${label}.role: must be distribution, challenge or regression`);
+    else declaredRoles.push(partition.role);
+    for (const [field, known] of [["question_ids", canonicalTrace.question_ids], ["risk_ids", canonicalTrace.risk_ids]]) {
+      const refs = verifyStringIdList(partition?.[field], `${label}.${field}`, errors);
+      verifyReferencesKnown(refs, new Set(known), `${label}.${field}`, errors);
+    }
+    verifyNonEmptyString(partition?.population_relation, `${label}.population_relation`, errors);
+    verifyNonEmptyString(partition?.allowed_claim, `${label}.allowed_claim`, errors);
+  }
+  for (const role of DATA_ROLES) if (!declaredRoles.includes(role)) errors.push(`dataset-charter.yaml: partitions must cover role ${role}`);
+
+  const sourceIds = verifyObjectEntities(
+    sources?.sources,
+    ["id", "name", "type", "purpose", "partition_ids", "provenance", "lineage", "authorization", "privacy", "license_and_access", "retention", "quality_limitations"],
+    "source-register.yaml: sources",
+    errors,
+  );
+  for (const [index, source] of asArray(sources?.sources).entries()) {
+    const label = `source-register.yaml: sources[${index}]`;
+    const sourcePartitions = verifyStringIdList(source?.partition_ids, `${label}.partition_ids`, errors);
+    verifyReferencesKnown(sourcePartitions, new Set(partitionIds), `${label}.partition_ids`, errors);
+    for (const field of ["provenance", "lineage", "authorization", "privacy", "license_and_access", "retention"]) {
+      verifyNonEmptyObject(source?.[field], `${label}.${field}`, errors);
+    }
+    verifyTemplateSourceGovernance(source, label, errors);
+    verifyNonEmptyArray(source?.quality_limitations, `${label}.quality_limitations`, errors);
+  }
+  for (const field of ["target_ids", "question_ids", "risk_ids"]) {
+    if (sources?.traceability?.[field] !== undefined) verifyMatchingIdSet(sources.traceability[field], canonicalTrace[field], `source-register.yaml: traceability.${field}`, errors);
+  }
+  verifyMatchingIdSet(sources?.traceability?.partition_ids, partitionIds, "source-register.yaml: traceability.partition_ids", errors);
+  verifyNonEmptyObject(sources?.source_governance, "source-register.yaml: source_governance", errors);
+
+  verifyDecisionContainer(sampling?.population, "sampling-plan.yaml: population", errors);
+  if (verifyNonEmptyObject(sampling?.sampling_frame, "sampling-plan.yaml: sampling_frame", errors)) {
+    verifyNonEmptyString(sampling.sampling_frame.frame_id, "sampling-plan.yaml: sampling_frame.frame_id", errors);
+    verifySamplingGaps(sampling.sampling_frame.gaps, "sampling-plan.yaml: sampling_frame.gaps", errors);
+  }
+  const stratumIds = verifyObjectEntities(sampling?.strata, ["id", "risk_ids", "scenario_family_ids", "definition"], "sampling-plan.yaml: strata", errors);
+  for (const [index, stratum] of asArray(sampling?.strata).entries()) {
+    for (const [field, known] of [["risk_ids", canonicalTrace.risk_ids], ["scenario_family_ids", canonicalTrace.scenario_family_ids]]) {
+      const refs = verifyStringIdList(stratum?.[field], `sampling-plan.yaml: strata[${index}].${field}`, errors);
+      verifyReferencesKnown(refs, new Set(known), `sampling-plan.yaml: strata[${index}].${field}`, errors);
+    }
+  }
+  for (const field of ["selection", "allocation", "deduplication", "weighting"]) verifyNonEmptyObject(sampling?.[field], `sampling-plan.yaml: ${field}`, errors);
+  const quotas = sampling?.allocation?.per_stratum;
+  verifyRequiredEntryFields(quotas, ["stratum_id", "target_count", "actual_count", "status", "rationale"], "sampling-plan.yaml: allocation.per_stratum", errors);
+  const allowedQuotaStatuses = new Set(["met", "gap", "blocked"]);
+  for (const [index, quota] of asArray(quotas).entries()) {
+    const label = `sampling-plan.yaml: allocation.per_stratum[${index}]`;
+    if (!stratumIds.includes(quota?.stratum_id)) errors.push(`${label}.stratum_id: unknown id ${quota?.stratum_id}`);
+    for (const field of ["target_count", "actual_count"]) {
+      const count = quota?.[field];
+      if (!((typeof count === "number" && count >= 0) || (typeof count === "string" && count.length > 0))) errors.push(`${label}.${field}: must be a non-negative number or non-empty blocked placeholder`);
+    }
+    if (!allowedQuotaStatuses.has(quota?.status)) errors.push(`${label}.status: must be met, gap or blocked`);
+    if (quota?.status === "met" && (typeof quota.actual_count !== "number" || typeof quota.target_count !== "number" || quota.actual_count < quota.target_count)) errors.push(`${label}.status: met requires numeric actual_count at least target_count`);
+  }
+  verifyRequiredEntryFields(sampling?.partition_assignment, ["partition_id", "role", "source_ids", "method", "denominator_policy"], "sampling-plan.yaml: partition_assignment", errors);
+  const usedPartitions = new Set(); const usedSources = new Set();
+  for (const [index, assignment] of asArray(sampling?.partition_assignment).entries()) {
+    const label = `sampling-plan.yaml: partition_assignment[${index}]`;
+    if (!DATA_ROLES.has(assignment?.role)) errors.push(`${label}.role: must be distribution, challenge or regression`);
+    verifyReferencesKnown([assignment?.partition_id], new Set(partitionIds), `${label}.partition_id`, errors, usedPartitions);
+    verifyReferencesKnown(verifyStringIdList(assignment?.source_ids, `${label}.source_ids`, errors), new Set(sourceIds), `${label}.source_ids`, errors, usedSources);
+  }
+  for (const id of partitionIds) if (!usedPartitions.has(id)) errors.push(`sampling-plan.yaml: partition ${id} is not assigned`);
+  for (const id of sourceIds) if (!usedSources.has(id)) errors.push(`sampling-plan.yaml: source ${id} is not assigned`);
+
+  for (const field of ["reference_policy", "oracle_hierarchy", "uncertainty", "versioning"]) verifyNonEmptyObject(standard?.[field], `reference-standard.yaml: ${field}`, errors);
+  for (const field of ["principle", "precedence", "conflict_action"]) verifyDecisionContainer(standard?.reference_policy?.[field], `reference-standard.yaml: reference_policy.${field}`, errors);
+  const referenceIds = asArray(standard?.reference_items)
+    .map((item) => item?.id)
+    .filter((id) => typeof id === "string" && id.length > 0);
+  verifyReferenceContent({
+    items: standard?.reference_items,
+    invariants: standard?.invariants,
+    knownRiskIds: canonicalTrace.risk_ids,
+    knownSourceIds: sourceIds,
+    knownTaskIds: canonicalTrace.task_ids,
+    label: "reference-standard.yaml: reference",
+    errors,
+  });
+  verifyNonEmptyArray(standard?.limitations, "reference-standard.yaml: limitations", errors);
+
+  verifyObjectEntities(annotation?.label_schema, ["id", "definition", "values", "evidence_required"], "annotation-protocol.yaml: label_schema", errors);
+  verifyTemplateAnnotation(annotation, "annotation-protocol.yaml", errors);
+  for (const field of ["instructions", "annotators", "blind_independent_passes", "disagreement", "arbitration", "quality_control", "privacy_handling", "outputs"]) {
+    verifyNonEmptyObject(annotation?.[field], `annotation-protocol.yaml: ${field}`, errors);
+  }
+  if (typeof annotation?.blind_independent_passes?.required_annotators !== "number" || annotation.blind_independent_passes.required_annotators < 2) errors.push("annotation-protocol.yaml: blind_independent_passes.required_annotators must be at least 2");
+  if (annotation?.disagreement?.preserve_raw_labels !== true) errors.push("annotation-protocol.yaml: disagreement.preserve_raw_labels must be true");
+  verifyNonEmptyArray(annotation?.arbitration?.required_for, "annotation-protocol.yaml: arbitration.required_for", errors);
+  verifyMatchingIdSet(annotation?.traceability?.reference_item_ids, referenceIds, "annotation-protocol.yaml: traceability.reference_item_ids", errors);
+
+  if (verifyNonEmptyObject(split?.grouping_keys, "split-manifest.yaml: grouping_keys", errors)) {
+    for (const field of ["parent", "entity", "document", "template", "time"]) {
+      verifyNonEmptyString(split.grouping_keys[field], `split-manifest.yaml: grouping_keys.${field}`, errors);
+    }
+  }
+  verifyTemplateSplit(split, "split-manifest.yaml", errors);
+  verifyObjectEntities(split?.leakage_controls, ["id", "boundary", "key", "rule", "check", "failure_action"], "split-manifest.yaml: leakage_controls", errors);
+  const boundaries = new Set(asArray(split?.leakage_controls).map((item) => item?.boundary));
+  for (const field of ["parent", "entity", "document", "template", "time"]) if (!boundaries.has(field)) errors.push(`split-manifest.yaml: leakage_controls must cover ${field}`);
+  const splitIds = verifyObjectEntities(split?.splits, ["id", "purpose", "partition_roles", "source_ids", "time_window", "assignment_rule", "protected", "allowed_use"], "split-manifest.yaml: splits", errors);
+  for (const [index, item] of asArray(split?.splits).entries()) {
+    const label = `split-manifest.yaml: splits[${index}]`;
+    for (const role of verifyNonEmptyStringArray(item?.partition_roles, `${label}.partition_roles`, errors)) if (!DATA_ROLES.has(role)) errors.push(`${label}.partition_roles: unknown role ${role}`);
+    verifyReferencesKnown(verifyStringIdList(item?.source_ids, `${label}.source_ids`, errors), new Set(sourceIds), `${label}.source_ids`, errors);
+    if (typeof item?.protected !== "boolean") errors.push(`${label}.protected: must be a boolean`);
+    verifyNonEmptyArray(item?.allowed_use, `${label}.allowed_use`, errors);
+    const serialized = JSON.stringify(item.allowed_use).toLowerCase();
+    if (item.protected === true && /(train|training|authoring|development)/.test(serialized)) errors.push(`${label}.allowed_use: protected split must not be exposed to training or development`);
+  }
+
+  if (verifyNonEmptyObject(dataset?.dataset_identity, "dataset-manifest.yaml: dataset_identity", errors)) {
+    for (const field of ["immutable_id", "created_at", "content_hash", "schema_hash", "status"]) verifyNonEmptyString(dataset.dataset_identity[field], `dataset-manifest.yaml: dataset_identity.${field}`, errors);
+    verifyEqualReference(dataset.dataset_identity.immutable_id, dataset?.metadata?.id, "dataset-manifest.yaml: dataset_identity.immutable_id", errors);
+  }
+  verifyObjectEntities(dataset?.contents, ["id", "path", "media_type", "hash", "record_role"], "dataset-manifest.yaml: contents", errors);
+  verifyTemplateDataset(dataset, "dataset-manifest.yaml", errors);
+  verifyNonEmptyObject(dataset?.item_schema, "dataset-manifest.yaml: item_schema", errors);
+  verifyNonEmptyArray(dataset?.joins, "dataset-manifest.yaml: joins", errors);
+  verifyAccessViews(dataset?.views, "dataset-manifest.yaml: views", errors);
+  verifyRequiredEntryFields(dataset?.partition_summary, ["partition_id", "role", "count", "denominator", "reporting"], "dataset-manifest.yaml: partition_summary", errors);
+  verifyMatchingIdSet(asArray(dataset?.partition_summary).map((item) => item?.partition_id), partitionIds, "dataset-manifest.yaml: partition_summary.partition_id", errors);
+  verifyNonEmptyObject(dataset?.provenance_summary, "dataset-manifest.yaml: provenance_summary", errors);
+  if (verifyNonEmptyObject(dataset?.versioning, "dataset-manifest.yaml: versioning", errors) && dataset.versioning.immutable !== true) errors.push("dataset-manifest.yaml: versioning.immutable must be true");
+  verifyNonEmptyObject(dataset?.drift_and_refresh, "dataset-manifest.yaml: drift_and_refresh", errors);
+  for (const field of ["monitors", "triggers"]) verifyNonEmptyArray(dataset?.drift_and_refresh?.[field], `dataset-manifest.yaml: drift_and_refresh.${field}`, errors);
+  for (const field of ["refresh_process", "comparison"]) verifyNonEmptyString(dataset?.drift_and_refresh?.[field], `dataset-manifest.yaml: drift_and_refresh.${field}`, errors);
+  for (const [field, expected] of [["partition_ids", partitionIds], ["source_ids", sourceIds], ["reference_item_ids", referenceIds], ["split_ids", splitIds]]) verifyMatchingIdSet(dataset?.traceability?.[field], expected, `dataset-manifest.yaml: traceability.${field}`, errors);
+  for (const [relativePath, value, fields] of [
+    ["sampling-plan.yaml", sampling, ["question_ids", "risk_ids", "scenario_family_ids", "task_ids"]],
+    ["reference-standard.yaml", standard, ["question_ids", "risk_ids", "task_ids"]],
+    ["annotation-protocol.yaml", annotation, ["question_ids", "risk_ids", "task_ids"]],
+    ["split-manifest.yaml", split, ["risk_ids", "task_ids"]],
+    ["dataset-manifest.yaml", dataset, traceFields],
+    ["data-quality-gate.yaml", gate, ["question_ids", "risk_ids", "task_ids"]],
+  ]) {
+    for (const field of fields) verifyMatchingIdSet(value?.traceability?.[field], canonicalTrace[field], `${relativePath}: traceability.${field}`, errors);
+  }
+  verifyMatchingIdSet(standard?.traceability?.source_ids, sourceIds, "reference-standard.yaml: traceability.source_ids", errors);
+  verifyMatchingIdSet(split?.traceability?.partition_ids, partitionIds, "split-manifest.yaml: traceability.partition_ids", errors);
+  verifyMatchingIdSet(gate?.traceability?.source_ids, sourceIds, "data-quality-gate.yaml: traceability.source_ids", errors);
+  verifyMatchingIdSet(gate?.traceability?.split_ids, splitIds, "data-quality-gate.yaml: traceability.split_ids", errors);
+
+  const templateEvidenceIds = collectNestedIds(Object.fromEntries(templateValues));
+  for (const [index, check] of asArray(gate?.checks).entries()) {
+    if (typeof check?.critical !== "boolean") errors.push(`data-quality-gate.yaml: checks[${index}].critical must be a boolean`);
+    for (const field of ["category", "requirement", "failure_action", "owner"]) verifyNonEmptyString(check?.[field], `data-quality-gate.yaml: checks[${index}].${field}`, errors);
+  }
+  verifyExactSet(Object.keys(gate?.status_values ?? {}), [...DATA_GATE_STATUSES], "data-quality-gate.yaml: status_values", errors);
+  verifyExactSet(Object.keys(gate?.check_status_values ?? {}), [...DATA_CHECK_STATUSES], "data-quality-gate.yaml: check_status_values", errors);
+  verifyGate({
+    gate,
+    checks: gate?.checks,
+    quotas,
+    gaps: sampling?.sampling_frame?.gaps,
+    knownEvidenceIds: templateEvidenceIds,
+    label: "data-quality-gate.yaml",
+    errors,
+  });
+}
+
+function collectNestedIds(value, ids = new Set()) {
+  if (Array.isArray(value)) {
+    for (const entry of value) collectNestedIds(entry, ids);
+  } else if (isNonEmptyObject(value)) {
+    if (typeof value.id === "string" && value.id.length > 0) ids.add(value.id);
+    for (const child of Object.values(value)) collectNestedIds(child, ids);
+  }
+  return ids;
+}
+
+function verifyTaskScenarioDataCase(value, relativePath, errors) {
+  if (!value) return;
+  verifyNonEmptyObject(value?.input, `${relativePath}: input`, errors);
+  const canonicalUpstream = A15_CANONICAL_UPSTREAM[relativePath];
+  const definitionMap = {
+    dataset_charter_ids: [value?.input?.charter?.id],
+    source_ids: asArray(value?.input?.sources).map((item) => item?.id),
+    partition_ids: asArray(value?.input?.charter?.partitions).map((item) => item?.id),
+    reference_item_ids: asArray(value?.input?.reference?.items).map((item) => item?.id),
+    annotation_protocol_ids: [value?.input?.annotation?.protocol_id],
+    split_ids: asArray(value?.input?.split?.splits).map((item) => item?.id),
+    dataset_version_ids: [value?.input?.dataset_version?.id],
+    quality_gate_ids: [value?.input?.quality_gate?.id],
+    trace_ids: asArray(value?.expected?.trace_closure).map((item) => item?.id),
+  };
+  const allKnown = collectNestedIds(value.input);
+  for (const id of [
+    value?.input?.reference?.standard_id,
+    value?.input?.annotation?.protocol_id,
+    value?.input?.split?.manifest_id,
+    value?.input?.sampling?.frame_id,
+  ]) {
+    if (typeof id === "string" && id.length > 0) allKnown.add(id);
+  }
+  for (const field of A15_UPSTREAM_FIELDS) {
+    const expectedIds = canonicalUpstream?.[field] ?? [];
+    const ids = verifyMatchingIdSet(
+      value?.references?.[field],
+      expectedIds,
+      `${relativePath}: references.${field}`,
+      errors,
+    );
+    verifyMatchingIdSet(
+      value?.input?.charter?.upstream_traceability?.[field],
+      expectedIds,
+      `${relativePath}: input.charter.upstream_traceability.${field}`,
+      errors,
+    );
+    for (const id of ids) allKnown.add(id);
+  }
+  for (const [field, rawIds] of Object.entries(definitionMap)) {
+    const definedIds = rawIds.filter((id) => typeof id === "string" && id.length > 0);
+    verifyMatchingIdSet(value?.references?.[field], definedIds, `${relativePath}: references.${field}`, errors);
+    for (const id of definedIds) allKnown.add(id);
+  }
+  for (const field of ["charter", "sampling", "reference", "annotation", "split", "dataset_version", "quality_gate"]) verifyNonEmptyObject(value?.input?.[field], `${relativePath}: input.${field}`, errors);
+  verifyCaseCharter(value?.input?.charter, `${relativePath}: input.charter`, errors);
+  verifyCaseAnnotation(value?.input?.annotation, `${relativePath}: input.annotation`, errors);
+  verifyCaseSplit(value?.input?.split, `${relativePath}: input.split`, errors);
+  verifyCaseDataset(value?.input?.dataset_version, `${relativePath}: input.dataset_version`, errors);
+  verifyNonEmptyArray(value?.input?.sources, `${relativePath}: input.sources`, errors);
+  verifyDataRoles(value?.input?.charter?.partitions, `${relativePath}: input.charter.partitions`, errors);
+  for (const [index, source] of asArray(value?.input?.sources).entries()) {
+    const label = `${relativePath}: input.sources[${index}]`;
+    for (const field of ["provenance", "lineage", "authorization", "privacy", "license_and_retention"]) verifyNonEmptyObject(source?.[field], `${label}.${field}`, errors);
+    verifyCaseSourceGovernance(source, label, errors);
+  }
+  if (verifyNonEmptyObject(value?.input?.sampling?.sampling_frame, `${relativePath}: input.sampling.sampling_frame`, errors)) {
+    verifySamplingGaps(
+      value.input.sampling.sampling_frame.gaps,
+      `${relativePath}: input.sampling.sampling_frame.gaps`,
+      errors,
+    );
+  }
+  const quotas = value?.input?.sampling?.allocation?.per_stratum;
+  verifyRequiredEntryFields(quotas, ["stratum_id", "target_count", "actual_count", "status", "rationale"], `${relativePath}: input.sampling.allocation.per_stratum`, errors);
+  for (const [index, quota] of asArray(quotas).entries()) {
+    if (typeof quota?.target_count !== "number") errors.push(`${relativePath}: input.sampling.allocation.per_stratum[${index}].target_count must be a number`);
+    if (typeof quota?.actual_count !== "number") errors.push(`${relativePath}: input.sampling.allocation.per_stratum[${index}].actual_count must be a number`);
+    if (!["met", "gap", "blocked"].includes(quota?.status)) errors.push(`${relativePath}: input.sampling.allocation.per_stratum[${index}].status must be met, gap or blocked`);
+    if (
+      quota?.status === "met" &&
+      (typeof quota.actual_count !== "number" ||
+        typeof quota.target_count !== "number" ||
+        quota.actual_count < quota.target_count)
+    ) {
+      errors.push(`${relativePath}: input.sampling.allocation.per_stratum[${index}].status met requires actual_count at least target_count`);
+    }
+  }
+  verifyReferenceContent({
+    items: value?.input?.reference?.items,
+    invariants: value?.input?.reference?.invariants,
+    knownRiskIds: canonicalUpstream?.risk_ids ?? [],
+    knownSourceIds: definitionMap.source_ids,
+    knownTaskIds: canonicalUpstream?.task_ids ?? [],
+    label: `${relativePath}: input.reference`,
+    errors,
+  });
+  for (const field of ["blind_independent", "disagreement", "arbitration"]) verifyNonEmptyObject(value?.input?.annotation?.[field], `${relativePath}: input.annotation.${field}`, errors);
+  if (value?.input?.annotation?.blind_independent?.annotators < 2) errors.push(`${relativePath}: input.annotation.blind_independent.annotators must be at least 2`);
+  if (value?.input?.annotation?.disagreement?.preserve_raw !== true) errors.push(`${relativePath}: input.annotation.disagreement.preserve_raw must be true`);
+  const boundaries = new Set(asArray(value?.input?.split?.leakage_controls).map((item) => item?.boundary));
+  for (const boundary of ["parent", "entity", "document", "template", "time"]) if (!boundaries.has(boundary)) errors.push(`${relativePath}: input.split.leakage_controls must cover ${boundary}`);
+  if (value?.input?.dataset_version?.identity?.immutable !== true) errors.push(`${relativePath}: input.dataset_version.identity.immutable must be true`);
+  verifyNonEmptyString(value?.input?.dataset_version?.identity?.content_hash, `${relativePath}: input.dataset_version.identity.content_hash`, errors);
+  verifyNonEmptyString(value?.input?.dataset_version?.identity?.schema_hash, `${relativePath}: input.dataset_version.identity.schema_hash`, errors);
+  verifyAccessViews(value?.input?.dataset_version?.views, `${relativePath}: input.dataset_version.views`, errors);
+  verifyExactSet(Object.keys(value?.input?.quality_gate?.status_values ?? {}), [...DATA_GATE_STATUSES], `${relativePath}: input.quality_gate.status_values`, errors);
+  const caseChecks = value?.input?.quality_gate?.checks;
+  verifyRequiredEntryFields(caseChecks, ["id", "requirement", "evidence", "status"], `${relativePath}: input.quality_gate.checks`, errors);
+  const gateExternalEvidenceIds = collectNestedIds({
+    charter: value?.input?.charter,
+    sources: value?.input?.sources,
+    sampling: value?.input?.sampling,
+    reference: value?.input?.reference,
+    annotation: value?.input?.annotation,
+    split: value?.input?.split,
+    dataset_version: value?.input?.dataset_version,
+  });
+  for (const id of [
+    value?.input?.reference?.standard_id,
+    value?.input?.annotation?.protocol_id,
+    value?.input?.split?.manifest_id,
+    value?.input?.sampling?.frame_id,
+  ]) {
+    if (typeof id === "string" && id.length > 0) gateExternalEvidenceIds.add(id);
+  }
+  const forbiddenGateEvidenceIds = collectNestedIds(value?.input?.quality_gate);
+  if (typeof value?.input?.quality_gate?.id === "string") {
+    forbiddenGateEvidenceIds.add(value.input.quality_gate.id);
+  }
+  const materializedEvidenceByCategory = value?.input?.quality_gate?.decision?.status === "ready"
+    ? verifyCaseReadyMaterialization(value, relativePath, errors)
+    : null;
+  verifyGate({
+    gate: value?.input?.quality_gate,
+    checks: caseChecks,
+    quotas,
+    gaps: value?.input?.sampling?.sampling_frame?.gaps,
+    knownEvidenceIds: gateExternalEvidenceIds,
+    forbiddenEvidenceIds: forbiddenGateEvidenceIds,
+    materializedEvidenceByCategory,
+    label: `${relativePath}: input.quality_gate`,
+    errors,
+  });
+
+  const traces = value?.expected?.trace_closure;
+  verifyObjectEntities(traces, ["id", "links", "action"], `${relativePath}: expected.trace_closure`, errors);
+  const traced = new Set();
+  for (const [index, trace] of asArray(traces).entries()) {
+    const links = verifyStringIdList(trace?.links, `${relativePath}: expected.trace_closure[${index}].links`, errors);
+    verifyReferencesKnown(links, allKnown, `${relativePath}: expected.trace_closure[${index}].links`, errors, traced);
+  }
+  for (const ids of Object.values(value?.references ?? {})) {
+    for (const id of asArray(ids)) {
+      if (typeof id === "string" && !traced.has(id) && !asArray(value?.references?.trace_ids).includes(id)) errors.push(`${relativePath}: reference ${id} is not covered by expected.trace_closure`);
+    }
+  }
+  verifyMatchingIdSet(value?.evidence?.traceability, definitionMap.trace_ids, `${relativePath}: evidence.traceability`, errors);
+  verifyNonEmptyArray(value?.evidence?.design_artifacts, `${relativePath}: evidence.design_artifacts`, errors);
+  verifyNonEmptyArray(value?.expected?.next_actions, `${relativePath}: expected.next_actions`, errors);
+  verifyNonEmptyArray(value?.evidence?.limitations, `${relativePath}: evidence.limitations`, errors);
+}
+
 function expectedUnitId(unitDir) {
   const match = path.basename(unitDir).match(/^unit-([a-z]\d+)-(\d+)$/i);
   return match ? `${match[1].toUpperCase()}.${match[2]}` : null;
@@ -2103,7 +3421,7 @@ async function verifyYaml(unitDir, relativePath, contract, errors) {
   return value;
 }
 
-async function verifyHtml(unitDir, errors) {
+async function verifyHtml(unitDir, errors, verifyLocalHrefs = false) {
   const htmlPath = path.join(unitDir, "index.html");
   if (!(await exists(htmlPath))) return;
   const source = await readFile(htmlPath, "utf8");
@@ -2118,6 +3436,31 @@ async function verifyHtml(unitDir, errors) {
   }
   if (!/<main\b/i.test(source)) {
     errors.push("index.html: missing main landmark");
+  }
+  if (verifyLocalHrefs) {
+    const hrefPattern = /<[a-z][^>]*\bhref\s*=\s*(["'])(.*?)\1/gi;
+    for (const match of source.matchAll(hrefPattern)) {
+      const href = match[2].trim();
+      if (
+        href.length === 0 ||
+        href.startsWith("#") ||
+        /^(?:https?:|mailto:|data:)/i.test(href) ||
+        path.isAbsolute(href)
+      ) {
+        continue;
+      }
+      const relativeTarget = href.split(/[?#]/, 1)[0];
+      if (relativeTarget.length === 0) continue;
+      let decodedTarget;
+      try {
+        decodedTarget = decodeURIComponent(relativeTarget);
+      } catch {
+        errors.push(`index.html: invalid local href ${href}`);
+        continue;
+      }
+      const target = path.resolve(path.dirname(htmlPath), decodedTarget);
+      if (!(await exists(target))) errors.push(`index.html: broken local href ${href}`);
+    }
   }
 }
 
@@ -2177,6 +3520,8 @@ export async function verifyAcademyUnit(unitDir) {
       verifyTargetBoundaryVersionCase(value, examplePath, errors);
     } else if (profileName === "question-to-task-scenario-v1") {
       verifyQuestionTaskScenarioCase(value, examplePath, errors);
+    } else if (profileName === "task-scenario-to-evaluation-data-v1") {
+      verifyTaskScenarioDataCase(value, examplePath, errors);
     }
   }
 
@@ -2190,8 +3535,14 @@ export async function verifyAcademyUnit(unitDir) {
     verifyTargetBoundaryVersionTemplates(templateValues, errors);
   } else if (profileName === "question-to-task-scenario-v1") {
     verifyQuestionTaskScenarioTemplates(templateValues, errors);
+  } else if (profileName === "task-scenario-to-evaluation-data-v1") {
+    verifyTaskScenarioDataTemplates(templateValues, errors);
   }
 
-  await verifyHtml(resolvedUnitDir, errors);
+  await verifyHtml(
+    resolvedUnitDir,
+    errors,
+    profileName === "task-scenario-to-evaluation-data-v1",
+  );
   return errors;
 }
