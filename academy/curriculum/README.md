@@ -1,6 +1,6 @@
 # Curriculum
 
-<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
 
 完整课程将覆盖 8 个阶段、29 个核心章节、不少于 138 个知识单元、8 个阶段 Capstone 和 1 个企业级综合 Capstone。
 
@@ -16,17 +16,18 @@
 - [A1.4｜从评测问题到任务与场景](../phase-a/chapter-a1/unit-a1-4/README.md)（任务、场景、覆盖与完整性合同已验证）
 - [A1.5｜从任务与场景到评测数据](../phase-a/chapter-a1/unit-a1-5/README.md)（评测数据治理与完整性合同已验证）
 - [A1.6｜从参考标准到评分器](../phase-a/chapter-a1/unit-a1-6/README.md)（评分器设计、身份、证据与质量就绪合同已验证）
-- A1.7（尚未开始；正式标题与范围待定义，学习完成前不创建正式成果或占位正文）
+- [A1.7｜从样本级评分到可信指标](../phase-a/chapter-a1/unit-a1-7/README.md)（指标、分母、聚合、不确定性、分析与证据就绪合同已验证）
+- A1.8（尚未开始；正式标题与范围待定义，学习完成前不创建正式成果或占位正文）
 
-#### A1.6 已验证范围
+#### A1.7 已验证范围
 
-A1.5 定义 Reference Standard 与评测数据治理；A1.6 进一步把参考标准、观察证据与风险构念转为可审计 Scorer，区分 Reference、Rubric、Scorer、Score、Metric 与 Gate，定义从 atomic claim 到 task/trial 的评分单位、Observation Bundle、确定性/程序化/人工/LLM-as-Judge/复合评分器、Rubric anchors、不确定与分歧仲裁、版本身份和质量就绪门。正式成果包含 8 类模板与退款 Agent、合同审查 Agent、企业知识助手 3 个案例；Node 24 本地 `npm ci && npm run check` 共 130 项测试通过，候选提交 [`dfd0c77`](https://github.com/plwslpld-arch/evalorium/commit/dfd0c77ad95f6c1c20f6011454bd626b9e2824f5) 对应的[远端 run 31393199383](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383) `completed/success`。该验证只证明公开 Scorer 设计、身份、证据追踪与质量就绪合同，不证明 A1.5 数据已物化、真实评分器实现或校准、trial、Score、Metric、Harness、统计推断、系统 Gate、生产效果或个人能力。
+A1.6 将参考标准变成可审计 Scorer 与样本级 Score；A1.7 进一步把 Score Records 转换为可用于决策的 Metric 与 Estimate，显式定义 estimand、目标总体、分析单位、分母、重复运行依赖、micro/macro/目标加权聚合、paired cluster bootstrap、最小支持、效应边界、多重比较、停止规则、缺失与 coverage-risk，以及 Metric Quality Gate。正式成果包含 8 类模板与退款 Agent、合同审查 Agent、企业知识助手 3 个案例；Node 24 本地 `npm ci && npm run check` 共 140 项测试通过，候选提交 [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708) 对应的[远端 run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) `completed/success`。该验证只证明公开 Metric 设计与证据就绪合同，不证明真实 Score 或 Estimate 已物化、版本比较或统计结论成立、系统可发布、Harness、生产效果或个人能力。
 
 学习目标：
 
-1. 严格区分 Reference、Rubric、Scorer、Score、Metric 与 Gate，避免把答案、判定程序和聚合结论混为一体。
-2. 选择与构念和决策相匹配的评分单位，并以 Observation Contract 限定评分器可以读取的证据。
-3. 组合确定性、程序化、人工与 LLM-as-Judge 评分器，确保高权威关键失败不会被低权威判断覆盖或平均掉。
-4. 用尺度、anchors、证据要求、critical errors 与 unscorable 语义构建可审计 Rubric。
-5. 显式处理不确定、弃权、不可评分、分歧、仲裁与结论不足，而不是强制生成分数。
-6. 固定 Scorer 身份与版本，并从 reliability、validity、calibration、错误画像、偏差、鲁棒性和安全性决定质量就绪状态。
+1. 区分 Score、Metric、Estimand、Estimator、Estimate 与 Gate，先定义要估计的量，再选择计算方法。
+2. 固定目标总体、分析单位、分母与缺失处理，避免选择偏差、静默丢弃和 Simpson 悖论。
+3. 根据任务层级、重复运行与版本配对关系选择 micro、macro、目标加权和分层聚合。
+4. 使用成对整簇重采样、置信区间、最小支持和稀有事件界限表达不确定性，不把 run 错当独立样本。
+5. 预声明 superiority、non-inferiority、equivalence 或绝对阈值问题，并控制多重比较、可选停止与胜者诅咒。
+6. 通过 Estimate Record、Comparison Report 与 Metric Quality Gate 阻止设计稿伪装成统计结论或发布依据。

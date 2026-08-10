@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1–A1.5 and [A1.6](academy/phase-a/chapter-a1/unit-a1-6/README.md) public artifact contracts validated; A1.6 includes three cases, eight templates, 130 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383) for [`dfd0c77`](https://github.com/plwslpld-arch/evalorium/commit/dfd0c77ad95f6c1c20f6011454bd626b9e2824f5); A1.7 is not started. This validates only the public scorer design, identity, evidence-traceability, and quality-readiness contract—not materialized A1.5 data, a real scorer implementation or calibration, trials, Scores, Metrics, a Harness, statistical inference, a system Gate, production outcomes, or personal competency. |
+| Academy curriculum | Learning | A1.1–A1.6 and [A1.7](academy/phase-a/chapter-a1/unit-a1-7/README.md) public artifact contracts validated; A1.7 includes three cases, eight templates, 140 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) for [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708); A1.8 is not started. This validates only the public metric estimand, denominator, aggregation, uncertainty, analysis, evidence-boundary, and quality-readiness contracts—not materialized Scores or Estimates, a real comparison, statistical or release conclusions, a Harness or system Gate, production outcomes, or personal competency. |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 

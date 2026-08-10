@@ -1,6 +1,6 @@
 # Evalorium Academy
 
-<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
 
 Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的一部分交付。
 
@@ -14,10 +14,11 @@ Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的�
 | A1.4 | 从评测问题到任务与场景 | [Markdown](phase-a/chapter-a1/unit-a1-4/README.md) · [HTML](phase-a/chapter-a1/unit-a1-4/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-4/artifact-manifest.yaml) | 任务、场景、覆盖与完整性合同已验证 |
 | A1.5 | 从任务与场景到评测数据 | [Markdown](phase-a/chapter-a1/unit-a1-5/README.md) · [HTML](phase-a/chapter-a1/unit-a1-5/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-5/artifact-manifest.yaml) | 评测数据治理与完整性合同已验证 |
 | A1.6 | 从参考标准到评分器 | [Markdown](phase-a/chapter-a1/unit-a1-6/README.md) · [HTML](phase-a/chapter-a1/unit-a1-6/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-6/artifact-manifest.yaml) | 评分器设计、身份、证据与质量就绪合同已验证 |
+| A1.7 | 从样本级评分到可信指标 | [Markdown](phase-a/chapter-a1/unit-a1-7/README.md) · [HTML](phase-a/chapter-a1/unit-a1-7/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-7/artifact-manifest.yaml) | 指标、分母、聚合、不确定性与证据就绪合同已验证 |
 
-当前单元是 A1.7（尚未开始）；正式标题与范围尚待定义，学习完成前不创建正式成果或占位正文。
+当前单元是 A1.8（尚未开始）；正式标题与范围尚待定义，学习完成前不创建正式成果或占位正文。
 
-A1.6 包含 Scorer Charter、Scoring Unit Spec、Observation Contract、Scoring Rubric、Adjudication Protocol、Scorer Manifest、Scorer Validation Report、Scorer Quality Gate 8 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个完整案例。Node 24 本地 `npm ci && npm run check` 共 130 项测试、品牌与仓库验证通过；候选提交 [`dfd0c77`](https://github.com/plwslpld-arch/evalorium/commit/dfd0c77ad95f6c1c20f6011454bd626b9e2824f5) 的 [Documentation Quality run 31393199383](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383) 精确匹配且成功。该验证只证明公开 Scorer 设计、身份、证据追踪与质量就绪合同，不证明 A1.5 数据已物化、真实评分器实现或校准、trial、Score、Metric、Harness、统计推断、系统 Gate、生产效果或个人能力。
+A1.7 包含 Metric Definition、Population & Denominator、Aggregation Plan、Uncertainty Plan、Analysis Plan、Estimate Record、Comparison Report、Metric Quality Gate 8 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个完整案例。Node 24 本地 `npm ci && npm run check` 共 140 项测试、品牌与仓库验证通过；候选提交 [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708) 的 [Documentation Quality run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) 精确匹配且成功。该验证只证明公开 Metric 的 estimand、分母、聚合、不确定性、分析、证据边界与质量就绪合同，不证明真实 Score 或 Estimate 已物化、版本比较或统计结论成立、系统可发布、Harness、生产效果或个人能力。
 
 ## 单元交付标准
 

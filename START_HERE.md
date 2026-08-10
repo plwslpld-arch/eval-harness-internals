@@ -1,6 +1,6 @@
 # Evalorium：跨设备恢复入口
 
-<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
 
 本文件是所有电脑、新任务和贡献者的统一恢复入口。对话用于交互，Git 仓库是持久事实来源。
 
@@ -10,7 +10,7 @@ Evalorium 是独立、开源、企业级的 AI 质量工程平台，目标覆盖
 
 当前先通过 Academy 逐单元交付经过校订与验证的课程、模板和案例，再逐步实现 Platform。课程不会因为一个月的节奏目标而缩减。
 
-当前 A1.6《从参考标准到评分器》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-6/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-6/index.html)、Scorer Charter、Scoring Unit Spec、Observation Contract、Scoring Rubric、Adjudication Protocol、Scorer Manifest、Scorer Validation Report、Scorer Quality Gate 共 8 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个端到端案例均纳入合同。Node 24 本地 `npm ci && npm run check` 共 130 项测试、品牌与仓库验证通过；候选内容提交 [`dfd0c77`](https://github.com/plwslpld-arch/evalorium/commit/dfd0c77ad95f6c1c20f6011454bd626b9e2824f5) 的 [Documentation Quality run 31393199383](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383) 精确匹配 head SHA 且 `completed/success`。该证据只证明公开 Scorer 设计、身份、证据追踪与质量就绪合同，不证明 A1.5 数据已物化、真实评分器实现或校准、trial、Score、Metric、Harness、统计推断、系统 Gate、生产效果或个人能力。当前 A1.7 尚未开始，必须先定义正式标题与范围，学习完成前不创建正式成果或占位正文。
+当前 A1.7《从样本级评分到可信指标》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-7/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-7/index.html)、Metric Definition、Population & Denominator、Aggregation Plan、Uncertainty Plan、Analysis Plan、Estimate Record、Comparison Report、Metric Quality Gate 共 8 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个端到端案例均纳入合同。Node 24 本地 `npm ci && npm run check` 共 140 项测试、品牌与仓库验证通过；候选内容提交 [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708) 的 [Documentation Quality run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) 精确匹配 head SHA 且 `completed/success`。该证据只证明公开 Metric 的 estimand、分母、聚合、不确定性、分析、证据边界与质量就绪合同，不证明真实 Score 或 Estimate 已物化、版本比较或统计结论成立、系统可发布、Harness、生产效果或个人能力。当前 A1.8 尚未开始，必须先定义正式标题与范围，学习完成前不创建正式成果或占位正文。
 
 ## 每次恢复的固定顺序
 

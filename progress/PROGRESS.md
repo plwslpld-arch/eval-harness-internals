@@ -1,15 +1,15 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
 - 章节：A1
-- 当前知识单元：A1.7（正式标题与范围待定义）
+- 当前知识单元：A1.8（正式标题与范围待定义）
 - 当前状态：尚未开始
-- 公开成果合同已验证知识单元：6
-- 最近完成：A1.6《从参考标准到评分器》
+- 公开成果合同已验证知识单元：7
+- 最近完成：A1.7《从样本级评分到可信指标》
 
 ## A1.1 公开成果结构合同已验证
 
@@ -76,6 +76,17 @@
 - 远程验证：[Documentation Quality run 31393199383](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383)，head SHA 精确匹配候选提交，状态为 `completed/success`
 - 限制：验证只证明公开 Scorer 设计、身份、证据追踪与质量就绪合同，不证明 A1.5 数据已物化、真实评分器实现或校准、trial、Score、Metric、Harness、统计推断、系统 Gate、生产效果或个人能力
 
+## A1.7 指标、分母、聚合、不确定性、分析与证据就绪合同已验证
+
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-7/README.md)与[独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-7/index.html)
+- Metric Definition、Population & Denominator、Aggregation Plan、Uncertainty Plan、Analysis Plan、Estimate Record、Comparison Report、Metric Quality Gate 共 8 类模板
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个 score-to-metric 完整案例
+- Canonical profile 检查 estimand 与目标总体、分析单位与分母、重复运行依赖、非补偿关键风险、目标加权与缺失敏感性、成对整簇重采样、预声明分析、多重比较与停止规则、计划记录真实性、Metric Quality Gate、案例身份和追踪闭环
+- Node 24 本地 `npm ci && npm run check`：140 项测试、品牌检查和仓库验证通过
+- 候选内容提交：[`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708)
+- 远程验证：[Documentation Quality run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004)，head SHA 精确匹配候选提交，状态为 `completed/success`
+- 限制：验证只证明公开 Metric 的 estimand、分母、聚合、不确定性、分析、证据边界与质量就绪合同，不证明真实 Score 或 Estimate 已物化、版本比较或统计结论成立、系统可发布、Harness、生产效果或个人能力
+
 ## 完整范围
 
 - 8 个阶段
@@ -95,7 +106,7 @@
 
 公开仓库只保存正式成果，不保存对话、个人回答、错误历史、私人学习笔记或中间草稿。单元状态描述的是开源交付物，不用于公开判断个人能力。
 
-## A1.7 下一步
+## A1.8 下一步
 
-1. 先定义 A1.7 的正式标题与学习范围，再开始循序学习。
-2. A1.7 学习完成前不创建正式单元成果或占位正文。
+1. 先定义 A1.8 的正式标题与学习范围，再开始循序学习。
+2. A1.8 学习完成前不创建正式单元成果或占位正文。

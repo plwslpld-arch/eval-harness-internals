@@ -1,6 +1,6 @@
 # Project Maturity Model
 
-<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
 
 Evalorium separates intent from evidence. Every capability uses one of five states.
 
@@ -17,7 +17,7 @@ Evalorium separates intent from evidence. Every capability uses one of five stat
 | Area | State | Evidence | Limitation |
 |---|---|---|---|
 | Repository quality foundation | `implemented` | Versioned validator, tests, brand renderer, and GitHub Actions quality gate | The gate validates repository contracts; it is not evidence of a production AI runtime |
-| Academy | `learning` | A1.1–A1.5 and [A1.6](../academy/phase-a/chapter-a1/unit-a1-6/README.md) public artifact contracts validated; A1.6 has three cases, eight templates, 130 local tests, and exact-candidate [remote run 31393199383](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383) for [`dfd0c77`](https://github.com/plwslpld-arch/evalorium/commit/dfd0c77ad95f6c1c20f6011454bd626b9e2824f5); A1.7 is not started | The gate proves only the public scorer design, identity, evidence-traceability, and quality-readiness contract. It does not prove materialized A1.5 data, a real scorer implementation or calibration, trials, Scores, Metrics, a Harness, statistical inference, a system Gate, production outcomes, or personal competency; no A1.7 placeholder exists |
+| Academy | `learning` | A1.1–A1.6 and [A1.7](../academy/phase-a/chapter-a1/unit-a1-7/README.md) public artifact contracts validated; A1.7 has three cases, eight templates, 140 local tests, and exact-candidate [remote run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) for [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708); A1.8 is not started | The gate proves only the public metric estimand, denominator, aggregation, uncertainty, analysis, evidence-boundary, and quality-readiness contracts. It does not prove materialized Scores or Estimates, a real comparison, statistical or release conclusions, a Harness or system Gate, production outcomes, or personal competency; no A1.8 placeholder exists |
 | Platform | `planned` | Vision, scope, architecture, and roadmap | No runtime implementation exists |
 | Agent Environment Harness | `planned` | Defined target boundary | No executable environment harness exists |
 | Production adoption | not claimed | None | Requires external organizational evidence |
