@@ -1,6 +1,6 @@
 schema_version: 2
 project: Evalorium
-updated_at: "2026-08-10T04:10:51Z"
+updated_at: "2026-08-10T04:28:27Z"
 
 repository:
   default_branch: main
@@ -32,7 +32,8 @@ current:
   phase: A
   chapter: A1
   unit: A1.4
-  status: not_started
+  title: 从评测问题到任务与场景
+  status: in_progress
 
 learning_protocol:
   interaction: assistant_provides_complete_instruction_and_answers
@@ -59,9 +60,9 @@ last_completed:
     remote_url: https://github.com/plwslpld-arch/evalorium/actions/runs/31354660150
 
 next_actions:
-  - 正式定义 A1.4 的标题、范围、学习目标及其与 A1.3 的边界
-  - 同步课程地图后，再从 A1.4 第一部分开始循序学习
-  - 在完成学习前不创建 A1.4 正式单元成果或占位正文
+  - 学习 A1.4 第一部分：为什么评测问题不能直接执行，并区分用例、场景、任务、样本与试次
+  - 继续学习场景空间、风险驱动覆盖、Task Spec、变体与控制条件
+  - 在完成循序学习前不创建 A1.4 正式单元成果或占位正文
 
 product_decisions:
   primary_product: 企业级 AI 质量工程、评测、门禁、监控与治理平台

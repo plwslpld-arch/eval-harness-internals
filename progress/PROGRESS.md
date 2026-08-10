@@ -1,13 +1,13 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A1.4 current_status=not_started last_completed=A1.3 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
 - 章节：A1
-- 当前知识单元：A1.4（正式标题与范围待定义）
-- 当前状态：未开始
+- 当前知识单元：A1.4《从评测问题到任务与场景》
+- 当前状态：学习中
 - 公开成果合同已验证知识单元：3
 - 最近完成：A1.3《评测对象、系统边界与版本》
 
@@ -64,6 +64,6 @@
 
 ## A1.4 下一步
 
-1. 正式定义 A1.4 的标题、范围、学习目标及其与 A1.3 的边界。
-2. 同步课程地图后，再从第一部分开始循序学习。
+1. 第一部分解释为什么评测问题不能直接执行，并区分用例、场景、任务、测试案例、样本和试次。
+2. 后续学习场景空间、风险驱动覆盖、Task Spec、变体与控制条件。
 3. 学习完成前不创建 A1.4 正式单元成果或占位正文。

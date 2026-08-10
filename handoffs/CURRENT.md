@@ -1,6 +1,6 @@
 # Current Handoff
 
-<!-- evalorium-progress current=A1.4 current_status=not_started last_completed=A1.3 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
 
 ## 已确认决策
 
@@ -20,7 +20,7 @@
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
-- 当前单元：A1.4（正式标题与范围待定义；尚未开始）
+- 当前单元：A1.4《从评测问题到任务与场景》（学习中；尚无正式单元成果）
 - 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》、A1.3《评测对象、系统边界与版本》
 
 ## A1.1 交付证据
@@ -58,9 +58,9 @@
 
 ## 下一次准确动作
 
-1. 开始 A1.4 前，重新只读确认 `main`、工作树与最新远端门禁。
-2. 先正式定义 A1.4 的标题、范围、学习目标及其与 A1.3 的边界，并同步课程地图。
-3. 定义完成后再从第一部分开始循序学习；不重复 A1.3，不提前创建正式单元成果。
+1. 继续 A1.4 每一部分前，重新只读确认 `main`、工作树与最新远端门禁。
+2. 从第一部分解释为什么评测问题不能直接执行，并区分用例、场景、任务、测试案例、样本与试次。
+3. 后续继续场景空间、风险驱动覆盖、Task Spec、变体与控制条件；不重复 A1.3，不提前创建正式单元成果。
 
 ## 未解决问题与风险
 

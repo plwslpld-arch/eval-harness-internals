@@ -1,6 +1,6 @@
 # Evalorium Academy
 
-<!-- evalorium-progress current=A1.4 current_status=not_started last_completed=A1.3 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
 
 Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的一部分交付。
 
@@ -11,6 +11,8 @@ Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的�
 | A1.1 | AI 评测的本质 | [Markdown](phase-a/chapter-a1/unit-a1-1/README.md) · [HTML](phase-a/chapter-a1/unit-a1-1/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-1/artifact-manifest.yaml) | 公开成果结构合同已验证 |
 | A1.2 | 从业务需求到评测问题 | [Markdown](phase-a/chapter-a1/unit-a1-2/README.md) · [HTML](phase-a/chapter-a1/unit-a1-2/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-2/artifact-manifest.yaml) | 公开成果与追踪合同已验证 |
 | A1.3 | 评测对象、系统边界与版本 | [Markdown](phase-a/chapter-a1/unit-a1-3/README.md) · [HTML](phase-a/chapter-a1/unit-a1-3/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-3/artifact-manifest.yaml) | 公开成果、目标身份与完整性合同已验证 |
+
+当前学习单元是 A1.4《从评测问题到任务与场景》；尚无正式单元成果，不能列入已发布单元。
 
 ## 单元交付标准
 

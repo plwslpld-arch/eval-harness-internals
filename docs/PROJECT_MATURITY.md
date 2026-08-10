@@ -1,6 +1,6 @@
 # Project Maturity Model
 
-<!-- evalorium-progress current=A1.4 current_status=not_started last_completed=A1.3 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
 
 Evalorium separates intent from evidence. Every capability uses one of five states.
 
@@ -17,7 +17,7 @@ Evalorium separates intent from evidence. Every capability uses one of five stat
 | Area | State | Evidence | Limitation |
 |---|---|---|---|
 | Repository quality foundation | `implemented` | Versioned validator, tests, brand renderer, and GitHub Actions quality gate | The gate validates repository contracts; it is not evidence of a production AI runtime |
-| Academy | `learning` | A1.1–A1.3 public artifact contracts validated; the next unit is not started | No executable Harness result, scientific outcome validation, or personal competency assessment is claimed by artifact delivery |
+| Academy | `learning` | A1.1–A1.3 public artifact contracts validated; A1.4 task-and-scenario design is active | No executable Harness result, scientific outcome validation, or personal competency assessment is claimed by artifact delivery |
 | Platform | `planned` | Vision, scope, architecture, and roadmap | No runtime implementation exists |
 | Agent Environment Harness | `planned` | Defined target boundary | No executable environment harness exists |
 | Production adoption | not claimed | None | Requires external organizational evidence |
