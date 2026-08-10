@@ -1,6 +1,6 @@
 # Curriculum
 
-<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
 
 完整课程将覆盖 8 个阶段、29 个核心章节、不少于 138 个知识单元、8 个阶段 Capstone 和 1 个企业级综合 Capstone。
 
@@ -17,11 +17,12 @@
 - [A1.5｜从任务与场景到评测数据](../phase-a/chapter-a1/unit-a1-5/README.md)（评测数据治理与完整性合同已验证）
 - [A1.6｜从参考标准到评分器](../phase-a/chapter-a1/unit-a1-6/README.md)（评分器设计、身份、证据与质量就绪合同已验证）
 - [A1.7｜从样本级评分到可信指标](../phase-a/chapter-a1/unit-a1-7/README.md)（指标、分母、聚合、不确定性、分析与证据就绪合同已验证）
-- A1.8（尚未开始；正式标题与范围待定义，学习完成前不创建正式成果或占位正文）
+- [A1.8｜从评测证据到质量决策](../phase-a/chapter-a1/unit-a1-8/README.md)（质量基线、Gate DAG、决策、豁免、发布与生产响应合同已验证）
+- A1.9（尚未开始；正式标题与范围待定义，学习完成前不创建正式成果或占位正文）
 
-#### A1.7 已验证范围
+#### A1.8 已验证范围
 
-A1.6 将参考标准变成可审计 Scorer 与样本级 Score；A1.7 进一步把 Score Records 转换为可用于决策的 Metric 与 Estimate，显式定义 estimand、目标总体、分析单位、分母、重复运行依赖、micro/macro/目标加权聚合、paired cluster bootstrap、最小支持、效应边界、多重比较、停止规则、缺失与 coverage-risk，以及 Metric Quality Gate。正式成果包含 8 类模板与退款 Agent、合同审查 Agent、企业知识助手 3 个案例；Node 24 本地 `npm ci && npm run check` 共 140 项测试通过，候选提交 [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708) 对应的[远端 run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) `completed/success`。该验证只证明公开 Metric 设计与证据就绪合同，不证明真实 Score 或 Estimate 已物化、版本比较或统计结论成立、系统可发布、Harness、生产效果或个人能力。
+A1.7 将样本级 Score 转换为可信 Metric 与 Estimate；A1.8 进一步把评测证据转化为可审计、可执行、可回滚的质量决定，显式定义 Quality Baseline、非补偿关键风险、三值检查与四值状态、七层 Gate DAG、Evidence Manifest、Partial、Waiver、Release Disposition、CI/CD 授权边界与生产事故回流。正式成果包含 9 类模板与退款 Agent、合同审查 Agent、企业知识助手 3 个案例；Node 24 本地 `npm ci && npm run check` 共 151 项测试通过，候选提交 [`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540) 对应的[远端 run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582) `completed/success`。该验证只证明公开质量决策合同存在且关键语义可由仓库校验器执行，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力。
 
 学习目标：
 

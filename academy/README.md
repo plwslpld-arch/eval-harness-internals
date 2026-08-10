@@ -1,6 +1,6 @@
 # Evalorium Academy
 
-<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
 
 Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的一部分交付。
 
@@ -15,10 +15,11 @@ Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的�
 | A1.5 | 从任务与场景到评测数据 | [Markdown](phase-a/chapter-a1/unit-a1-5/README.md) · [HTML](phase-a/chapter-a1/unit-a1-5/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-5/artifact-manifest.yaml) | 评测数据治理与完整性合同已验证 |
 | A1.6 | 从参考标准到评分器 | [Markdown](phase-a/chapter-a1/unit-a1-6/README.md) · [HTML](phase-a/chapter-a1/unit-a1-6/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-6/artifact-manifest.yaml) | 评分器设计、身份、证据与质量就绪合同已验证 |
 | A1.7 | 从样本级评分到可信指标 | [Markdown](phase-a/chapter-a1/unit-a1-7/README.md) · [HTML](phase-a/chapter-a1/unit-a1-7/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-7/artifact-manifest.yaml) | 指标、分母、聚合、不确定性与证据就绪合同已验证 |
+| A1.8 | 从评测证据到质量决策 | [Markdown](phase-a/chapter-a1/unit-a1-8/README.md) · [HTML](phase-a/chapter-a1/unit-a1-8/index.html) | [Artifact Manifest](phase-a/chapter-a1/unit-a1-8/artifact-manifest.yaml) | 质量基线、Gate DAG、决策、豁免、发布与生产响应合同已验证 |
 
-当前单元是 A1.8（尚未开始）；正式标题与范围尚待定义，学习完成前不创建正式成果或占位正文。
+当前单元是 A1.9（尚未开始）；正式标题与范围尚待定义，学习完成前不创建正式成果或占位正文。
 
-A1.7 包含 Metric Definition、Population & Denominator、Aggregation Plan、Uncertainty Plan、Analysis Plan、Estimate Record、Comparison Report、Metric Quality Gate 8 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个完整案例。Node 24 本地 `npm ci && npm run check` 共 140 项测试、品牌与仓库验证通过；候选提交 [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708) 的 [Documentation Quality run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) 精确匹配且成功。该验证只证明公开 Metric 的 estimand、分母、聚合、不确定性、分析、证据边界与质量就绪合同，不证明真实 Score 或 Estimate 已物化、版本比较或统计结论成立、系统可发布、Harness、生产效果或个人能力。
+A1.8 包含 Quality Baseline、Gate Policy、Gate Dependency Graph、Evidence Manifest、Gate Evaluation、Gate Decision、Waiver Request、Release Disposition、Production Response Policy 9 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个完整案例。Node 24 本地 `npm ci && npm run check` 共 151 项测试、品牌与仓库验证通过；候选提交 [`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540) 的 [Documentation Quality run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582) 精确匹配且成功。该验证只证明公开质量基线、Gate DAG、证据清单、质量决定、Waiver、发布处置与生产响应合同，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力。
 
 ## 单元交付标准
 

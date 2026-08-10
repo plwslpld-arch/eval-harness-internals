@@ -1,6 +1,6 @@
 # Evalorium：跨设备恢复入口
 
-<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
 
 本文件是所有电脑、新任务和贡献者的统一恢复入口。对话用于交互，Git 仓库是持久事实来源。
 
@@ -10,7 +10,7 @@ Evalorium 是独立、开源、企业级的 AI 质量工程平台，目标覆盖
 
 当前先通过 Academy 逐单元交付经过校订与验证的课程、模板和案例，再逐步实现 Platform。课程不会因为一个月的节奏目标而缩减。
 
-当前 A1.7《从样本级评分到可信指标》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-7/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-7/index.html)、Metric Definition、Population & Denominator、Aggregation Plan、Uncertainty Plan、Analysis Plan、Estimate Record、Comparison Report、Metric Quality Gate 共 8 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个端到端案例均纳入合同。Node 24 本地 `npm ci && npm run check` 共 140 项测试、品牌与仓库验证通过；候选内容提交 [`d7941a4`](https://github.com/plwslpld-arch/evalorium/commit/d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708) 的 [Documentation Quality run 31404873004](https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004) 精确匹配 head SHA 且 `completed/success`。该证据只证明公开 Metric 的 estimand、分母、聚合、不确定性、分析、证据边界与质量就绪合同，不证明真实 Score 或 Estimate 已物化、版本比较或统计结论成立、系统可发布、Harness、生产效果或个人能力。当前 A1.8 尚未开始，必须先定义正式标题与范围，学习完成前不创建正式成果或占位正文。
+当前 A1.8《从评测证据到质量决策》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-8/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-8/index.html)、Quality Baseline、Gate Policy、Gate Dependency Graph、Evidence Manifest、Gate Evaluation、Gate Decision、Waiver Request、Release Disposition、Production Response Policy 共 9 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个端到端案例均纳入合同。Node 24 本地 `npm ci && npm run check` 共 151 项测试、品牌与仓库验证通过；候选内容提交 [`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540) 的 [Documentation Quality run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582) 精确匹配 head SHA 且 `completed/success`。该证据只证明公开质量基线、Gate DAG、证据清单、质量决定、Waiver、发布处置与生产响应合同，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力。当前 A1.9 尚未开始，必须先定义正式标题与范围，学习完成前不创建正式成果或占位正文。
 
 ## 每次恢复的固定顺序
 

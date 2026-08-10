@@ -1,15 +1,15 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A1.8 current_status=not_started last_completed=A1.7 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
 - 章节：A1
-- 当前知识单元：A1.8（正式标题与范围待定义）
+- 当前知识单元：A1.9（正式标题与范围待定义）
 - 当前状态：尚未开始
-- 公开成果合同已验证知识单元：7
-- 最近完成：A1.7《从样本级评分到可信指标》
+- 公开成果合同已验证知识单元：8
+- 最近完成：A1.8《从评测证据到质量决策》
 
 ## A1.1 公开成果结构合同已验证
 
@@ -106,7 +106,18 @@
 
 公开仓库只保存正式成果，不保存对话、个人回答、错误历史、私人学习笔记或中间草稿。单元状态描述的是开源交付物，不用于公开判断个人能力。
 
-## A1.8 下一步
+## A1.8 质量基线、Gate DAG、决策、豁免、发布与生产响应合同已验证
 
-1. 先定义 A1.8 的正式标题与学习范围，再开始循序学习。
-2. A1.8 学习完成前不创建正式单元成果或占位正文。
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-8/README.md) 与 [独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-8/index.html)
+- Quality Baseline、Gate Policy、Gate Dependency Graph、Evidence Manifest、Gate Evaluation、Gate Decision、Waiver Request、Release Disposition、Production Response Policy 共 9 类模板
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个 `evidence-to-quality-decision` 完整合成案例
+- Canonical profile 检查关键风险非补偿、证据真实性、Gate DAG 无环与传播、三值检查和四值决定、Partial 范围交集、Waiver 不改写 Gate、发布不扩大范围、生产冻结/撤销/回滚及事故回流
+- Node 24 本地 `npm ci && npm run check` 共 151 项自动化测试通过，品牌检查和仓库验证通过
+- 候选内容提交：[`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540)
+- 远端验证：[Documentation Quality run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582)，head SHA 精确匹配候选提交，状态为 `completed/success`
+- 限制：验证只证明公开质量决策合同存在且关键语义可由仓库校验器执行，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力
+
+## A1.9 下一步
+
+1. 先定义 A1.9 的正式标题与学习范围，再开始循序学习。
+2. A1.9 学习完成前不创建正式单元成果或占位正文。

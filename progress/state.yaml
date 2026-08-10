@@ -31,7 +31,7 @@ program:
 current:
   phase: A
   chapter: A1
-  unit: A1.8
+  unit: A1.9
   status: not_started
 
 learning_protocol:
@@ -42,28 +42,28 @@ learning_protocol:
 
 delivery:
   status: not_started
-  current_unit: A1.8
+  current_unit: A1.9
 
 last_completed:
-  unit: A1.7
-  title: 从样本级评分到可信指标
+  unit: A1.8
+  title: 从评测证据到质量决策
   status: artifact_validated
-  validation_scope: public_artifact_metric_estimand_aggregation_uncertainty_analysis_and_readiness_contract
-  artifact: academy/phase-a/chapter-a1/unit-a1-7/README.md
-  content_commit: d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708
+  validation_scope: public_artifact_quality_baseline_gate_dag_decision_waiver_release_and_response_contract
+  artifact: academy/phase-a/chapter-a1/unit-a1-8/README.md
+  content_commit: 9c4fd4641dc59c795b270192465ce469c14e3540
   verification:
     local_command: npm ci && npm run check
-    local_tests: 140
+    local_tests: 151
     remote_workflow: Documentation Quality
-    remote_run_id: 31404873004
+    remote_run_id: 31439279582
     remote_status: completed
     remote_conclusion: success
-    remote_head_sha: d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708
-    remote_url: https://github.com/plwslpld-arch/evalorium/actions/runs/31404873004
+    remote_head_sha: 9c4fd4641dc59c795b270192465ce469c14e3540
+    remote_url: https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582
 
 next_actions:
-  - 先定义 A1.8 的正式标题与学习范围，再开始循序学习
-  - 在 A1.8 学习完成前不创建正式单元成果或占位正文
+  - 先定义 A1.9 的正式标题与学习范围，再开始循序学习
+  - 在 A1.9 学习完成前不创建正式单元成果或占位正文
 
 product_decisions:
   primary_product: 企业级 AI 质量工程、评测、门禁、监控与治理平台
@@ -78,7 +78,7 @@ maturity:
 
 handoff:
   path: handoffs/CURRENT.md
-  based_on_commit: d7941a43b4e0c7b89e2a512ed41cb8db4cc4a708
+  based_on_commit: 9c4fd4641dc59c795b270192465ce469c14e3540
 
 quality_gate:
   command: npm run check
