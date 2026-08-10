@@ -1,7 +1,11 @@
 <!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
 
 <p align="center">
-  <img src="docs/assets/brand/evalorium-logo.svg" alt="Evalorium" width="420">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/evalorium-logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/evalorium-logo.svg">
+    <img src="docs/assets/brand/evalorium-logo.svg" alt="Evalorium" width="420">
+  </picture>
 </p>
 
 <p align="center"><strong>Evidence before release.</strong></p>
