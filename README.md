@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A1.3 current_status=in_progress last_completed=A1.2 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.4 current_status=not_started last_completed=A1.3 last_status=artifact_validated -->
 
 <p align="center">
   <img src="docs/assets/brand/evalorium-logo.svg" alt="Evalorium" width="420">
@@ -90,7 +90,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1 and A1.2 public artifact contracts validated; A1.3 is active |
+| Academy curriculum | Learning | A1.1–A1.3 public artifact contracts validated; the next unit is not started |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 
