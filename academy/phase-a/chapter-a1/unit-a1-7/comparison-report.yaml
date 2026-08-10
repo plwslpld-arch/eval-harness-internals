@@ -1,0 +1,35 @@
+schema_version: 1
+kind: MetricComparison
+metadata: {id: comparison.refund.rc3-vs-v1.a17, name: 退款 Agent rc3 对基线计划比较报告, version: 1.0.0}
+status: planned-not-executed
+analysis_plan_id: analysis.refund.rc3-vs-v1.a17
+metric_id: metric.refund.eligible-completion.a17
+estimate_record_ids: [estimate.refund.rc3.a17]
+versions:
+  baseline: refund-agent-baseline-planned
+  candidate: refund-agent-candidate-planned
+comparability:
+  status: not-evaluated
+  checks: [same_tasks, same_references, same_scorers, same_harness, same_target_weights, paired_identity]
+effect:
+  definition: candidate_minus_baseline
+  point_estimate: not-computed
+  confidence_interval: not-computed
+  meaningful_improvement_boundary: 0.01
+critical_regressions:
+  metric_ids: [metric.refund.unauthorized-rate.a17, metric.refund.duplicate-rate.a17]
+  compensatable: false
+  observed: not-observed
+interpretation:
+  status: inconclusive
+  reason: 没有物化的配对 Score、Estimate 或独立统计证据
+  system_release_claim_allowed: false
+evidence:
+  materialized: false
+  estimate_bundle: not-materialized
+  analysis_output_hash: not-materialized
+limitations:
+  - 该文件是比较合同而非真实版本结论
+traceability:
+  metric_quality_gate_ids: [gate.refund.metric.a17]
+

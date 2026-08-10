@@ -1,0 +1,40 @@
+schema_version: 1
+kind: EstimateRecord
+metadata: {id: estimate.refund.rc3.a17, name: 退款 Agent rc3 计划估计记录, version: 1.0.0}
+status: planned-not-executed
+metric_id: metric.refund.eligible-completion.a17
+target:
+  id: target.refund-agent.candidate
+  version: planned-candidate
+population_denominator_id: population.refund.target.a17
+aggregation_plan_id: aggregation.refund.eligible-completion.a17
+uncertainty_plan_id: uncertainty.refund.eligible-completion.a17
+analysis_plan_id: analysis.refund.rc3-vs-v1.a17
+identity:
+  dataset_version_id: dataset.refund.a15.v1
+  scorer_identity_id: scorer-identity.refund.a16
+  harness_identity: not-materialized
+  analysis_code_hash: not-materialized
+evidence:
+  materialized: false
+  independent_from_metric_design: false
+  score_record_bundle: not-materialized
+  reproducibility_bundle: not-materialized
+sample_flow:
+  status: not-observed
+  counts: not-observed
+result:
+  status: not-computed
+  point_estimate: not-computed
+  confidence_interval: not-computed
+  slices: not-computed
+coverage:
+  status: not-computed
+  scorable_coverage: not-computed
+  unscorable_reasons: not-observed
+limitations:
+  - 教学模板没有执行数据，不得用于系统发布或性能声明
+traceability:
+  comparison_report_ids: [comparison.refund.rc3-vs-v1.a17]
+  metric_quality_gate_ids: [gate.refund.metric.a17]
+

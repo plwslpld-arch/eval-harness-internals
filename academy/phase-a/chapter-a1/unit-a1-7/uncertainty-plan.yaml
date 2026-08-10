@@ -1,0 +1,45 @@
+schema_version: 1
+kind: UncertaintyPlan
+metadata: {id: uncertainty.refund.eligible-completion.a17, name: 退款任务不确定性计划, version: 1.0.0}
+metric_id: metric.refund.eligible-completion.a17
+aggregation_plan_id: aggregation.refund.eligible-completion.a17
+sources:
+  task_sampling: included
+  repeated_model_execution: included_within_task
+  environment_variation: controlled_and_recorded
+  scorer_variation: requires_ready_scorer_and_separate_validation
+dependence:
+  hierarchy: [task_family_id, task_id, run_id]
+  independent_unit_claim: task_family_id
+  iid_run_assumption_allowed: false
+method:
+  primary: paired_cluster_bootstrap
+  resamples: 10000
+  confidence_level: 0.95
+  interval_type: percentile
+pairing:
+  enabled: true
+  keys: [task_id, seed, environment_fixture_id]
+  preserve_baseline_candidate_pair: true
+clustering:
+  primary_key: task_family_id
+  nested_keys: [task_id, run_id]
+  resample_whole_clusters: true
+rare_events:
+  metrics: [metric.refund.unauthorized-rate.a17, metric.refund.duplicate-rate.a17]
+  methods: [exact_binomial_interval, rule_of_three_zero_event_bound]
+minimum_support:
+  independent_clusters: 80
+  tasks: 240
+  runs_per_task_per_version: 3
+unsupported_conditions:
+  - independent_clusters_below_minimum
+  - target_distribution_unknown
+  - scorer_quality_gate_not_ready
+  - comparison_identity_not_reconciled
+limitations:
+  - 重采样不能修复总体代表性、数据污染、评分器系统偏差或未来分布漂移
+traceability:
+  metric_ids: [metric.refund.eligible-completion.a17]
+  aggregation_plan_ids: [aggregation.refund.eligible-completion.a17]
+

@@ -1,0 +1,43 @@
+schema_version: 1
+kind: PopulationDenominator
+metadata: {id: population.refund.target.a17, name: 退款目标总体与分母, version: 1.0.0}
+metric_id: metric.refund.eligible-completion.a17
+target_population:
+  id: population.refund.target.a17
+  description: 下一发布周期内目标渠道中政策允许自动处理的退款任务
+  time_horizon: one-release-cycle
+  unit: refund_task
+  transport_assumptions: [政策版本保持兼容, 目标渠道构成可由版本化权重近似]
+analysis_unit:
+  id: task
+  identity_keys: [task_id, target_identity, environment_identity]
+  child_units: [run_id, tool_call_id, state_transition_id]
+  child_units_are_independent_samples: false
+inclusion:
+  rules: [policy_eligible=true, target_identity_verified=true, authoritative_state_available=true]
+  declared_before_execution: true
+exclusion:
+  rules: [task_out_of_scope=true, duplicate_business_identity=true]
+  post_outcome_exclusion_allowed: false
+denominator_treatments:
+  - {status: system_timeout, treatment: failure, coverage_denominator: true}
+  - {status: system_crash, treatment: failure, coverage_denominator: true}
+  - {status: system_abstention, treatment: rubric_dependent, coverage_denominator: true}
+  - {status: scorer_abstention, treatment: unresolved, coverage_denominator: true}
+  - {status: unscorable, treatment: unresolved, coverage_denominator: true}
+  - {status: inconclusive, treatment: unresolved, coverage_denominator: true}
+sample_flow:
+  stages: [sampled, predeclared_excluded, executed, system_failed, scorer_abstained, unscorable, scored]
+  counts_materialized: false
+weights:
+  method: target_distribution
+  source_id: production-mix.refund.planned.a17
+  status: planned-not-materialized
+  same_weights_required_for_version_comparison: true
+traceability:
+  metric_ids: [metric.refund.eligible-completion.a17]
+  dataset_version_ids: [dataset.refund.a15.v1]
+  scoring_unit_ids: [unit.refund.trial]
+limitations:
+  - 目标总体权重未物化前不能估计生产总体表现
+

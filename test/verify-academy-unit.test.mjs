@@ -135,6 +135,11 @@ const A16_UNIT = path.resolve(
   "../academy/phase-a/chapter-a1/unit-a1-6",
 );
 
+const A17_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a1/unit-a1-7",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -2581,4 +2586,162 @@ test("A1.6 index rejects broken local href targets after query and fragment remo
   const source = await readFile(htmlPath, "utf8");
   await writeFile(htmlPath, source.replace("scorer-charter.yaml", "missing-scorer.yaml?view=1#schema"));
   assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-scorer\.yaml\?view=1#schema/);
+});
+
+test("an A1.7 score-to-metric profile requires every template and domain case", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    `schema_version: 1
+unit: {id: A1.7, title: 从样本级评分到可信指标, phase: A, chapter: A1}
+publication: {status: candidate, language: zh-CN, formats: [markdown, html, yaml]}
+contents:
+  lesson: README.md
+  html: index.html
+  templates: []
+  examples: []
+verification: {profile: score-to-metric-v1}
+`,
+  );
+
+  const report = (await verifyAcademyUnit(root)).join("\n");
+
+  assert.match(report, /profile score-to-metric-v1 requires metric-definition\.yaml/);
+  assert.match(report, /profile score-to-metric-v1 requires analysis-plan\.yaml/);
+  assert.match(report, /profile score-to-metric-v1 requires metric-quality-gate\.yaml/);
+  assert.match(report, /profile score-to-metric-v1 requires examples\/knowledge-assistant\/evaluation-case\.yaml/);
+});
+
+test("the complete A1.7 score-to-metric candidate is accepted", async () => {
+  assert.deepEqual(await verifyAcademyUnit(A17_UNIT), []);
+});
+
+test("A1.7 fixes the analysis unit, denominator policy and missingness boundary before execution", async () => {
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-denominator-");
+  await mutateYaml(root, "population-denominator.yaml", (value) => {
+    value.analysis_unit.child_units_are_independent_samples = true;
+    value.inclusion.declared_before_execution = false;
+    value.exclusion.post_outcome_exclusion_allowed = true;
+    value.denominator_treatments = value.denominator_treatments.filter((item) => item.status !== "system_crash");
+  });
+  await mutateYaml(root, "metric-definition.yaml", (value) => {
+    value.missingness.silent_drop_allowed = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /child_units_are_independent_samples must be false/);
+  assert.match(report, /inclusion\.declared_before_execution must be true/);
+  assert.match(report, /exclusion\.post_outcome_exclusion_allowed must be false/);
+  assert.match(report, /denominator_treatments\.status.*system_crash/);
+  assert.match(report, /missingness\.silent_drop_allowed must be false/);
+});
+
+test("A1.7 rejects pseudoreplication, compensatory critical risks and fragile complete-case summaries", async () => {
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-aggregation-");
+  await mutateYaml(root, "aggregation-plan.yaml", (value) => {
+    value.hierarchy.claim_or_run_as_independent_task = true;
+    value.hierarchy.cluster_level = value.hierarchy.analysis_level;
+    value.critical_metrics.compensatable = true;
+    value.missingness.complete_case_only_as_primary = true;
+    value.sensitivity_analysis.variants = ["target_weighted"];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /claim_or_run_as_independent_task must be false/);
+  assert.match(report, /cluster_level must differ from analysis_level/);
+  assert.match(report, /critical_metrics\.compensatable must be false/);
+  assert.match(report, /complete_case_only_as_primary must be false/);
+  assert.match(report, /sensitivity_analysis\.variants.*missing_all_fail/);
+  assert.match(report, /sensitivity_analysis\.variants.*missing_all_pass/);
+});
+
+test("A1.7 preserves pairing and clusters when estimating uncertainty", async () => {
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-uncertainty-");
+  await mutateYaml(root, "uncertainty-plan.yaml", (value) => {
+    value.dependence.iid_run_assumption_allowed = true;
+    value.method.resamples = 0;
+    value.method.confidence_level = 1;
+    value.pairing.enabled = false;
+    value.pairing.preserve_baseline_candidate_pair = false;
+    value.clustering.resample_whole_clusters = false;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /iid_run_assumption_allowed must be false/);
+  assert.match(report, /method\.resamples must be a positive integer/);
+  assert.match(report, /method\.confidence_level must be between 0 and 1/);
+  assert.match(report, /pairing\.enabled must be true/);
+  assert.match(report, /preserve_baseline_candidate_pair must be true/);
+  assert.match(report, /resample_whole_clusters must be true/);
+});
+
+test("A1.7 keeps confirmatory analysis predeclared and prevents optional stopping", async () => {
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-analysis-");
+  await mutateYaml(root, "analysis-plan.yaml", (value) => {
+    value.status = "executed";
+    value.multiple_comparisons.method = "none";
+    value.exploratory.findings_require_independent_confirmation = false;
+    value.stopping_rule.type = "peek_until_significant";
+    value.stopping_rule.optional_stopping_allowed = true;
+    value.reporting.require_all_predeclared_metrics = false;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /status must be predeclared-not-executed/);
+  assert.match(report, /multiple_comparisons\.method must be holm/);
+  assert.match(report, /findings_require_independent_confirmation must be true/);
+  assert.match(report, /stopping_rule\.type must be fixed_sample/);
+  assert.match(report, /optional_stopping_allowed must be false/);
+  assert.match(report, /require_all_predeclared_metrics must be true/);
+});
+
+test("A1.7 planned records cannot fabricate estimates, comparisons or release claims", async () => {
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-planned-records-");
+  await mutateYaml(root, "estimate-record.yaml", (value) => {
+    value.evidence.materialized = true;
+    value.result.status = "computed";
+    value.result.point_estimate = 0.99;
+  });
+  await mutateYaml(root, "comparison-report.yaml", (value) => {
+    value.evidence.materialized = true;
+    value.effect.point_estimate = 0.02;
+    value.interpretation.status = "superior";
+    value.interpretation.system_release_claim_allowed = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /planned estimate evidence\.materialized must be false/);
+  assert.match(report, /planned estimate result must remain not-computed/);
+  assert.match(report, /planned comparison evidence\.materialized must be false/);
+  assert.match(report, /planned comparison effect must remain not-computed/);
+  assert.match(report, /planned comparison interpretation\.status must be inconclusive/);
+  assert.match(report, /system_release_claim_allowed must be false/);
+});
+
+test("A1.7 metric gate cannot become ready from design-only evidence", async () => {
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-false-ready-");
+  await mutateYaml(root, "metric-quality-gate.yaml", (value) => {
+    value.decision.status = "ready";
+    value.decision.blocking_check_ids = [];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /ready requires every check to be passed/);
+  assert.match(report, /ready requires materialized estimate and comparison evidence/);
+});
+
+test("A1.7 domain cases preserve canonical scorer identity and complete trace closure", async () => {
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-case-trace-");
+  await mutateYaml(root, relativePath, (value) => {
+    value.references.scorer_identity_ids = ["scorer-identity.contract.a16"];
+    value.expected.trace_closure[0].links = value.expected.trace_closure[0].links.filter((id) => id !== value.references.population_ids[0]);
+    value.expected.trace_closure[1].links.push("metric.unknown.a17");
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /references\.scorer_identity_ids.*scorer-identity\.refund\.a16/);
+  assert.match(report, /reference population\.refund\.a17 is not covered by expected\.trace_closure/);
+  assert.match(report, /expected\.trace_closure\[1\]\.links: unknown id metric\.unknown\.a17/);
+});
+
+test("A1.7 HTML cannot link to a missing local artifact", async () => {
+  const root = await copyUnit(A17_UNIT, "evalorium-a1-7-html-href-");
+  const htmlPath = path.join(root, "index.html");
+  await writeFile(htmlPath, (await readFile(htmlPath, "utf8")).replace("metric-definition.yaml", "missing-metric.yaml"));
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-metric\.yaml/);
 });

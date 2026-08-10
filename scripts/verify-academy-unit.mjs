@@ -108,6 +108,23 @@ const VERIFICATION_PROFILES = {
       "examples/knowledge-assistant/evaluation-case.yaml",
     ],
   },
+  "score-to-metric-v1": {
+    templates: [
+      "metric-definition.yaml",
+      "population-denominator.yaml",
+      "aggregation-plan.yaml",
+      "uncertainty-plan.yaml",
+      "analysis-plan.yaml",
+      "estimate-record.yaml",
+      "comparison-report.yaml",
+      "metric-quality-gate.yaml",
+    ],
+    examples: [
+      "examples/refund-agent/evaluation-case.yaml",
+      "examples/contract-agent/evaluation-case.yaml",
+      "examples/knowledge-assistant/evaluation-case.yaml",
+    ],
+  },
 };
 
 const CANONICAL_UNIT_PROFILES = {
@@ -117,9 +134,10 @@ const CANONICAL_UNIT_PROFILES = {
   "A1.4": "question-to-task-scenario-v1",
   "A1.5": "task-scenario-to-evaluation-data-v1",
   "A1.6": "reference-to-scorer-v1",
+  "A1.7": "score-to-metric-v1",
 };
 
-const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6"]);
+const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6", "A1.7"]);
 
 const TEMPLATE_CONTRACTS = {
   "artifact-manifest.yaml": {
@@ -295,6 +313,38 @@ const TEMPLATE_CONTRACTS = {
   "scorer-quality-gate.yaml": {
     kind: "ScorerQualityGate",
     required: ["metadata.id", "scorer_manifest_id", "scorer_validation_report_id", "status_values", "check_status_values", "checks", "decision.status", "evidence_boundary", "traceability"],
+  },
+  "metric-definition.yaml": {
+    kind: "MetricDefinition",
+    required: ["metadata.id", "traceability", "construct", "estimand", "input", "direction", "missingness", "mandatory_slices", "critical_metrics", "limitations"],
+  },
+  "population-denominator.yaml": {
+    kind: "PopulationDenominator",
+    required: ["metadata.id", "metric_id", "target_population", "analysis_unit", "inclusion", "exclusion", "denominator_treatments", "sample_flow", "weights", "traceability", "limitations"],
+  },
+  "aggregation-plan.yaml": {
+    kind: "AggregationPlan",
+    required: ["metadata.id", "metric_id", "population_denominator_id", "score_input", "hierarchy", "repeated_runs", "population_aggregation", "slices", "critical_metrics", "missingness", "sensitivity_analysis", "traceability"],
+  },
+  "uncertainty-plan.yaml": {
+    kind: "UncertaintyPlan",
+    required: ["metadata.id", "metric_id", "aggregation_plan_id", "sources", "dependence", "method", "pairing", "clustering", "rare_events", "minimum_support", "unsupported_conditions", "limitations", "traceability"],
+  },
+  "analysis-plan.yaml": {
+    kind: "AnalysisPlan",
+    required: ["metadata.id", "status", "metric_ids", "population_denominator_id", "aggregation_plan_id", "uncertainty_plan_id", "comparison_question", "confirmatory", "decision_boundaries", "multiple_comparisons", "exploratory", "stopping_rule", "reporting", "traceability"],
+  },
+  "estimate-record.yaml": {
+    kind: "EstimateRecord",
+    required: ["metadata.id", "status", "metric_id", "target", "population_denominator_id", "aggregation_plan_id", "uncertainty_plan_id", "analysis_plan_id", "identity", "evidence", "sample_flow", "result", "coverage", "limitations", "traceability"],
+  },
+  "comparison-report.yaml": {
+    kind: "MetricComparison",
+    required: ["metadata.id", "status", "analysis_plan_id", "metric_id", "estimate_record_ids", "versions", "comparability", "effect", "critical_regressions", "interpretation", "evidence", "limitations", "traceability"],
+  },
+  "metric-quality-gate.yaml": {
+    kind: "MetricQualityGate",
+    required: ["metadata.id", "metric_id", "estimate_record_id", "comparison_report_id", "status_values", "check_status_values", "checks", "decision", "evidence_boundary", "traceability"],
   },
 };
 
@@ -803,6 +853,119 @@ const PROFILE_CONTRACTS = {
         "input.validation.validation_identity",
         "input.quality_gate", "expected.trace_closure", "evidence.design_artifacts",
         "evidence.traceability", "evidence.limitations",
+      ],
+    },
+  },
+  "score-to-metric-v1": {
+    "metric-definition.yaml": {
+      kind: "MetricDefinition",
+      required: [
+        "metadata.id", "metadata.version", "traceability.scorer_identity_ids",
+        "traceability.scorer_quality_gate_ids", "construct.id", "estimand.id",
+        "estimand.population_id", "estimand.analysis_unit", "estimand.quantity",
+        "input.score_record_schema", "input.scoring_unit_id", "input.required_fields",
+        "direction", "missingness.report_statuses", "missingness.silent_drop_allowed",
+        "mandatory_slices", "critical_metrics", "limitations",
+      ],
+    },
+    "population-denominator.yaml": {
+      kind: "PopulationDenominator",
+      required: [
+        "metadata.id", "metadata.version", "metric_id", "target_population.id",
+        "target_population.time_horizon", "target_population.unit", "analysis_unit.id",
+        "analysis_unit.identity_keys", "analysis_unit.child_units",
+        "analysis_unit.child_units_are_independent_samples", "inclusion.rules",
+        "inclusion.declared_before_execution", "exclusion.rules",
+        "exclusion.post_outcome_exclusion_allowed", "denominator_treatments",
+        "sample_flow.stages", "sample_flow.counts_materialized", "weights.method",
+        "weights.status", "traceability", "limitations",
+      ],
+    },
+    "aggregation-plan.yaml": {
+      kind: "AggregationPlan",
+      required: [
+        "metadata.id", "metadata.version", "metric_id", "population_denominator_id",
+        "score_input.schema", "score_input.field", "hierarchy.levels",
+        "hierarchy.analysis_level", "hierarchy.cluster_level",
+        "hierarchy.claim_or_run_as_independent_task", "repeated_runs.required_runs_per_task",
+        "population_aggregation.primary_estimator", "slices.required",
+        "critical_metrics.separate_from_composite", "critical_metrics.compensatable",
+        "missingness.report_scorable_coverage", "missingness.complete_case_only_as_primary",
+        "sensitivity_analysis.variants", "traceability",
+      ],
+    },
+    "uncertainty-plan.yaml": {
+      kind: "UncertaintyPlan",
+      required: [
+        "metadata.id", "metadata.version", "metric_id", "aggregation_plan_id",
+        "sources", "dependence.hierarchy", "dependence.independent_unit_claim",
+        "dependence.iid_run_assumption_allowed", "method.primary", "method.resamples",
+        "method.confidence_level", "pairing.enabled", "pairing.keys",
+        "pairing.preserve_baseline_candidate_pair", "clustering.primary_key",
+        "clustering.resample_whole_clusters", "rare_events", "minimum_support",
+        "unsupported_conditions", "limitations", "traceability",
+      ],
+    },
+    "analysis-plan.yaml": {
+      kind: "AnalysisPlan",
+      required: [
+        "metadata.id", "metadata.version", "status", "metric_ids",
+        "population_denominator_id", "aggregation_plan_id", "uncertainty_plan_id",
+        "comparison_question.type", "comparison_question.effect_definition",
+        "comparison_question.meaningful_improvement_boundary", "confirmatory.primary_metric_id",
+        "confirmatory.critical_metric_ids", "confirmatory.required_slices",
+        "decision_boundaries", "multiple_comparisons.family", "multiple_comparisons.method",
+        "exploratory.findings_require_independent_confirmation", "stopping_rule.type",
+        "stopping_rule.optional_stopping_allowed", "reporting.require_effect_and_interval",
+        "reporting.require_all_predeclared_metrics", "traceability",
+      ],
+    },
+    "estimate-record.yaml": {
+      kind: "EstimateRecord",
+      required: [
+        "metadata.id", "metadata.version", "status", "metric_id", "target.id",
+        "population_denominator_id", "aggregation_plan_id", "uncertainty_plan_id",
+        "analysis_plan_id", "identity.dataset_version_id", "identity.scorer_identity_id",
+        "evidence.materialized", "sample_flow.status", "result.status",
+        "coverage.status", "limitations", "traceability",
+      ],
+    },
+    "comparison-report.yaml": {
+      kind: "MetricComparison",
+      required: [
+        "metadata.id", "metadata.version", "status", "analysis_plan_id", "metric_id",
+        "estimate_record_ids", "versions", "comparability.status", "comparability.checks",
+        "effect.definition", "effect.point_estimate", "effect.confidence_interval",
+        "critical_regressions.metric_ids", "critical_regressions.compensatable",
+        "interpretation.status", "interpretation.system_release_claim_allowed",
+        "evidence.materialized", "limitations", "traceability",
+      ],
+    },
+    "metric-quality-gate.yaml": {
+      kind: "MetricQualityGate",
+      required: [
+        "metadata.id", "metadata.version", "metric_id", "estimate_record_id",
+        "comparison_report_id", "status_values", "check_status_values", "checks",
+        "decision.status", "decision.blocking_check_ids", "decision.prohibited_claims",
+        "evidence_boundary.proves", "evidence_boundary.does_not_prove", "traceability",
+      ],
+    },
+    example: {
+      kind: "EvaluationCase",
+      required: [
+        "metadata.id", "metadata.version", "references.target_ids",
+        "references.construct_ids", "references.question_ids", "references.risk_ids",
+        "references.task_ids", "references.dataset_version_ids",
+        "references.scorer_identity_ids", "references.scorer_quality_gate_ids",
+        "references.metric_ids", "references.population_ids",
+        "references.aggregation_plan_ids", "references.uncertainty_plan_ids",
+        "references.analysis_plan_ids", "references.estimate_record_ids",
+        "references.comparison_report_ids", "references.metric_quality_gate_ids",
+        "input.metric", "input.population_denominator", "input.aggregation",
+        "input.uncertainty", "input.analysis", "input.estimate", "input.comparison",
+        "input.metric_quality_gate", "expected.trace_closure",
+        "evidence.materialized", "evidence.design_artifacts", "evidence.proves",
+        "evidence.does_not_prove",
       ],
     },
   },
@@ -4480,6 +4643,285 @@ function verifyReferenceToScorerCase(value, relativePath, errors) {
   verifyA16Gate({gate: value?.input?.quality_gate, validation, manifest, expectedChecks: A16_CASE_GATE_CHECKS[relativePath], knownEvidenceIds: knownIds, forbiddenEvidenceIds: caseForbiddenEvidenceIds, label: `${relativePath}: input.quality_gate`, errors});
 }
 
+const A17_DENOMINATOR_STATUSES = [
+  "system_timeout",
+  "system_crash",
+  "system_abstention",
+  "scorer_abstention",
+  "unscorable",
+  "inconclusive",
+];
+
+const A17_GATE_CATEGORIES = [
+  "construct",
+  "population-denominator",
+  "identity-lineage",
+  "scorer-readiness",
+  "missingness-coverage",
+  "dependence",
+  "uncertainty",
+  "comparison",
+];
+
+const A17_CANONICAL_SCORER_IDENTITIES = {
+  "examples/refund-agent/evaluation-case.yaml": "scorer-identity.refund.a16",
+  "examples/contract-agent/evaluation-case.yaml": "scorer-identity.contract.a16",
+  "examples/knowledge-assistant/evaluation-case.yaml": "scorer-identity.knowledge.a16",
+};
+
+function verifyA17Boolean(value, expected, label, errors) {
+  if (value !== expected) errors.push(`${label} must be ${expected}`);
+}
+
+function verifyA17PositiveInteger(value, label, errors) {
+  if (!Number.isInteger(value) || value <= 0) errors.push(`${label} must be a positive integer`);
+}
+
+function verifyA17PlannedEvidence(estimate, comparison, errors) {
+  if (estimate?.status === "planned-not-executed") {
+    verifyA17Boolean(estimate?.evidence?.materialized, false, "estimate-record.yaml: planned estimate evidence.materialized", errors);
+    if (
+      estimate?.result?.status !== "not-computed" ||
+      estimate?.result?.point_estimate !== "not-computed" ||
+      estimate?.result?.confidence_interval !== "not-computed"
+    ) {
+      errors.push("estimate-record.yaml: planned estimate result must remain not-computed");
+    }
+    if (estimate?.coverage?.status !== "not-computed") {
+      errors.push("estimate-record.yaml: planned estimate coverage must remain not-computed");
+    }
+  }
+
+  if (comparison?.status === "planned-not-executed") {
+    verifyA17Boolean(comparison?.evidence?.materialized, false, "comparison-report.yaml: planned comparison evidence.materialized", errors);
+    if (
+      comparison?.effect?.point_estimate !== "not-computed" ||
+      comparison?.effect?.confidence_interval !== "not-computed"
+    ) {
+      errors.push("comparison-report.yaml: planned comparison effect must remain not-computed");
+    }
+    if (comparison?.interpretation?.status !== "inconclusive") {
+      errors.push("comparison-report.yaml: planned comparison interpretation.status must be inconclusive");
+    }
+    verifyA17Boolean(
+      comparison?.interpretation?.system_release_claim_allowed,
+      false,
+      "comparison-report.yaml: system_release_claim_allowed",
+      errors,
+    );
+  }
+}
+
+function verifyA17MetricGate(gate, estimate, comparison, errors) {
+  const label = "metric-quality-gate.yaml";
+  verifyExactSet(Object.keys(gate?.status_values ?? {}), ["ready", "partial", "blocked", "invalid"], `${label}: status_values`, errors);
+  verifyExactSet(Object.keys(gate?.check_status_values ?? {}), ["passed", "partial", "blocked", "failed"], `${label}: check_status_values`, errors);
+  const checks = asArray(gate?.checks);
+  const checkIds = [];
+  const categories = [];
+  for (const [index, check] of checks.entries()) {
+    const checkLabel = `${label}: checks[${index}]`;
+    verifyNonEmptyString(check?.id, `${checkLabel}.id`, errors);
+    verifyNonEmptyString(check?.category, `${checkLabel}.category`, errors);
+    if (check?.id) checkIds.push(check.id);
+    if (check?.category) categories.push(check.category);
+    verifyA17Boolean(check?.critical, true, `${checkLabel}.critical`, errors);
+    if (!new Set(["passed", "partial", "blocked", "failed"]).has(check?.status)) {
+      errors.push(`${checkLabel}.status must be passed, partial, blocked or failed`);
+    }
+    if (check?.status === "passed") {
+      verifyA17Boolean(check?.evidence?.materialized, true, `${checkLabel}.evidence.materialized`, errors);
+      verifyA17Boolean(check?.evidence?.planned_only, false, `${checkLabel}.evidence.planned_only`, errors);
+      verifyNonEmptyStringArray(check?.evidence?.evidence_links, `${checkLabel}.evidence.evidence_links`, errors);
+    }
+  }
+  verifyExactSet(categories, A17_GATE_CATEGORIES, `${label}: checks.category`, errors);
+
+  const decisionStatus = gate?.decision?.status;
+  if (decisionStatus === "ready") {
+    if (checks.some((check) => check?.status !== "passed")) {
+      errors.push(`${label}: ready requires every check to be passed`);
+    }
+    if (estimate?.evidence?.materialized !== true || comparison?.evidence?.materialized !== true) {
+      errors.push(`${label}: ready requires materialized estimate and comparison evidence`);
+    }
+  } else if (decisionStatus === "blocked") {
+    const expectedBlocking = checks.filter((check) => ["blocked", "failed"].includes(check?.status)).map((check) => check.id);
+    verifyMatchingIdSet(gate?.decision?.blocking_check_ids, expectedBlocking, `${label}: decision.blocking_check_ids`, errors);
+  } else if (!new Set(["partial", "invalid"]).has(decisionStatus)) {
+    errors.push(`${label}: decision.status must be ready, partial, blocked or invalid`);
+  }
+  verifyNonEmptyStringArray(gate?.decision?.prohibited_claims, `${label}: decision.prohibited_claims`, errors);
+  for (const id of asArray(gate?.decision?.blocking_check_ids)) {
+    if (!checkIds.includes(id)) errors.push(`${label}: decision.blocking_check_ids: unknown id ${id}`);
+  }
+}
+
+function verifyScoreToMetricTemplates(templateValues, errors) {
+  const metric = templateValues.get("metric-definition.yaml");
+  const population = templateValues.get("population-denominator.yaml");
+  const aggregation = templateValues.get("aggregation-plan.yaml");
+  const uncertainty = templateValues.get("uncertainty-plan.yaml");
+  const analysis = templateValues.get("analysis-plan.yaml");
+  const estimate = templateValues.get("estimate-record.yaml");
+  const comparison = templateValues.get("comparison-report.yaml");
+  const gate = templateValues.get("metric-quality-gate.yaml");
+
+  const metricId = metric?.metadata?.id;
+  const populationId = population?.metadata?.id;
+  const aggregationId = aggregation?.metadata?.id;
+  const uncertaintyId = uncertainty?.metadata?.id;
+  const analysisId = analysis?.metadata?.id;
+  const estimateId = estimate?.metadata?.id;
+  const comparisonId = comparison?.metadata?.id;
+
+  for (const [label, actual, expected] of [
+    ["metric-definition.yaml: estimand.population_id", metric?.estimand?.population_id, populationId],
+    ["population-denominator.yaml: target_population.id", population?.target_population?.id, populationId],
+    ["population-denominator.yaml: metric_id", population?.metric_id, metricId],
+    ["aggregation-plan.yaml: metric_id", aggregation?.metric_id, metricId],
+    ["aggregation-plan.yaml: population_denominator_id", aggregation?.population_denominator_id, populationId],
+    ["uncertainty-plan.yaml: metric_id", uncertainty?.metric_id, metricId],
+    ["uncertainty-plan.yaml: aggregation_plan_id", uncertainty?.aggregation_plan_id, aggregationId],
+    ["analysis-plan.yaml: population_denominator_id", analysis?.population_denominator_id, populationId],
+    ["analysis-plan.yaml: aggregation_plan_id", analysis?.aggregation_plan_id, aggregationId],
+    ["analysis-plan.yaml: uncertainty_plan_id", analysis?.uncertainty_plan_id, uncertaintyId],
+    ["estimate-record.yaml: metric_id", estimate?.metric_id, metricId],
+    ["estimate-record.yaml: population_denominator_id", estimate?.population_denominator_id, populationId],
+    ["estimate-record.yaml: aggregation_plan_id", estimate?.aggregation_plan_id, aggregationId],
+    ["estimate-record.yaml: uncertainty_plan_id", estimate?.uncertainty_plan_id, uncertaintyId],
+    ["estimate-record.yaml: analysis_plan_id", estimate?.analysis_plan_id, analysisId],
+    ["comparison-report.yaml: analysis_plan_id", comparison?.analysis_plan_id, analysisId],
+    ["comparison-report.yaml: metric_id", comparison?.metric_id, metricId],
+    ["metric-quality-gate.yaml: metric_id", gate?.metric_id, metricId],
+    ["metric-quality-gate.yaml: estimate_record_id", gate?.estimate_record_id, estimateId],
+    ["metric-quality-gate.yaml: comparison_report_id", gate?.comparison_report_id, comparisonId],
+  ]) verifyEqualReference(actual, expected, label, errors);
+  verifyMatchingIdSet(comparison?.estimate_record_ids, [estimateId], "comparison-report.yaml: estimate_record_ids", errors);
+
+  verifyA17Boolean(metric?.missingness?.silent_drop_allowed, false, "metric-definition.yaml: missingness.silent_drop_allowed", errors);
+  verifyNonEmptyStringArray(metric?.mandatory_slices, "metric-definition.yaml: mandatory_slices", errors);
+  for (const [index, critical] of asArray(metric?.critical_metrics).entries()) {
+    verifyA17Boolean(critical?.compensatable, false, `metric-definition.yaml: critical_metrics[${index}].compensatable`, errors);
+  }
+
+  verifyA17Boolean(population?.analysis_unit?.child_units_are_independent_samples, false, "population-denominator.yaml: analysis_unit.child_units_are_independent_samples", errors);
+  verifyA17Boolean(population?.inclusion?.declared_before_execution, true, "population-denominator.yaml: inclusion.declared_before_execution", errors);
+  verifyA17Boolean(population?.exclusion?.post_outcome_exclusion_allowed, false, "population-denominator.yaml: exclusion.post_outcome_exclusion_allowed", errors);
+  verifyExactSet(asArray(population?.denominator_treatments).map((item) => item?.status), A17_DENOMINATOR_STATUSES, "population-denominator.yaml: denominator_treatments.status", errors);
+  for (const [index, treatment] of asArray(population?.denominator_treatments).entries()) {
+    verifyA17Boolean(treatment?.coverage_denominator, true, `population-denominator.yaml: denominator_treatments[${index}].coverage_denominator`, errors);
+  }
+
+  verifyA17Boolean(aggregation?.hierarchy?.claim_or_run_as_independent_task, false, "aggregation-plan.yaml: hierarchy.claim_or_run_as_independent_task", errors);
+  if (aggregation?.hierarchy?.cluster_level === aggregation?.hierarchy?.analysis_level) {
+    errors.push("aggregation-plan.yaml: hierarchy.cluster_level must differ from analysis_level");
+  }
+  verifyA17PositiveInteger(aggregation?.repeated_runs?.required_runs_per_task, "aggregation-plan.yaml: repeated_runs.required_runs_per_task", errors);
+  verifyA17Boolean(aggregation?.critical_metrics?.separate_from_composite, true, "aggregation-plan.yaml: critical_metrics.separate_from_composite", errors);
+  verifyA17Boolean(aggregation?.critical_metrics?.compensatable, false, "aggregation-plan.yaml: critical_metrics.compensatable", errors);
+  verifyA17Boolean(aggregation?.missingness?.report_scorable_coverage, true, "aggregation-plan.yaml: missingness.report_scorable_coverage", errors);
+  verifyA17Boolean(aggregation?.missingness?.complete_case_only_as_primary, false, "aggregation-plan.yaml: missingness.complete_case_only_as_primary", errors);
+  for (const required of ["missing_all_fail", "missing_all_pass"]) {
+    if (!asArray(aggregation?.sensitivity_analysis?.variants).includes(required)) {
+      errors.push(`aggregation-plan.yaml: sensitivity_analysis.variants missing required ${required}`);
+    }
+  }
+
+  verifyA17Boolean(uncertainty?.dependence?.iid_run_assumption_allowed, false, "uncertainty-plan.yaml: dependence.iid_run_assumption_allowed", errors);
+  if (uncertainty?.method?.primary !== "paired_cluster_bootstrap") errors.push("uncertainty-plan.yaml: method.primary must be paired_cluster_bootstrap");
+  verifyA17PositiveInteger(uncertainty?.method?.resamples, "uncertainty-plan.yaml: method.resamples", errors);
+  if (!(typeof uncertainty?.method?.confidence_level === "number" && uncertainty.method.confidence_level > 0 && uncertainty.method.confidence_level < 1)) {
+    errors.push("uncertainty-plan.yaml: method.confidence_level must be between 0 and 1");
+  }
+  verifyA17Boolean(uncertainty?.pairing?.enabled, true, "uncertainty-plan.yaml: pairing.enabled", errors);
+  verifyNonEmptyStringArray(uncertainty?.pairing?.keys, "uncertainty-plan.yaml: pairing.keys", errors);
+  verifyA17Boolean(uncertainty?.pairing?.preserve_baseline_candidate_pair, true, "uncertainty-plan.yaml: pairing.preserve_baseline_candidate_pair", errors);
+  verifyA17Boolean(uncertainty?.clustering?.resample_whole_clusters, true, "uncertainty-plan.yaml: clustering.resample_whole_clusters", errors);
+  for (const [key, value] of Object.entries(uncertainty?.minimum_support ?? {})) verifyA17PositiveInteger(value, `uncertainty-plan.yaml: minimum_support.${key}`, errors);
+
+  if (analysis?.status !== "predeclared-not-executed") errors.push("analysis-plan.yaml: status must be predeclared-not-executed");
+  if (!new Set(["superiority", "noninferiority", "equivalence", "absolute_threshold"]).has(analysis?.comparison_question?.type)) {
+    errors.push("analysis-plan.yaml: comparison_question.type is unsupported");
+  }
+  if (analysis?.multiple_comparisons?.method !== "holm") errors.push("analysis-plan.yaml: multiple_comparisons.method must be holm");
+  verifyA17Boolean(analysis?.exploratory?.findings_require_independent_confirmation, true, "analysis-plan.yaml: exploratory.findings_require_independent_confirmation", errors);
+  if (analysis?.stopping_rule?.type !== "fixed_sample") errors.push("analysis-plan.yaml: stopping_rule.type must be fixed_sample");
+  verifyA17Boolean(analysis?.stopping_rule?.optional_stopping_allowed, false, "analysis-plan.yaml: stopping_rule.optional_stopping_allowed", errors);
+  verifyA17Boolean(analysis?.reporting?.require_effect_and_interval, true, "analysis-plan.yaml: reporting.require_effect_and_interval", errors);
+  verifyA17Boolean(analysis?.reporting?.require_all_predeclared_metrics, true, "analysis-plan.yaml: reporting.require_all_predeclared_metrics", errors);
+
+  verifyA17PlannedEvidence(estimate, comparison, errors);
+  verifyA17MetricGate(gate, estimate, comparison, errors);
+}
+
+function verifyScoreToMetricCase(value, relativePath, errors) {
+  if (!value) return;
+  const expectedScorerIdentity = A17_CANONICAL_SCORER_IDENTITIES[relativePath];
+  verifyMatchingIdSet(value?.references?.scorer_identity_ids, [expectedScorerIdentity], `${relativePath}: references.scorer_identity_ids`, errors);
+
+  const input = value?.input ?? {};
+  const definitionMap = {
+    metric_ids: [
+      input?.metric?.id,
+      ...asArray(input?.metric?.critical_metric_ids),
+      ...asArray(input?.analysis?.guardrail_metric_ids),
+    ],
+    population_ids: [input?.population_denominator?.id],
+    aggregation_plan_ids: [input?.aggregation?.id],
+    uncertainty_plan_ids: [input?.uncertainty?.id],
+    analysis_plan_ids: [input?.analysis?.id],
+    estimate_record_ids: [input?.estimate?.id],
+    comparison_report_ids: [input?.comparison?.id],
+    metric_quality_gate_ids: [input?.metric_quality_gate?.id],
+  };
+  for (const [field, ids] of Object.entries(definitionMap)) {
+    verifyMatchingIdSet(value?.references?.[field], ids.filter(Boolean), `${relativePath}: references.${field}`, errors);
+  }
+  verifyEqualReference(input?.metric?.estimand?.population_id, input?.population_denominator?.id, `${relativePath}: input.metric.estimand.population_id`, errors);
+  verifyA17Boolean(input?.population_denominator?.silent_drop_allowed, false, `${relativePath}: input.population_denominator.silent_drop_allowed`, errors);
+  verifyExactSet(Object.keys(input?.population_denominator?.treatments ?? {}), A17_DENOMINATOR_STATUSES, `${relativePath}: input.population_denominator.treatments`, errors);
+  verifyA17Boolean(input?.aggregation?.critical_metrics_compensatable, false, `${relativePath}: input.aggregation.critical_metrics_compensatable`, errors);
+  verifyA17Boolean(input?.uncertainty?.iid_run_assumption_allowed, false, `${relativePath}: input.uncertainty.iid_run_assumption_allowed`, errors);
+  if (input?.uncertainty?.method !== "paired_cluster_bootstrap") errors.push(`${relativePath}: input.uncertainty.method must be paired_cluster_bootstrap`);
+  if (input?.analysis?.status !== "predeclared-not-executed") errors.push(`${relativePath}: input.analysis.status must be predeclared-not-executed`);
+  verifyA17Boolean(input?.analysis?.exploratory_requires_independent_confirmation, true, `${relativePath}: input.analysis.exploratory_requires_independent_confirmation`, errors);
+  if (input?.estimate?.status === "planned-not-executed") {
+    verifyA17Boolean(input?.estimate?.evidence_materialized, false, `${relativePath}: input.estimate.evidence_materialized`, errors);
+    if (input?.estimate?.result !== "not-computed") errors.push(`${relativePath}: input.estimate.result must be not-computed`);
+  }
+  if (input?.comparison?.status === "planned-not-executed" && input?.comparison?.effect !== "not-computed") {
+    errors.push(`${relativePath}: input.comparison.effect must be not-computed`);
+  }
+  verifyA17Boolean(value?.evidence?.materialized, false, `${relativePath}: evidence.materialized`, errors);
+  if (input?.metric_quality_gate?.status !== "blocked") errors.push(`${relativePath}: input.metric_quality_gate.status must be blocked for design-only evidence`);
+  verifyExactSet(input?.metric_quality_gate?.blocking_categories ?? [], A17_GATE_CATEGORIES, `${relativePath}: input.metric_quality_gate.blocking_categories`, errors);
+
+  const expectedArtifacts = [
+    input?.metric?.id,
+    input?.population_denominator?.id,
+    input?.aggregation?.id,
+    input?.uncertainty?.id,
+    input?.analysis?.id,
+    input?.estimate?.id,
+    input?.comparison?.id,
+    input?.metric_quality_gate?.id,
+  ].filter(Boolean);
+  verifyMatchingIdSet(value?.evidence?.design_artifacts, expectedArtifacts, `${relativePath}: evidence.design_artifacts`, errors);
+
+  const knownIds = collectNestedIds(input);
+  for (const ids of Object.values(value?.references ?? {})) for (const id of asArray(ids)) knownIds.add(id);
+  const tracedIds = new Set();
+  for (const [index, trace] of asArray(value?.expected?.trace_closure).entries()) {
+    verifyNonEmptyString(trace?.id, `${relativePath}: expected.trace_closure[${index}].id`, errors);
+    const links = verifyStringIdList(trace?.links, `${relativePath}: expected.trace_closure[${index}].links`, errors);
+    verifyReferencesKnown(links, knownIds, `${relativePath}: expected.trace_closure[${index}].links`, errors, tracedIds);
+  }
+  for (const ids of Object.values(value?.references ?? {})) {
+    for (const id of asArray(ids)) if (!tracedIds.has(id)) errors.push(`${relativePath}: reference ${id} is not covered by expected.trace_closure`);
+  }
+}
+
 function verifyA16GlobalScorerIdentityUniqueness(exampleValues, errors) {
   const seen = new Map();
   for (const [relativePath, value] of exampleValues) {
@@ -4626,6 +5068,8 @@ export async function verifyAcademyUnit(unitDir) {
       verifyTaskScenarioDataCase(value, examplePath, errors);
     } else if (profileName === "reference-to-scorer-v1") {
       verifyReferenceToScorerCase(value, examplePath, errors);
+    } else if (profileName === "score-to-metric-v1") {
+      verifyScoreToMetricCase(value, examplePath, errors);
     }
   }
 
@@ -4644,12 +5088,14 @@ export async function verifyAcademyUnit(unitDir) {
   } else if (profileName === "reference-to-scorer-v1") {
     verifyA16GlobalScorerIdentityUniqueness(exampleValues, errors);
     verifyReferenceToScorerTemplates(templateValues, errors);
+  } else if (profileName === "score-to-metric-v1") {
+    verifyScoreToMetricTemplates(templateValues, errors);
   }
 
   await verifyHtml(
     resolvedUnitDir,
     errors,
-    ["task-scenario-to-evaluation-data-v1", "reference-to-scorer-v1"].includes(profileName),
+    ["task-scenario-to-evaluation-data-v1", "reference-to-scorer-v1", "score-to-metric-v1"].includes(profileName),
   );
   return errors;
 }
