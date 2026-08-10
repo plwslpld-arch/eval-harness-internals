@@ -1,15 +1,15 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
 - 章节：A1
-- 当前知识单元：A1.4《从评测问题到任务与场景》
-- 当前状态：学习中
-- 公开成果合同已验证知识单元：3
-- 最近完成：A1.3《评测对象、系统边界与版本》
+- 当前知识单元：A1.5（正式标题与范围待定义）
+- 当前状态：尚未开始
+- 公开成果合同已验证知识单元：4
+- 最近完成：A1.4《从评测问题到任务与场景》
 
 ## A1.1 公开成果结构合同已验证
 
@@ -43,6 +43,17 @@
 - 远程验证：[Documentation Quality run 31354660150](https://github.com/plwslpld-arch/evalorium/actions/runs/31354660150)
 - 限制：验证证明公开成果、目标身份与内部完整性合同，不证明真实 Harness 运行、生产适用性、科学效度或个人掌握程度
 
+## A1.4 任务、场景、覆盖与完整性合同已验证
+
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-4/README.md)与[独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-4/index.html)
+- Scenario Space、Task Spec、Test Case、Variant Plan、Trajectory Contract、Coverage Matrix 共 6 类模板
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个 question-to-task-scenario 完整案例
+- Canonical profile 检查任务—场景—案例—变体—轨迹—覆盖引用图、目标与构念传递、执行证据语义、错误类型和缩水绕过
+- Node 24 本地 `npm run check`：64 项测试、品牌检查和仓库验证通过
+- 内容提交：[`719113a`](https://github.com/plwslpld-arch/evalorium/commit/719113a511ba044c13d494ebfa08c69bc785b880)
+- 远程验证：[Documentation Quality run 31361998848](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848)
+- 限制：验证证明公开成果的任务、场景、覆盖与内部完整性合同，不证明真实 Harness 运行、生产适用性、科学效度或个人掌握程度
+
 ## 完整范围
 
 - 8 个阶段
@@ -62,8 +73,7 @@
 
 公开仓库只保存正式成果，不保存对话、个人回答、错误历史、私人学习笔记或中间草稿。单元状态描述的是开源交付物，不用于公开判断个人能力。
 
-## A1.4 下一步
+## A1.5 下一步
 
-1. 第一部分解释为什么评测问题不能直接执行，并区分用例、场景、任务、测试案例、样本和试次。
-2. 后续学习场景空间、风险驱动覆盖、Task Spec、变体与控制条件。
-3. 学习完成前不创建 A1.4 正式单元成果或占位正文。
+1. 先定义 A1.5 的正式标题与学习范围，再开始循序学习。
+2. A1.5 学习完成前不创建正式单元成果或占位正文。

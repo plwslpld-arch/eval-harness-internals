@@ -1,6 +1,6 @@
 # Evalorium：跨设备恢复入口
 
-<!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
 
 本文件是所有电脑、新任务和贡献者的统一恢复入口。对话用于交互，Git 仓库是持久事实来源。
 
@@ -9,6 +9,8 @@
 Evalorium 是独立、开源、企业级的 AI 质量工程平台，目标覆盖质量标准、评测框架、统计测量、LLM-as-Judge、人工评测、Agent Environment Harness、安全红队、CI/CD 质量门禁、生产监控、治理和 Eval-to-RL。
 
 当前先通过 Academy 逐单元交付经过校订与验证的课程、模板和案例，再逐步实现 Platform。课程不会因为一个月的节奏目标而缩减。
+
+当前 A1.4《从评测问题到任务与场景》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-4/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-4/index.html)、6 类工程模板和 3 个端到端案例均纳入合同；Node 24 本地 `npm run check` 共 64 项测试通过，[Documentation Quality run 31361998848](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848) 成功。该证据只证明任务、场景、覆盖与内部完整性合同，不证明真实 Harness 运行、科学效度或个人能力。当前 A1.5 尚未开始，必须先定义正式标题与范围，学习完成前不创建占位成果。
 
 ## 每次恢复的固定顺序
 

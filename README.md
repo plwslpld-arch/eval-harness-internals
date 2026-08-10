@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A1.4 current_status=in_progress last_completed=A1.3 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1–A1.3 public artifact contracts validated; A1.4 “From Evaluation Questions to Tasks and Scenarios” is active |
+| Academy curriculum | Learning | A1.1–A1.3 and [A1.4](academy/phase-a/chapter-a1/unit-a1-4/README.md) public artifact contracts validated; A1.4 includes three cases, six templates, 64 local tests, and [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848); A1.5 is not started |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 

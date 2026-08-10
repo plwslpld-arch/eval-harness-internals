@@ -1,7 +1,7 @@
 schema_version: 1
 unit: {id: A1.4, title: 从评测问题到任务与场景, phase: A, chapter: A1}
 publication:
-  status: candidate
+  status: validated
   audience: AI 质量工程师、评测工程师、Agent Harness 工程师、产品与风险负责人
   language: zh-CN
   formats: [markdown, html, yaml]
