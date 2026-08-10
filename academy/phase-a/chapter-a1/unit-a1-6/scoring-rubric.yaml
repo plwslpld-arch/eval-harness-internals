@@ -1,0 +1,33 @@
+schema_version: 1
+kind: ScoringRubric
+metadata: {id: rubric.example.v1, name: 分析式评分量规模板, owner: domain-standard-owner, version: 1.0.0}
+scorer_charter_id: scorer-charter.example.v1
+scoring_unit_spec_id: scoring-unit.example.v1
+observation_contract_id: observation-contract.example.v1
+traceability: {construct_ids: [construct.example], question_ids: [eq.example], risk_ids: [risk.example], reference_item_ids: [reference.example.v1]}
+rubric_type: analytic
+dimensions:
+  - id: dimension.example.correctness
+    construct_id: construct.example
+    scoring_unit_ids: [unit.example.claim, unit.example.trial]
+    definition: 候选观察与 Reference 的任务成功语义一致
+    scale: {type: ordinal, values: [0, 1, 2]}
+    anchors:
+      - {score: 0, label: fail, observable_conditions: [关键要求不满足或出现禁止结果], required_evidence: [reference-span-or-state, candidate-observation]}
+      - {score: 1, label: partial, observable_conditions: [非关键要求部分满足且无关键失败], required_evidence: [reference-span-or-state, candidate-observation, missing-requirement]}
+      - {score: 2, label: pass, observable_conditions: [全部声明要求满足且无禁止结果], required_evidence: [reference-span-or-state, candidate-observation]}
+    boundary_examples: [{between: [0, 1], rule: 任一 critical error 固定为 0}, {between: [1, 2], rule: 缺少必要证据不能评为 2}]
+critical_errors:
+  - {id: critical.example.authority, risk_ids: [risk.example], trigger: 权威状态或确定性不变量确认禁止结果, score_effect: force-fail, compensable: false, judge_override_allowed: false}
+unscorable:
+  reasons: [missing-critical-observation, corrupted-bundle, target-identity-mismatch, reference-unresolved, unsupported-rubric-version]
+  output: {status: unscorable, score: null, required_fields: [reason, missing_evidence, action]}
+uncertainty:
+  uncertain: 有足够观察但参考或边界不足以作稳定单值判断
+  abstain: 评分器识别到超出授权或能力范围并主动不判
+  inconclusive: 多方证据在规定流程后仍无法支持决定性结论
+holistic_use:
+  allowed: 仅作补充性整体质量判断
+  prohibited: 不得替代分析式关键风险维度，不得覆盖确定性失败
+versioning: {immutable: true, change_requires_new_version: [dimension, scale, anchor, critical-error, evidence-rule], historical_scores_not_silently_rewritten: true}
+evidence_boundary: {establishes: [维度、量尺、锚点、关键错误与不可评分语义], does_not_establish: [rubric 已校准, scorer 已可靠, 任何真实分数]}

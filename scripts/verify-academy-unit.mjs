@@ -91,6 +91,23 @@ const VERIFICATION_PROFILES = {
       "examples/knowledge-assistant/evaluation-case.yaml",
     ],
   },
+  "reference-to-scorer-v1": {
+    templates: [
+      "scorer-charter.yaml",
+      "scoring-unit-spec.yaml",
+      "observation-contract.yaml",
+      "scoring-rubric.yaml",
+      "adjudication-protocol.yaml",
+      "scorer-manifest.yaml",
+      "scorer-validation-report.yaml",
+      "scorer-quality-gate.yaml",
+    ],
+    examples: [
+      "examples/refund-agent/evaluation-case.yaml",
+      "examples/contract-agent/evaluation-case.yaml",
+      "examples/knowledge-assistant/evaluation-case.yaml",
+    ],
+  },
 };
 
 const CANONICAL_UNIT_PROFILES = {
@@ -99,9 +116,10 @@ const CANONICAL_UNIT_PROFILES = {
   "A1.3": "target-boundary-version-v1",
   "A1.4": "question-to-task-scenario-v1",
   "A1.5": "task-scenario-to-evaluation-data-v1",
+  "A1.6": "reference-to-scorer-v1",
 };
 
-const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5"]);
+const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6"]);
 
 const TEMPLATE_CONTRACTS = {
   "artifact-manifest.yaml": {
@@ -245,6 +263,38 @@ const TEMPLATE_CONTRACTS = {
   "data-quality-gate.yaml": {
     kind: "DataQualityGate",
     required: ["metadata.id", "dataset_manifest_id", "status_values", "checks", "decision.status"],
+  },
+  "scorer-charter.yaml": {
+    kind: "ScorerCharter",
+    required: ["metadata.id", "purpose", "traceability", "scoring_boundary", "evidence_boundary"],
+  },
+  "scoring-unit-spec.yaml": {
+    kind: "ScoringUnitSpec",
+    required: ["metadata.id", "scorer_charter_id", "units", "aggregation_boundary", "traceability"],
+  },
+  "observation-contract.yaml": {
+    kind: "ObservationContract",
+    required: ["metadata.id", "scorer_charter_id", "scoring_unit_spec_id", "bundle", "evidence_requirements", "traceability"],
+  },
+  "scoring-rubric.yaml": {
+    kind: "ScoringRubric",
+    required: ["metadata.id", "scorer_charter_id", "scoring_unit_spec_id", "observation_contract_id", "dimensions", "scale", "critical_errors", "unscorable", "traceability"],
+  },
+  "adjudication-protocol.yaml": {
+    kind: "AdjudicationProtocol",
+    required: ["metadata.id", "scoring_rubric_id", "disagreement", "abstention", "adjudication", "outputs", "traceability"],
+  },
+  "scorer-manifest.yaml": {
+    kind: "ScorerManifest",
+    required: ["metadata.id", "scorer_charter_id", "scoring_rubric_id", "observation_contract_id", "adjudication_protocol_id", "scorers", "precedence", "output_contract", "traceability"],
+  },
+  "scorer-validation-report.yaml": {
+    kind: "ScorerValidationReport",
+    required: ["metadata.id", "scorer_manifest_id", "validation_scope", "evidence_status", "reliability", "validity", "calibration", "error_profile", "bias", "robustness", "security", "conclusion", "traceability"],
+  },
+  "scorer-quality-gate.yaml": {
+    kind: "ScorerQualityGate",
+    required: ["metadata.id", "scorer_manifest_id", "scorer_validation_report_id", "status_values", "check_status_values", "checks", "decision.status", "evidence_boundary", "traceability"],
   },
 };
 
@@ -662,6 +712,97 @@ const PROFILE_CONTRACTS = {
         "references.dataset_version_ids", "references.quality_gate_ids", "references.trace_ids",
         "input", "expected.trace_closure", "expected.next_actions",
         "evidence.design_artifacts", "evidence.traceability", "evidence.limitations",
+      ],
+    },
+  },
+  "reference-to-scorer-v1": {
+    "scorer-charter.yaml": {
+      kind: "ScorerCharter",
+      required: [
+        "metadata.id", "metadata.version", "purpose", "traceability", "scoring_claim",
+        "authority_order", "non_compensation", "responsibilities", "evidence_boundary",
+      ],
+    },
+    "scoring-unit-spec.yaml": {
+      kind: "ScoringUnitSpec",
+      required: [
+        "metadata.id", "metadata.version", "scorer_charter_id", "traceability",
+        "units", "dependence", "missing_or_duplicate_identity", "evidence_boundary",
+      ],
+    },
+    "observation-contract.yaml": {
+      kind: "ObservationContract",
+      required: [
+        "metadata.id", "metadata.version", "scoring_unit_spec_id", "traceability", "bundle",
+        "completeness", "integrity", "privacy_and_access", "evidence_boundary",
+      ],
+    },
+    "scoring-rubric.yaml": {
+      kind: "ScoringRubric",
+      required: [
+        "metadata.id", "metadata.version", "scorer_charter_id", "scoring_unit_spec_id",
+        "observation_contract_id", "traceability", "rubric_type", "dimensions",
+        "critical_errors", "unscorable", "uncertainty", "holistic_use", "versioning",
+        "evidence_boundary",
+      ],
+    },
+    "adjudication-protocol.yaml": {
+      kind: "AdjudicationProtocol",
+      required: [
+        "metadata.id", "metadata.version", "rubric_id", "traceability", "disagreement",
+        "workflow", "adjudicator", "outcomes", "critical_failure_rule", "feedback",
+        "evidence_boundary",
+      ],
+    },
+    "scorer-manifest.yaml": {
+      kind: "ScorerManifest",
+      required: [
+        "metadata.id", "metadata.version", "scorer_charter_id", "scoring_unit_spec_id",
+        "observation_contract_id", "rubric_id", "adjudication_protocol_id", "traceability",
+        "scorer_identity", "implementations", "precedence", "output_record",
+        "failure_behavior", "security", "evidence_boundary",
+      ],
+    },
+    "scorer-validation-report.yaml": {
+      kind: "ScorerValidationReport",
+      required: [
+        "metadata.id", "metadata.version", "scorer_manifest_id", "rubric_id",
+        "adjudication_protocol_id", "validation_identity", "evidence", "dimensions.reliability",
+        "dimensions.validity", "dimensions.calibration", "error_profile",
+        "bias_and_robustness", "security", "acceptance", "limitations",
+        "evidence.record_schema.required", "evidence.record_schema.category_values",
+        "evidence.record_schema.hash_format", "evidence.record_schema.materialized_status",
+      ],
+    },
+    "scorer-quality-gate.yaml": {
+      kind: "ScorerQualityGate",
+      required: [
+        "metadata.id", "metadata.version", "scorer_manifest_id", "validation_report_id",
+        "status_values", "checks", "decision.status", "ready_rule", "exceptions", "limitations",
+        "partial_scope_schema.required_when", "partial_scope_schema.required",
+        "partial_scope_schema.evidence_rule", "required_check_categories", "all_checks_critical",
+      ],
+    },
+    example: {
+      kind: "EvaluationCase",
+      required: [
+        "metadata.id", "references.target_ids", "references.construct_ids",
+        "references.question_ids", "references.risk_ids", "references.scenario_family_ids",
+        "references.task_ids", "references.reference_item_ids",
+        "references.annotation_protocol_ids", "references.dataset_version_ids",
+        "references.quality_gate_ids", "references.scorer_charter_ids",
+        "references.scoring_unit_spec_ids", "references.scoring_unit_ids",
+        "references.observation_contract_ids",
+        "references.rubric_ids", "references.adjudication_protocol_ids",
+        "references.scorer_manifest_ids", "references.scorer_identity_ids", "references.scorer_ids",
+        "references.scorer_validation_ids",
+        "references.scorer_quality_gate_ids", "references.scoring_trace_ids",
+        "input.scorer_charter", "input.scoring_units.spec_id", "input.scoring_units.units",
+        "input.observation_contract",
+        "input.rubric", "input.adjudication", "input.scorers", "input.validation",
+        "input.validation.validation_identity",
+        "input.quality_gate", "expected.trace_closure", "evidence.design_artifacts",
+        "evidence.traceability", "evidence.limitations",
       ],
     },
   },
@@ -2258,6 +2399,79 @@ const A15_CANONICAL_UPSTREAM = {
   },
 };
 
+const A16_UPSTREAM_FIELDS = [
+  "target_ids", "construct_ids", "question_ids", "risk_ids", "scenario_family_ids",
+  "task_ids", "dataset_charter_ids", "source_ids", "partition_ids",
+  "reference_item_ids", "annotation_protocol_ids", "split_ids", "dataset_version_ids",
+  "quality_gate_ids", "trace_ids",
+];
+
+const A16_CANONICAL_UPSTREAM = {
+  "examples/refund-agent/evaluation-case.yaml": {
+    target_ids: ["target.refund-agent.candidate"],
+    construct_ids: ["construct.refund.authorization", "construct.refund.state-safety"],
+    question_ids: ["eq.refund.safe"],
+    risk_ids: ["risk.refund.unauthorized", "risk.refund.duplicate"],
+    scenario_family_ids: ["family.refund.normal", "family.refund.boundary", "family.refund.concurrent"],
+    task_ids: ["task.refund.execute"],
+    dataset_charter_ids: ["charter.refund.a15"],
+    source_ids: ["source.refund.traffic.v1", "source.refund.incident.v1", "source.refund.policy.v1", "source.refund.state.v1"],
+    partition_ids: ["partition.refund.distribution", "partition.refund.challenge", "partition.refund.regression"],
+    reference_item_ids: ["reference.refund.policy-state.v1", "reference.refund.timeout.v1"],
+    annotation_protocol_ids: ["annotation.refund.v1"],
+    split_ids: ["split.refund.development", "split.refund.gate", "split.refund.regression"],
+    dataset_version_ids: ["dataset.refund.a15.v1"],
+    quality_gate_ids: ["gate.refund.data.v1"],
+    trace_ids: ["trace.refund.authorization", "trace.refund.duplicate"],
+  },
+  "examples/contract-agent/evaluation-case.yaml": {
+    target_ids: ["target.contract-agent.candidate"],
+    construct_ids: ["construct.contract.critical-recall", "construct.contract.span-grounding"],
+    question_ids: ["eq.contract.screen"],
+    risk_ids: ["risk.contract.omission", "risk.contract.fabrication"],
+    scenario_family_ids: ["family.contract.explicit", "family.contract.cross", "family.contract.missing"],
+    task_ids: ["task.contract.screen"],
+    dataset_charter_ids: ["charter.contract.a15"],
+    source_ids: ["source.contract.licensed.v1", "source.contract.expert.v1", "source.contract.taxonomy.v1"],
+    partition_ids: ["partition.contract.distribution", "partition.contract.challenge", "partition.contract.regression"],
+    reference_item_ids: ["reference.contract.risk-span.v1", "reference.contract.incomplete.v1"],
+    annotation_protocol_ids: ["annotation.contract.v1"],
+    split_ids: ["split.contract.development", "split.contract.gate", "split.contract.regression"],
+    dataset_version_ids: ["dataset.contract.a15.v1"],
+    quality_gate_ids: ["gate.contract.data.v1"],
+    trace_ids: ["trace.contract.omission", "trace.contract.fabrication"],
+  },
+  "examples/knowledge-assistant/evaluation-case.yaml": {
+    target_ids: ["target.knowledge-assistant.candidate"],
+    construct_ids: ["construct.knowledge.groundedness", "construct.knowledge.access-isolation"],
+    question_ids: ["eq.knowledge.answer"],
+    risk_ids: ["risk.knowledge.ungrounded", "risk.knowledge.acl"],
+    scenario_family_ids: ["family.knowledge.current", "family.knowledge.conflict", "family.knowledge.unauthorized"],
+    task_ids: ["task.knowledge.answer"],
+    dataset_charter_ids: ["charter.knowledge.a15"],
+    source_ids: ["source.knowledge.questions.v1", "source.knowledge.corpus.v1", "source.knowledge.security.v1"],
+    partition_ids: ["partition.knowledge.distribution", "partition.knowledge.challenge", "partition.knowledge.regression"],
+    reference_item_ids: ["reference.knowledge.claim-span.v1", "reference.knowledge.acl.v1"],
+    annotation_protocol_ids: ["annotation.knowledge.v1"],
+    split_ids: ["split.knowledge.development", "split.knowledge.gate", "split.knowledge.regression"],
+    dataset_version_ids: ["dataset.knowledge.a15.v1"],
+    quality_gate_ids: ["gate.knowledge.data.v1"],
+    trace_ids: ["trace.knowledge.grounding", "trace.knowledge.acl"],
+  },
+};
+
+const A16_CANONICAL_SCORER_IDENTITIES = {
+  "examples/refund-agent/evaluation-case.yaml": "scorer-identity.refund.a16",
+  "examples/contract-agent/evaluation-case.yaml": "scorer-identity.contract.a16",
+  "examples/knowledge-assistant/evaluation-case.yaml": "scorer-identity.knowledge.a16",
+};
+
+const A16_CANONICAL_VALIDATION_DATASETS = {
+  "examples/refund-agent/evaluation-case.yaml": "independent-calibration-set.refund.a16",
+  "examples/contract-agent/evaluation-case.yaml": "independent-calibration-set.contract.a16",
+  "examples/knowledge-assistant/evaluation-case.yaml": "independent-calibration-set.knowledge.a16",
+};
+
 function verifyDecisionContainer(value, label, errors) {
   if (typeof value === "string") return verifyNonEmptyString(value, label, errors);
   if (Array.isArray(value)) return verifyNonEmptyArray(value, label, errors);
@@ -3393,6 +3607,892 @@ function verifyTaskScenarioDataCase(value, relativePath, errors) {
   verifyNonEmptyArray(value?.evidence?.limitations, `${relativePath}: evidence.limitations`, errors);
 }
 
+const SCORER_GATE_STATUSES = new Set(["ready", "partial", "blocked", "invalid"]);
+const SCORER_CHECK_STATUSES = new Set(["passed", "partial", "blocked", "failed"]);
+const SCORER_IMPLEMENTATION_TYPES = new Set([
+  "deterministic", "programmatic", "human", "llm-as-judge", "composite",
+]);
+const SCORE_RECORD_STATUSES = new Set([
+  "scored", "uncertain", "abstained", "unscorable", "inconclusive",
+]);
+
+const A16_TEMPLATE_GATE_CHECKS = {
+  "check.identity": "reproducibility",
+  "check.precedence": "safety",
+  "check.reliability": "reliability",
+  "check.validity": "validity",
+  "check.calibration": "calibration",
+  "check.error-profile": "error",
+  "check.bias-robustness": "robustness",
+  "check.security": "security",
+};
+
+const A16_CASE_GATE_CHECKS = {
+  "examples/refund-agent/evaluation-case.yaml": {
+    "refund.scorer.check.identity": "reproducibility",
+    "refund.scorer.check.precedence": "safety",
+    "refund.scorer.check.reliability": "reliability",
+    "refund.scorer.check.validity": "validity",
+    "refund.scorer.check.calibration": "calibration",
+    "refund.scorer.check.error-profile": "error",
+    "refund.scorer.check.bias-security": "bias-robustness-security",
+  },
+  "examples/contract-agent/evaluation-case.yaml": {
+    "contract.scorer.check.identity": "reproducibility",
+    "contract.scorer.check.precedence": "safety",
+    "contract.scorer.check.reliability": "reliability",
+    "contract.scorer.check.validity": "validity",
+    "contract.scorer.check.calibration": "calibration",
+    "contract.scorer.check.error-profile": "error",
+    "contract.scorer.check.bias-security": "bias-robustness-security",
+  },
+  "examples/knowledge-assistant/evaluation-case.yaml": {
+    "knowledge.scorer.check.identity": "reproducibility",
+    "knowledge.scorer.check.precedence": "safety",
+    "knowledge.scorer.check.reliability": "reliability",
+    "knowledge.scorer.check.validity": "validity",
+    "knowledge.scorer.check.calibration": "calibration",
+    "knowledge.scorer.check.error-profile": "error",
+    "knowledge.scorer.check.bias-security": "bias-robustness-security",
+  },
+};
+
+function verifyA16EvidenceBoundary(value, label, errors) {
+  if (!verifyNonEmptyObject(value, label, errors)) return;
+  verifyNonEmptyStringArray(value.establishes, `${label}.establishes`, errors);
+  verifyNonEmptyStringArray(value.does_not_establish, `${label}.does_not_establish`, errors);
+}
+
+function verifyA16Traceability(value, label, errors) {
+  if (!verifyNonEmptyObject(value, label, errors)) return;
+  for (const [field, ids] of Object.entries(value)) {
+    if (!field.endsWith("_ids")) {
+      errors.push(`${label}.${field}: traceability fields must end in _ids`);
+      continue;
+    }
+    verifyStringIdList(ids, `${label}.${field}`, errors);
+  }
+}
+
+function verifyA16EntityArray(value, fields, label, errors) {
+  return verifyObjectEntities(value, fields, label, errors);
+}
+
+const A16_EVIDENCE_CATEGORIES = new Set([
+  "identity", "precedence", "reliability", "validity", "calibration",
+  "error-profile", "bias-robustness-security",
+]);
+
+const A16_CHECK_EVIDENCE_CATEGORY = new Map([
+  ["reproducibility", "identity"],
+  ["identity", "identity"],
+  ["safety", "precedence"],
+  ["precedence", "precedence"],
+  ["reliability", "reliability"],
+  ["validity", "validity"],
+  ["calibration", "calibration"],
+  ["error", "error-profile"],
+  ["error-profile", "error-profile"],
+  ["robustness", "bias-robustness-security"],
+  ["security", "bias-robustness-security"],
+  ["bias-robustness", "bias-robustness-security"],
+  ["bias-robustness-security", "bias-robustness-security"],
+]);
+
+function verifyA16MaterializedRecords(value, label, forbiddenIds, errors) {
+  if (!verifyNonEmptyArray(value, label, errors)) return [];
+  const records = [];
+  for (const [index, record] of value.entries()) {
+    const recordLabel = `${label}[${index}]`;
+    if (!verifyNonEmptyObject(record, recordLabel, errors)) continue;
+    verifyNonEmptyString(record.id, `${recordLabel}.id`, errors);
+    verifyNonEmptyString(record.category, `${recordLabel}.category`, errors);
+    if (typeof record.category === "string" && !A16_EVIDENCE_CATEGORIES.has(record.category)) {
+      errors.push(`${recordLabel}.category must be a supported scorer validation evidence category`);
+    }
+    verifyA16StrictSha256(record.hash, `${recordLabel}.hash`, errors);
+    if (record.status !== "materialized") errors.push(`${recordLabel}.status must be materialized`);
+    if (typeof record.id === "string" && record.id.length > 0) {
+      records.push({id: record.id, category: record.category});
+      if (forbiddenIds?.has(record.id)) errors.push(`${recordLabel}.id must not reuse a scorer design, validation report or gate id`);
+    }
+  }
+  return records;
+}
+
+function verifyA16DisjointScorerIdentities({ manifestId, immutableId, implementationIds, label, errors }) {
+  const identities = [manifestId, immutableId, ...implementationIds].filter((id) => typeof id === "string" && id.length > 0);
+  for (const duplicate of new Set(identities.filter((id, index) => identities.indexOf(id) !== index))) {
+    errors.push(`${label}: scorer manifest, immutable identity and implementation ids must be pairwise disjoint; duplicate ${duplicate}`);
+  }
+}
+
+function verifyA16StructuredIdentity(value, label, errors) {
+  if (!isMaterializedString(value) || /not-implemented|not-observed/i.test(value)) {
+    errors.push(`${label}: must identify a materialized non-sentinel value`);
+    return;
+  }
+  if (!/^[A-Za-z][A-Za-z0-9._-]+$/.test(value)) errors.push(`${label}: must be a structured identity`);
+}
+
+function verifyA16StrictSha256(value, label, errors) {
+  if (!isMaterializedString(value) || /not-implemented|not-observed/i.test(value)) {
+    errors.push(`${label}: must identify a materialized non-sentinel value`);
+    return;
+  }
+  if (!/^sha256:[a-f0-9]{64}$/i.test(value)) errors.push(`${label}: must be sha256 followed by exactly 64 hexadecimal characters`);
+}
+
+function verifyA16ReadyScorerIdentity(identity, label, errors) {
+  for (const field of ["immutable_id", "runtime_identity", "input_schema_version", "output_schema_version"]) {
+    verifyA16StructuredIdentity(identity?.[field], `${label}.${field}`, errors);
+  }
+  for (const field of ["implementation_hash", "config_hash"]) verifyA16StrictSha256(identity?.[field], `${label}.${field}`, errors);
+}
+
+function verifyA16ExecutedAt(value, label, errors) {
+  const match = typeof value === "string" ? value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|[+-](\d{2}):(\d{2}))$/,
+  ) : null;
+  if (!match) {
+    errors.push(`${label}: must be a valid non-future ISO timestamp`);
+    return;
+  }
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, , zone, offsetHourText, offsetMinuteText] = match;
+  const [year, month, day, hour, minute, second] = [yearText, monthText, dayText, hourText, minuteText, secondText].map(Number);
+  const daysInMonth = month >= 1 && month <= 12 ? new Date(Date.UTC(year, month, 0)).getUTCDate() : 0;
+  const offsetHour = Number(offsetHourText);
+  const offsetMinute = Number(offsetMinuteText);
+  const offsetValid = zone === "Z" || (offsetHour < 14 && offsetMinute <= 59) || (offsetHour === 14 && offsetMinute === 0);
+  const timestamp = Date.parse(value);
+  if (
+    !Number.isFinite(timestamp) || month < 1 || month > 12 || day < 1 || day > daysInMonth ||
+    hour > 23 || minute > 59 || second > 59 || !offsetValid || timestamp > Date.now()
+  ) {
+    errors.push(`${label}: must be a valid non-future ISO timestamp`);
+  }
+}
+
+function verifyA16AcceptedResult(value, label, errors) {
+  if (!verifyNonEmptyObject(value, label, errors)) return;
+  if (!new Set(["accepted", "passed"]).has(value.status)) {
+    errors.push(`${label}.status must be accepted or passed`);
+  }
+  verifyNonEmptyString(value.evidence_id, `${label}.evidence_id`, errors);
+  verifyNonEmptyString(value.metric, `${label}.metric`, errors);
+  if (typeof value.observed_value !== "number" || !Number.isFinite(value.observed_value)) {
+    errors.push(`${label}.observed_value must be a finite number`);
+  }
+}
+
+function verifyA16Threshold(result, threshold, label, errors) {
+  if (!verifyNonEmptyObject(threshold, `${label}.threshold`, errors)) return;
+  verifyNonEmptyString(threshold.metric, `${label}.threshold.metric`, errors);
+  if (typeof result?.metric === "string" && result.metric !== threshold.metric) {
+    errors.push(`${label}.metric must match the predeclared threshold metric`);
+  }
+  if (!new Set(["gte", "lte", "equals"]).has(threshold.operator)) {
+    errors.push(`${label}.threshold.operator must be gte, lte or equals`);
+  }
+  if (typeof threshold.value !== "number" || !Number.isFinite(threshold.value)) {
+    errors.push(`${label}.threshold.value must be a finite number`);
+    return;
+  }
+  const observed = result?.observed_value;
+  if (typeof observed !== "number" || !Number.isFinite(observed)) return;
+  const passed = threshold.operator === "gte" ? observed >= threshold.value :
+    threshold.operator === "lte" ? observed <= threshold.value : observed === threshold.value;
+  if (!passed) errors.push(`${label}.observed_value does not satisfy the predeclared threshold`);
+}
+
+function verifyA16ThresholdDeclarations(acceptance, label, errors) {
+  if (!verifyNonEmptyObject(acceptance, label, errors)) return;
+  if (acceptance.thresholds_declared_before_execution !== true) errors.push(`${label}.thresholds_declared_before_execution must be true`);
+  verifyNonEmptyStringArray(acceptance.required_results, `${label}.required_results`, errors);
+  const declaredThresholds = acceptance.thresholds;
+  verifyExactSet(Object.keys(declaredThresholds ?? {}), ["reliability", "validity", "calibration", "bias_and_robustness", "security"], `${label}.thresholds`, errors);
+  for (const [name, threshold] of Object.entries(declaredThresholds ?? {})) {
+    verifyNonEmptyString(threshold?.metric, `${label}.thresholds.${name}.metric`, errors);
+    if (!new Set(["gte", "lte", "equals"]).has(threshold?.operator)) errors.push(`${label}.thresholds.${name}.operator must be gte, lte or equals`);
+    if (typeof threshold?.value !== "number" || !Number.isFinite(threshold.value)) errors.push(`${label}.thresholds.${name}.value must be a finite number`);
+  }
+  const errorThresholds = acceptance.error_thresholds;
+  verifyExactSet(Object.keys(errorThresholds ?? {}), ["false_pass", "false_fail", "abstain_error", "unscorable_detection_error"], `${label}.error_thresholds`, errors);
+  for (const [name, threshold] of Object.entries(errorThresholds ?? {})) {
+    if (typeof threshold?.max_count !== "number" || !Number.isFinite(threshold.max_count) || threshold.max_count < 0) errors.push(`${label}.error_thresholds.${name}.max_count must be a non-negative number`);
+  }
+}
+
+function verifyA16ExecutedValidation(validation, manifest, label, forbiddenEvidenceIds, errors) {
+  const independent = validation?.evidence?.independent_from_scorer_development ??
+    validation?.evidence?.independent_from_development;
+  if (independent !== true) errors.push(`${label}: validation evidence must be independently produced`);
+  if (validation?.evidence?.materialized !== true) errors.push(`${label}: validation evidence.materialized must be true`);
+  if (validation?.acceptance?.thresholds_declared_before_execution !== true) {
+    errors.push(`${label}: validation thresholds must be declared before execution`);
+  }
+  const sampleRecords = verifyA16MaterializedRecords(validation?.evidence?.sample_records, `${label}: validation.evidence.sample_records`, forbiddenEvidenceIds, errors);
+  const evidenceRecords = verifyA16MaterializedRecords(validation?.evidence?.evidence_links, `${label}: validation.evidence.evidence_links`, forbiddenEvidenceIds, errors);
+  const allRecords = [...sampleRecords, ...evidenceRecords];
+  const allRecordIds = allRecords.map((record) => record.id);
+  for (const duplicate of new Set(allRecordIds.filter((id, index) => allRecordIds.indexOf(id) !== index))) {
+    errors.push(`${label}: validation evidence record ids must be unique across sample_records and evidence_links; duplicate ${duplicate}`);
+  }
+  const independentEvidenceIds = new Set(allRecords.map((record) => record.id));
+  const evidenceIdsByCategory = new Map();
+  for (const record of allRecords) {
+    if (!evidenceIdsByCategory.has(record.category)) evidenceIdsByCategory.set(record.category, new Set());
+    evidenceIdsByCategory.get(record.category).add(record.id);
+  }
+
+  const validationStatus = validation?.validation_identity?.status ?? validation?.status;
+  if (!new Set(["executed", "validated", "accepted"]).has(validationStatus)) {
+    errors.push(`${label}: validation identity status must be executed, validated or accepted`);
+  }
+  const reportId = validation?.metadata?.id ?? validation?.id;
+  verifyEqualReference(
+    validation?.validation_identity?.report_id,
+    reportId,
+    `${label}: validation.validation_identity.report_id`,
+    errors,
+  );
+  verifyEqualReference(
+    validation?.validation_identity?.scorer_immutable_id,
+    manifest?.scorer_identity?.immutable_id,
+    `${label}: validation.validation_identity.scorer_immutable_id`,
+    errors,
+  );
+  verifyA16StructuredIdentity(
+    validation?.validation_identity?.dataset_version,
+    `${label}: validation.validation_identity.dataset_version`,
+    errors,
+  );
+  verifyA16ExecutedAt(validation?.validation_identity?.executed_at, `${label}: validation.validation_identity.executed_at`, errors);
+  return {independentEvidenceIds, evidenceIdsByCategory};
+}
+
+function verifyA16ReadyValidation(validation, manifest, label, forbiddenEvidenceIds, errors, executedValidation = null) {
+  const {independentEvidenceIds, evidenceIdsByCategory} = executedValidation ??
+    verifyA16ExecutedValidation(validation, manifest, label, forbiddenEvidenceIds, errors);
+  const results = {
+    reliability: validation?.dimensions?.reliability?.result,
+    validity: validation?.dimensions?.validity?.result,
+    calibration: validation?.dimensions?.calibration?.result,
+    bias_and_robustness: validation?.bias_and_robustness?.results,
+    security: validation?.security?.results,
+  };
+  const declaredThresholds = validation?.acceptance?.thresholds;
+  verifyExactSet(Object.keys(declaredThresholds ?? {}), Object.keys(results), `${label}: validation.acceptance.thresholds`, errors);
+  for (const [name, result] of Object.entries(results)) {
+    const resultLabel = name === "bias_and_robustness" ?
+      `${label}: validation.bias_and_robustness.results` :
+      name === "security" ? `${label}: validation.security.results` :
+        `${label}: validation.dimensions.${name}.result`;
+    verifyA16AcceptedResult(result, resultLabel, errors);
+    if (typeof result?.evidence_id === "string" && !independentEvidenceIds.has(result.evidence_id)) {
+      errors.push(`${resultLabel}.evidence_id must resolve to independent materialized validation evidence`);
+    }
+    const expectedEvidenceCategory = new Set(["bias_and_robustness", "security"]).has(name) ?
+      "bias-robustness-security" : name;
+    if (
+      typeof result?.evidence_id === "string" &&
+      independentEvidenceIds.has(result.evidence_id) &&
+      !evidenceIdsByCategory.get(expectedEvidenceCategory)?.has(result.evidence_id)
+    ) {
+      errors.push(`${resultLabel}.evidence_id must resolve to ${expectedEvidenceCategory} validation evidence`);
+    }
+    if (forbiddenEvidenceIds?.has(result?.evidence_id)) errors.push(`${resultLabel}.evidence_id must not reuse a scorer design, validation report or gate id`);
+    if (
+      typeof result?.observed_value === "number" &&
+      (result.observed_value < 0 || (name !== "security" && result.observed_value > 1))
+    ) {
+      errors.push(`${resultLabel}.observed_value must be within its declared bounded domain`);
+    }
+    verifyA16Threshold(result, declaredThresholds?.[name], resultLabel, errors);
+  }
+
+  const thresholds = validation?.acceptance?.error_thresholds;
+  if (!verifyNonEmptyObject(thresholds, `${label}: validation.acceptance.error_thresholds`, errors)) return;
+  for (const name of ["false_pass", "false_fail", "abstain_error", "unscorable_detection_error"]) {
+    const threshold = thresholds[name];
+    const thresholdLabel = `${label}: validation.acceptance.error_thresholds.${name}`;
+    if (!verifyNonEmptyObject(threshold, thresholdLabel, errors)) continue;
+    if (typeof threshold.max_count !== "number" || !Number.isFinite(threshold.max_count) || threshold.max_count < 0) {
+      errors.push(`${thresholdLabel}.max_count must be a non-negative number`);
+    }
+    const observed = validation?.error_profile?.[name]?.observed_count;
+    if (typeof observed !== "number" || !Number.isFinite(observed) || observed < 0) {
+      errors.push(`${label}: validation.error_profile.${name}.observed_count must be a non-negative number`);
+    } else if (typeof threshold.max_count === "number" && observed > threshold.max_count) {
+      errors.push(`${label}: validation.error_profile.${name}.observed_count exceeds predeclared max_count`);
+    }
+  }
+}
+
+function verifyA16PartialScope(value, label, executedValidation, expectedCategories, errors) {
+  if (!verifyNonEmptyObject(value, label, errors)) return;
+  verifyA16StructuredIdentity(value.id, `${label}.id`, errors);
+  verifyNonEmptyStringArray(value.allowed_uses, `${label}.allowed_uses`, errors);
+  verifyNonEmptyStringArray(value.prohibited_uses, `${label}.prohibited_uses`, errors);
+  const evidenceIds = verifyStringIdList(value.evidence_ids, `${label}.evidence_ids`, errors);
+  const actualCategories = new Set();
+  for (const id of evidenceIds) {
+    if (!executedValidation.independentEvidenceIds.has(id)) {
+      errors.push(`${label}.evidence_ids: unknown independent materialized validation evidence id ${id}`);
+      continue;
+    }
+    const category = [...executedValidation.evidenceIdsByCategory.entries()]
+      .find(([, ids]) => ids.has(id))?.[0];
+    if (!expectedCategories.has(category)) {
+      errors.push(`${label}.evidence_ids: unrelated evidence category ${category ?? "unknown"} for partial checks`);
+    } else {
+      actualCategories.add(category);
+    }
+  }
+  verifyExactSet([...actualCategories], [...expectedCategories], `${label}.evidence_categories`, errors);
+}
+
+function verifyA16GateCheckTaxonomy(checks, expectedChecks, label, errors) {
+  const expected = expectedChecks ?? {};
+  const expectedIds = Object.keys(expected);
+  const expectedCategories = Object.values(expected);
+  const actualChecks = asArray(checks);
+  verifyMatchingIdSet(actualChecks.map((check) => check?.id), expectedIds, `${label}.checks.id`, errors);
+  verifyExactSet(actualChecks.map((check) => check?.category), expectedCategories, `${label}.checks.category`, errors);
+  for (const [index, check] of actualChecks.entries()) {
+    const checkLabel = `${label}.checks[${index}]`;
+    const expectedCategory = expected[check?.id];
+    if (expectedCategory && check?.category !== expectedCategory) {
+      errors.push(`${checkLabel}.category: check ${check.id} must use ${expectedCategory}`);
+    }
+    if (check?.critical !== true) errors.push(`${checkLabel}.critical must be true`);
+  }
+}
+
+function verifyA16Gate({ gate, validation, manifest, expectedChecks, knownEvidenceIds = null, forbiddenEvidenceIds = new Set(), label, errors }) {
+  verifyExactSet(Object.keys(gate?.status_values ?? {}), [...SCORER_GATE_STATUSES], `${label}.status_values`, errors);
+  const checks = gate?.checks;
+  const checkIds = verifyA16EntityArray(
+    checks,
+    ["id", "category", "requirement", "evidence", "status", "failure_action"],
+    `${label}.checks`,
+    errors,
+  );
+  verifyA16GateCheckTaxonomy(checks, expectedChecks, label, errors);
+  const forbidden = new Set(forbiddenEvidenceIds);
+  for (const id of collectNestedIds({manifest, gate: {...gate, checks: undefined}, validation: {...validation, evidence: undefined, dimensions: undefined, error_profile: undefined, bias_and_robustness: undefined, security: undefined}})) forbidden.add(id);
+  for (const id of [
+    manifest?.metadata?.id, manifest?.id, manifest?.scorer_identity?.immutable_id,
+    gate?.metadata?.id, gate?.id, validation?.metadata?.id, validation?.id,
+    validation?.validation_identity?.report_id, validation?.validation_identity?.scorer_immutable_id,
+    ...checkIds,
+  ]) if (typeof id === "string" && id.length > 0) forbidden.add(id);
+  for (const field of ["scorer_charter_id", "scoring_unit_spec_id", "observation_contract_id", "rubric_id", "adjudication_protocol_id"]) {
+    if (typeof manifest?.[field] === "string") forbidden.add(manifest[field]);
+  }
+  for (const field of ["scorer_manifest_id", "rubric_id", "adjudication_protocol_id"]) if (typeof validation?.[field] === "string") forbidden.add(validation[field]);
+  for (const field of ["scorer_manifest_id", "validation_report_id"]) if (typeof gate?.[field] === "string") forbidden.add(gate[field]);
+  const decisionStatus = gate?.decision?.status;
+  const executedValidation = new Set(["partial", "ready"]).has(decisionStatus) ?
+    verifyA16ExecutedValidation(validation, manifest, label, forbidden, errors) : null;
+  const blocked = [];
+  const partial = [];
+  const failed = [];
+  for (const [index, check] of asArray(checks).entries()) {
+    const checkLabel = `${label}.checks[${index}]`;
+    if (typeof check?.critical !== "boolean") errors.push(`${checkLabel}.critical: must be a boolean`);
+    if (!SCORER_CHECK_STATUSES.has(check?.status)) errors.push(`${checkLabel}.status: must be passed, partial, blocked or failed`);
+    if (check?.status === "blocked") blocked.push(check?.id);
+    if (check?.status === "partial") partial.push(check?.id);
+    if (check?.status === "failed") failed.push(check?.id);
+    if (verifyNonEmptyObject(check?.evidence, `${checkLabel}.evidence`, errors)) {
+      if (typeof check.evidence.materialized !== "boolean") errors.push(`${checkLabel}.evidence.materialized: must be a boolean`);
+      if (typeof check.evidence.planned_only !== "boolean") errors.push(`${checkLabel}.evidence.planned_only: must be a boolean`);
+      verifyNonEmptyString(check.evidence.semantic_basis, `${checkLabel}.evidence.semantic_basis`, errors);
+      const links = verifyStringIdList(check.evidence.evidence_links, `${checkLabel}.evidence.evidence_links`, errors);
+      if (knownEvidenceIds) verifyReferencesKnown(links, knownEvidenceIds, `${checkLabel}.evidence.evidence_links`, errors);
+      for (const link of links) {
+        if (link === check?.id || checkIds.includes(link) || link === gate?.metadata?.id) {
+          errors.push(`${checkLabel}.evidence.evidence_links: gate cannot use self evidence id ${link}`);
+        }
+        if (check?.evidence?.materialized === true && forbidden.has(link)) errors.push(`${checkLabel}.evidence.evidence_links: must not reuse a scorer design, validation report or gate id ${link}`);
+      }
+      if (new Set(["passed", "partial"]).has(check?.status)) {
+        if (check.evidence.materialized !== true || check.evidence.planned_only !== false) {
+          errors.push(`${checkLabel}: passed or partial check requires non-planned materialized evidence`);
+        }
+        if (!links.some((id) => executedValidation?.independentEvidenceIds.has(id))) {
+          errors.push(`${checkLabel}.evidence.evidence_links: passed or partial check must resolve to independent materialized validation evidence`);
+        }
+        const expectedCategory = A16_CHECK_EVIDENCE_CATEGORY.get(check?.category);
+        if (!expectedCategory) {
+          errors.push(`${checkLabel}.category is not compatible with a scorer validation evidence category`);
+        } else if (!links.some((id) => executedValidation?.evidenceIdsByCategory.get(expectedCategory)?.has(id))) {
+          errors.push(`${checkLabel}.evidence.evidence_links: requires independent materialized ${expectedCategory} evidence`);
+        }
+      }
+    }
+  }
+  const decision = gate?.decision;
+  if (!verifyNonEmptyObject(decision, `${label}.decision`, errors)) return;
+  if (!SCORER_GATE_STATUSES.has(decision.status)) errors.push(`${label}.decision.status: must be ready, partial, blocked or invalid`);
+  for (const field of ["blocking_check_ids", "partial_check_ids", "invalidating_check_ids"]) {
+    verifyStringIdArray(decision[field], `${label}.decision.${field}`, errors, true);
+  }
+  verifyNonEmptyString(decision.reason, `${label}.decision.reason`, errors);
+  verifyNonEmptyString(decision.allowed_next_step, `${label}.decision.allowed_next_step`, errors);
+  verifyNonEmptyStringArray(decision.prohibited_claims, `${label}.decision.prohibited_claims`, errors);
+
+  verifyExactSet(decision.blocking_check_ids ?? [], blocked, `${label}.decision.blocking_check_ids`, errors);
+  verifyExactSet(decision.partial_check_ids ?? [], partial, `${label}.decision.partial_check_ids`, errors);
+  verifyExactSet(decision.invalidating_check_ids ?? [], failed, `${label}.decision.invalidating_check_ids`, errors);
+
+  if (decision.status === "blocked") {
+    if (blocked.length === 0) errors.push(`${label}.decision.status blocked requires a blocked check`);
+  }
+  if (decision.status === "partial") {
+    if (partial.length === 0) errors.push(`${label}.decision.status partial requires a partial check`);
+    if (blocked.length > 0 || failed.length > 0) errors.push(`${label}.decision.status partial cannot retain blocked or failed checks`);
+    const partialChecks = asArray(checks).filter((check) => check?.status === "partial");
+    if (partialChecks.some((check) => check?.evidence?.materialized !== true || check?.evidence?.planned_only !== false)) {
+      errors.push(`${label}.decision.status partial requires non-planned materialized evidence for every partial check`);
+    }
+    if (!new Set(["implemented", "validated"]).has(manifest?.scorer_identity?.status)) {
+      errors.push(`${label}.decision.status partial requires implemented or validated scorer identity`);
+    }
+    verifyA16ReadyScorerIdentity(manifest?.scorer_identity, `${label}: scorer_identity`, errors);
+    if (validation?.acceptance?.current_conclusion !== "partial") {
+      errors.push(`${label}.decision.status partial requires validation acceptance.current_conclusion partial`);
+    }
+    verifyA16PartialScope(
+      decision.partial_scope,
+      `${label}.decision.partial_scope`,
+      executedValidation ?? {independentEvidenceIds: new Set(), evidenceIdsByCategory: new Map()},
+      new Set(partialChecks.map((check) => A16_CHECK_EVIDENCE_CATEGORY.get(check?.category)).filter(Boolean)),
+      errors,
+    );
+  }
+  if (decision.status === "invalid") {
+    if (failed.length === 0) errors.push(`${label}.decision.status invalid requires a failed check`);
+  }
+  if (decision.status !== "ready") return;
+
+  if (asArray(checks).some((check) => check?.critical && check?.status !== "passed")) {
+    errors.push(`${label}.decision.status ready requires every critical check passed`);
+  }
+  if (asArray(checks).some((check) => check?.evidence?.materialized !== true || check?.evidence?.planned_only !== false)) {
+    errors.push(`${label}.decision.status ready requires non-planned materialized evidence for every check`);
+  }
+  if (manifest?.scorer_identity?.status === "design-only") errors.push(`${label}.decision.status ready cannot use design-only scorer identity`);
+  verifyA16ReadyScorerIdentity(manifest?.scorer_identity, `${label}: scorer_identity`, errors);
+  if (validation?.evidence?.materialized !== true) errors.push(`${label}.decision.status ready requires validation evidence.materialized true`);
+  verifyA16ReadyValidation(validation, manifest, label, forbidden, errors, executedValidation);
+  if (validation?.acceptance?.current_conclusion !== "ready") errors.push(`${label}.decision.status ready requires validation acceptance.current_conclusion ready`);
+}
+
+function verifyReferenceToScorerTemplates(templateValues, errors) {
+  const charter = templateValues.get("scorer-charter.yaml");
+  const unit = templateValues.get("scoring-unit-spec.yaml");
+  const observation = templateValues.get("observation-contract.yaml");
+  const rubric = templateValues.get("scoring-rubric.yaml");
+  const adjudication = templateValues.get("adjudication-protocol.yaml");
+  const manifest = templateValues.get("scorer-manifest.yaml");
+  const validation = templateValues.get("scorer-validation-report.yaml");
+  const gate = templateValues.get("scorer-quality-gate.yaml");
+  for (const [name, value] of templateValues) {
+    verifyNonEmptyString(value?.metadata?.version, `${name}: metadata.version`, errors);
+    if (value?.traceability !== undefined) verifyA16Traceability(value.traceability, `${name}: traceability`, errors);
+    if (value?.evidence_boundary !== undefined) verifyA16EvidenceBoundary(value.evidence_boundary, `${name}: evidence_boundary`, errors);
+  }
+  for (const [name, value, field, expected] of [
+    ["scoring-unit-spec.yaml", unit, "scorer_charter_id", charter?.metadata?.id],
+    ["observation-contract.yaml", observation, "scoring_unit_spec_id", unit?.metadata?.id],
+    ["scoring-rubric.yaml", rubric, "scorer_charter_id", charter?.metadata?.id],
+    ["scoring-rubric.yaml", rubric, "scoring_unit_spec_id", unit?.metadata?.id],
+    ["scoring-rubric.yaml", rubric, "observation_contract_id", observation?.metadata?.id],
+    ["adjudication-protocol.yaml", adjudication, "rubric_id", rubric?.metadata?.id],
+    ["scorer-manifest.yaml", manifest, "scorer_charter_id", charter?.metadata?.id],
+    ["scorer-manifest.yaml", manifest, "scoring_unit_spec_id", unit?.metadata?.id],
+    ["scorer-manifest.yaml", manifest, "observation_contract_id", observation?.metadata?.id],
+    ["scorer-manifest.yaml", manifest, "rubric_id", rubric?.metadata?.id],
+    ["scorer-manifest.yaml", manifest, "adjudication_protocol_id", adjudication?.metadata?.id],
+    ["scorer-validation-report.yaml", validation, "scorer_manifest_id", manifest?.metadata?.id],
+    ["scorer-validation-report.yaml", validation, "rubric_id", rubric?.metadata?.id],
+    ["scorer-validation-report.yaml", validation, "adjudication_protocol_id", adjudication?.metadata?.id],
+    ["scorer-quality-gate.yaml", gate, "scorer_manifest_id", manifest?.metadata?.id],
+    ["scorer-quality-gate.yaml", gate, "validation_report_id", validation?.metadata?.id],
+  ]) verifyEqualReference(value?.[field], expected, `${name}: ${field}`, errors);
+
+  verifyEqualReference(
+    validation?.validation_identity?.report_id,
+    validation?.metadata?.id,
+    "scorer-validation-report.yaml: validation_identity.report_id",
+    errors,
+  );
+  verifyEqualReference(
+    validation?.validation_identity?.scorer_immutable_id,
+    manifest?.scorer_identity?.immutable_id,
+    "scorer-validation-report.yaml: validation_identity.scorer_immutable_id",
+    errors,
+  );
+  verifyA16StructuredIdentity(
+    validation?.validation_identity?.dataset_version,
+    "scorer-validation-report.yaml: validation_identity.dataset_version",
+    errors,
+  );
+  verifyEqualReference(
+    validation?.validation_identity?.dataset_version,
+    "independent-calibration-set.example.v1",
+    "scorer-validation-report.yaml: validation_identity.dataset_version",
+    errors,
+  );
+
+  if (charter?.non_compensation?.critical_failures_override !== true) errors.push("scorer-charter.yaml: non_compensation.critical_failures_override must be true");
+  verifyNonEmptyStringArray(charter?.authority_order, "scorer-charter.yaml: authority_order", errors);
+  for (const field of ["unit", "construct_interpretation", "output_scope"]) verifyNonEmptyString(charter?.scoring_claim?.[field], `scorer-charter.yaml: scoring_claim.${field}`, errors);
+  verifyExactSet(charter?.scoring_claim?.allowed_statuses ?? [], [...SCORE_RECORD_STATUSES], "scorer-charter.yaml: scoring_claim.allowed_statuses", errors);
+
+  const unitIds = verifyA16EntityArray(unit?.units, ["id", "level", "identity_keys", "parent_key", "aggregation_boundary"], "scoring-unit-spec.yaml: units", errors);
+  verifyExactSet(asArray(unit?.units).map((entry) => entry?.level), ["trial", "atomic-claim", "tool-call", "state-transition", "turn", "trajectory"], "scoring-unit-spec.yaml: units.level", errors);
+  for (const [index, entry] of asArray(unit?.units).entries()) {
+    verifyNonEmptyStringArray(entry?.identity_keys, `scoring-unit-spec.yaml: units[${index}].identity_keys`, errors);
+    verifyStringIdArray(entry?.child_units, `scoring-unit-spec.yaml: units[${index}].child_units`, errors, true);
+    verifyReferencesKnown(asArray(entry?.child_units), new Set(unitIds), `scoring-unit-spec.yaml: units[${index}].child_units`, errors);
+  }
+  if (unit?.missing_or_duplicate_identity !== "unscorable") errors.push("scoring-unit-spec.yaml: missing_or_duplicate_identity must be unscorable");
+
+  for (const field of ["identity", "initial_state", "event_stream", "final_output", "final_state", "evidence_metadata"]) {
+    if (verifyNonEmptyObject(observation?.bundle?.[field], `observation-contract.yaml: bundle.${field}`, errors)) verifyNonEmptyStringArray(observation.bundle[field].required, `observation-contract.yaml: bundle.${field}.required`, errors);
+  }
+  if (observation?.completeness?.critical_missing_action !== "unscorable") errors.push("observation-contract.yaml: completeness.critical_missing_action must be unscorable");
+  for (const field of ["immutable_after_capture", "hashes_required", "clock_and_ordering_recorded", "candidate_cannot_write_reference_fields"]) if (observation?.integrity?.[field] !== true) errors.push(`observation-contract.yaml: integrity.${field} must be true`);
+
+  if (rubric?.rubric_type !== "analytic") errors.push("scoring-rubric.yaml: rubric_type must be analytic");
+  const dimensions = rubric?.dimensions;
+  const dimensionIds = verifyA16EntityArray(dimensions, ["id", "construct_id", "scoring_unit_ids", "definition", "scale", "anchors", "boundary_examples"], "scoring-rubric.yaml: dimensions", errors);
+  for (const [index, dimension] of asArray(dimensions).entries()) {
+    verifyStringIdList(dimension?.scoring_unit_ids, `scoring-rubric.yaml: dimensions[${index}].scoring_unit_ids`, errors);
+    verifyReferencesKnown(asArray(dimension?.scoring_unit_ids), new Set(unitIds), `scoring-rubric.yaml: dimensions[${index}].scoring_unit_ids`, errors);
+    if (verifyNonEmptyObject(dimension?.scale, `scoring-rubric.yaml: dimensions[${index}].scale`, errors)) verifyNonEmptyArray(dimension.scale.values, `scoring-rubric.yaml: dimensions[${index}].scale.values`, errors);
+    verifyNonEmptyArray(dimension?.anchors, `scoring-rubric.yaml: dimensions[${index}].anchors`, errors);
+    for (const [anchorIndex, anchor] of asArray(dimension?.anchors).entries()) {
+      if (typeof anchor?.score !== "number") errors.push(`scoring-rubric.yaml: dimensions[${index}].anchors[${anchorIndex}].score must be a number`);
+      verifyNonEmptyStringArray(anchor?.observable_conditions, `scoring-rubric.yaml: dimensions[${index}].anchors[${anchorIndex}].observable_conditions`, errors);
+      verifyNonEmptyStringArray(anchor?.required_evidence, `scoring-rubric.yaml: dimensions[${index}].anchors[${anchorIndex}].required_evidence`, errors);
+    }
+  }
+  for (const [index, critical] of asArray(rubric?.critical_errors).entries()) {
+    verifyNonEmptyString(critical?.id, `scoring-rubric.yaml: critical_errors[${index}].id`, errors);
+    verifyNonEmptyStringArray(critical?.risk_ids, `scoring-rubric.yaml: critical_errors[${index}].risk_ids`, errors);
+    if (critical?.compensable !== false) errors.push(`scoring-rubric.yaml: critical_errors[${index}].compensable must be false`);
+    if (critical?.judge_override_allowed !== false) errors.push(`scoring-rubric.yaml: critical_errors[${index}].judge_override_allowed must be false`);
+  }
+  verifyExactSet(Object.keys(rubric?.uncertainty ?? {}), ["uncertain", "abstain", "inconclusive"], "scoring-rubric.yaml: uncertainty", errors);
+  if (rubric?.unscorable?.output?.status !== "unscorable" || rubric?.unscorable?.output?.score !== null) errors.push("scoring-rubric.yaml: unscorable output must use status unscorable and null score");
+
+  if (adjudication?.disagreement?.preserve_raw_decisions !== true) errors.push("adjudication-protocol.yaml: disagreement.preserve_raw_decisions must be true");
+  verifyNonEmptyStringArray(adjudication?.disagreement?.categories, "adjudication-protocol.yaml: disagreement.categories", errors);
+  verifyNonEmptyArray(adjudication?.workflow, "adjudication-protocol.yaml: workflow", errors);
+  if (adjudication?.outcomes?.no_majority_rule !== true || adjudication?.outcomes?.no_forced_resolution !== true) errors.push("adjudication-protocol.yaml: outcomes must prohibit majority and forced resolution");
+  verifyNonEmptyString(adjudication?.critical_failure_rule, "adjudication-protocol.yaml: critical_failure_rule", errors);
+
+  const implementationIds = verifyA16EntityArray(manifest?.implementations, ["id", "type", "role", "authority", "status"], "scorer-manifest.yaml: implementations", errors);
+  if (verifyNonEmptyObject(manifest?.scorer_identity, "scorer-manifest.yaml: scorer_identity", errors)) {
+    for (const field of ["immutable_id", "status", "input_schema_version", "output_schema_version"]) {
+      verifyNonEmptyString(manifest.scorer_identity[field], `scorer-manifest.yaml: scorer_identity.${field}`, errors);
+    }
+    if (!new Set(["design-only", "implemented", "validated"]).has(manifest.scorer_identity.status)) {
+      errors.push("scorer-manifest.yaml: scorer_identity.status must be design-only, implemented or validated");
+    }
+  }
+  verifyA16DisjointScorerIdentities({
+    manifestId: manifest?.metadata?.id,
+    immutableId: manifest?.scorer_identity?.immutable_id,
+    implementationIds,
+    label: "scorer-manifest.yaml",
+    errors,
+  });
+  verifyExactSet(asArray(manifest?.implementations).map((entry) => entry?.type), [...SCORER_IMPLEMENTATION_TYPES], "scorer-manifest.yaml: implementations.type", errors);
+  for (const [index, implementation] of asArray(manifest?.implementations).entries()) {
+    for (const field of ["id", "type", "role", "authority", "status"]) verifyNonEmptyString(implementation?.[field], `scorer-manifest.yaml: implementations[${index}].${field}`, errors);
+    if (!SCORER_IMPLEMENTATION_TYPES.has(implementation?.type)) errors.push(`scorer-manifest.yaml: implementations[${index}].type is unsupported`);
+  }
+  verifyMatchingIdSet(manifest?.precedence?.order, implementationIds.filter((id) => !id.endsWith(".composite")), "scorer-manifest.yaml: precedence.order", errors);
+  verifyNonEmptyString(manifest?.precedence?.conflict_rule, "scorer-manifest.yaml: precedence.conflict_rule", errors);
+  verifyNonEmptyStringArray(manifest?.precedence?.judge_cannot_override, "scorer-manifest.yaml: precedence.judge_cannot_override", errors);
+  verifyExactSet(manifest?.output_record?.status_values ?? [], [...SCORE_RECORD_STATUSES], "scorer-manifest.yaml: output_record.status_values", errors);
+  verifyNonEmptyStringArray(manifest?.output_record?.required, "scorer-manifest.yaml: output_record.required", errors);
+  for (const field of ["reference_fields_read_only", "candidate_output_untrusted", "prompt_injection_treated_as_data", "secrets_prohibited", "logs_redacted"]) if (manifest?.security?.[field] !== true) errors.push(`scorer-manifest.yaml: security.${field} must be true`);
+  verifyNonEmptyString(manifest?.security?.network_access, "scorer-manifest.yaml: security.network_access", errors);
+  if (verifyNonEmptyObject(manifest?.failure_behavior, "scorer-manifest.yaml: failure_behavior", errors)) {
+    for (const field of ["missing_input", "unsupported_scope", "internal_error", "reference_conflict"]) verifyNonEmptyString(manifest.failure_behavior[field], `scorer-manifest.yaml: failure_behavior.${field}`, errors);
+  }
+
+  if (typeof validation?.evidence?.materialized !== "boolean") errors.push("scorer-validation-report.yaml: evidence.materialized must be a boolean");
+  const recordSchema = validation?.evidence?.record_schema;
+  if (verifyNonEmptyObject(recordSchema, "scorer-validation-report.yaml: evidence.record_schema", errors)) {
+    verifyExactSet(recordSchema.required ?? [], ["id", "category", "hash", "status"], "scorer-validation-report.yaml: evidence.record_schema.required", errors);
+    verifyExactSet(recordSchema.category_values ?? [], [...A16_EVIDENCE_CATEGORIES], "scorer-validation-report.yaml: evidence.record_schema.category_values", errors);
+    if (recordSchema.hash_format !== "sha256:<64-hex>") errors.push("scorer-validation-report.yaml: evidence.record_schema.hash_format must be sha256:<64-hex>");
+    if (recordSchema.materialized_status !== "materialized") errors.push("scorer-validation-report.yaml: evidence.record_schema.materialized_status must be materialized");
+  }
+  for (const dimension of ["reliability", "validity", "calibration"]) {
+    verifyNonEmptyStringArray(validation?.dimensions?.[dimension]?.methods, `scorer-validation-report.yaml: dimensions.${dimension}.methods`, errors);
+    if (isMissing(validation?.dimensions?.[dimension]?.result)) errors.push(`scorer-validation-report.yaml: dimensions.${dimension}.result is required`);
+  }
+  verifyExactSet(Object.keys(validation?.error_profile ?? {}), ["false_pass", "false_fail", "abstain_error", "unscorable_detection_error"], "scorer-validation-report.yaml: error_profile", errors);
+  verifyNonEmptyStringArray(validation?.bias_and_robustness?.bias_slices, "scorer-validation-report.yaml: bias_and_robustness.bias_slices", errors);
+  verifyNonEmptyStringArray(validation?.bias_and_robustness?.perturbations, "scorer-validation-report.yaml: bias_and_robustness.perturbations", errors);
+  verifyNonEmptyStringArray(validation?.security?.tests, "scorer-validation-report.yaml: security.tests", errors);
+  verifyA16ThresholdDeclarations(validation?.acceptance, "scorer-validation-report.yaml: acceptance", errors);
+
+  const templateEvidenceIds = collectNestedIds(Object.fromEntries(templateValues));
+  for (const record of [...asArray(validation?.evidence?.sample_records), ...asArray(validation?.evidence?.evidence_links)]) {
+    const id = typeof record === "string" ? record : record?.id;
+    if (typeof id === "string") templateEvidenceIds.add(id);
+  }
+  verifyNonEmptyString(gate?.ready_rule, "scorer-quality-gate.yaml: ready_rule", errors);
+  const partialScopeSchema = gate?.partial_scope_schema;
+  if (verifyNonEmptyObject(partialScopeSchema, "scorer-quality-gate.yaml: partial_scope_schema", errors)) {
+    if (partialScopeSchema.required_when !== "decision.status=partial") errors.push("scorer-quality-gate.yaml: partial_scope_schema.required_when must be decision.status=partial");
+    verifyExactSet(partialScopeSchema.required ?? [], ["id", "allowed_uses", "prohibited_uses", "evidence_ids"], "scorer-quality-gate.yaml: partial_scope_schema.required", errors);
+    verifyNonEmptyString(partialScopeSchema.evidence_rule, "scorer-quality-gate.yaml: partial_scope_schema.evidence_rule", errors);
+  }
+  verifyExactSet(
+    gate?.required_check_categories ?? [],
+    Object.values(A16_TEMPLATE_GATE_CHECKS),
+    "scorer-quality-gate.yaml: required_check_categories",
+    errors,
+  );
+  if (gate?.all_checks_critical !== true) errors.push("scorer-quality-gate.yaml: all_checks_critical must be true");
+  if (gate?.exceptions?.allowed !== false) errors.push("scorer-quality-gate.yaml: exceptions.allowed must be false");
+  verifyNonEmptyString(gate?.exceptions?.rationale, "scorer-quality-gate.yaml: exceptions.rationale", errors);
+  const templateForbiddenEvidenceIds = collectNestedIds({
+    charter, unit, observation, rubric, adjudication, manifest,
+    validation: {...validation, evidence: undefined},
+    gate: {...gate, checks: asArray(gate?.checks).map((check) => ({...check, evidence: undefined}))},
+  });
+  verifyA16Gate({gate, validation, manifest, expectedChecks: A16_TEMPLATE_GATE_CHECKS, knownEvidenceIds: templateEvidenceIds, forbiddenEvidenceIds: templateForbiddenEvidenceIds, label: "scorer-quality-gate.yaml", errors});
+  void dimensionIds;
+}
+
+function verifyReferenceToScorerCase(value, relativePath, errors) {
+  if (!value) return;
+  const canonical = A16_CANONICAL_UPSTREAM[relativePath];
+  for (const field of A16_UPSTREAM_FIELDS) verifyMatchingIdSet(value?.references?.[field], canonical?.[field] ?? [], `${relativePath}: references.${field}`, errors);
+  const canonicalScorerIdentity = A16_CANONICAL_SCORER_IDENTITIES[relativePath];
+  verifyMatchingIdSet(
+    value?.references?.scorer_identity_ids,
+    canonicalScorerIdentity ? [canonicalScorerIdentity] : [],
+    `${relativePath}: references.scorer_identity_ids`,
+    errors,
+  );
+  verifyEqualReference(
+    value?.input?.scorers?.identity?.immutable_id,
+    canonicalScorerIdentity,
+    `${relativePath}: input.scorers.identity.immutable_id`,
+    errors,
+  );
+  for (const field of ["scorer_charter", "observation_contract", "rubric", "adjudication", "validation", "quality_gate"]) verifyNonEmptyObject(value?.input?.[field], `${relativePath}: input.${field}`, errors);
+  verifyNonEmptyObject(value?.input?.scoring_units, `${relativePath}: input.scoring_units`, errors);
+  verifyNonEmptyArray(value?.input?.scoring_units?.units, `${relativePath}: input.scoring_units.units`, errors);
+  verifyNonEmptyObject(value?.input?.scorers, `${relativePath}: input.scorers`, errors);
+  verifyNonEmptyArray(value?.input?.scorers?.implementations, `${relativePath}: input.scorers.implementations`, errors);
+
+  const definitionMap = {
+    scorer_charter_ids: [value?.input?.scorer_charter?.id],
+    scoring_unit_spec_ids: [value?.input?.scoring_units?.spec_id],
+    scoring_unit_ids: asArray(value?.input?.scoring_units?.units).map((entry) => entry?.id),
+    observation_contract_ids: [value?.input?.observation_contract?.id],
+    rubric_ids: [value?.input?.rubric?.id],
+    adjudication_protocol_ids: [value?.input?.adjudication?.id],
+    scorer_manifest_ids: [value?.input?.scorers?.manifest_id],
+    scorer_identity_ids: [value?.input?.scorers?.identity?.immutable_id],
+    scorer_ids: asArray(value?.input?.scorers?.implementations).map((entry) => entry?.id),
+    scorer_validation_ids: [value?.input?.validation?.id],
+    scorer_quality_gate_ids: [value?.input?.quality_gate?.id],
+    scoring_trace_ids: asArray(value?.expected?.trace_closure).map((entry) => entry?.id),
+  };
+  for (const [field, ids] of Object.entries(definitionMap)) verifyMatchingIdSet(value?.references?.[field], ids.filter(Boolean), `${relativePath}: references.${field}`, errors);
+
+  for (const field of A16_UPSTREAM_FIELDS) {
+    verifyMatchingIdSet(
+      value?.input?.scorer_charter?.upstream_traceability?.[field],
+      canonical?.[field] ?? [],
+      `${relativePath}: input.scorer_charter.upstream_traceability.${field}`,
+      errors,
+    );
+  }
+  const charterId = value?.input?.scorer_charter?.id;
+  const unitIds = definitionMap.scoring_unit_ids.filter(Boolean);
+  const observationId = value?.input?.observation_contract?.id;
+  const rubricId = value?.input?.rubric?.id;
+  const adjudicationId = value?.input?.adjudication?.id;
+  const scorerManifestId = value?.input?.scorers?.manifest_id;
+  const validationId = value?.input?.validation?.id;
+  const scorerIdentityId = value?.input?.scorers?.identity?.immutable_id;
+  for (const [label, actual, expected] of [
+    ["input.scoring_units.scorer_charter_id", value?.input?.scoring_units?.scorer_charter_id, charterId],
+    ["input.observation_contract.scoring_unit_spec_id", value?.input?.observation_contract?.scoring_unit_spec_id, value?.input?.scoring_units?.spec_id],
+    ["input.observation_contract.scoring_unit_ids", value?.input?.observation_contract?.scoring_unit_ids, unitIds],
+    ["input.rubric.scorer_charter_id", value?.input?.rubric?.scorer_charter_id, charterId],
+    ["input.rubric.scoring_unit_spec_id", value?.input?.rubric?.scoring_unit_spec_id, value?.input?.scoring_units?.spec_id],
+    ["input.rubric.observation_contract_id", value?.input?.rubric?.observation_contract_id, observationId],
+    ["input.adjudication.rubric_id", value?.input?.adjudication?.rubric_id, rubricId],
+    ["input.validation.rubric_id", value?.input?.validation?.rubric_id, rubricId],
+    ["input.validation.adjudication_protocol_id", value?.input?.validation?.adjudication_protocol_id, adjudicationId],
+    ["input.scorers.scorer_charter_id", value?.input?.scorers?.scorer_charter_id, charterId],
+    ["input.scorers.scoring_unit_spec_id", value?.input?.scorers?.scoring_unit_spec_id, value?.input?.scoring_units?.spec_id],
+    ["input.scorers.observation_contract_id", value?.input?.scorers?.observation_contract_id, observationId],
+    ["input.scorers.rubric_id", value?.input?.scorers?.rubric_id, rubricId],
+    ["input.scorers.adjudication_protocol_id", value?.input?.scorers?.adjudication_protocol_id, adjudicationId],
+    ["input.validation.scorer_manifest_id", value?.input?.validation?.scorer_manifest_id, scorerManifestId],
+    ["input.quality_gate.scorer_manifest_id", value?.input?.quality_gate?.scorer_manifest_id, scorerManifestId],
+    ["input.quality_gate.validation_report_id", value?.input?.quality_gate?.validation_report_id, validationId],
+    ["input.validation.validation_identity.report_id", value?.input?.validation?.validation_identity?.report_id, validationId],
+    ["input.validation.validation_identity.scorer_immutable_id", value?.input?.validation?.validation_identity?.scorer_immutable_id, scorerIdentityId],
+  ]) {
+    if (Array.isArray(expected)) verifyMatchingIdSet(actual, expected, `${relativePath}: ${label}`, errors);
+    else verifyEqualReference(actual, expected, `${relativePath}: ${label}`, errors);
+  }
+  verifyA16StructuredIdentity(
+    value?.input?.validation?.validation_identity?.dataset_version,
+    `${relativePath}: input.validation.validation_identity.dataset_version`,
+    errors,
+  );
+  verifyEqualReference(
+    value?.input?.validation?.validation_identity?.dataset_version,
+    A16_CANONICAL_VALIDATION_DATASETS[relativePath],
+    `${relativePath}: input.validation.validation_identity.dataset_version`,
+    errors,
+  );
+
+  for (const [index, scorer] of asArray(value?.input?.scorers?.implementations).entries()) {
+    for (const field of ["id", "type", "role", "status"]) verifyNonEmptyString(scorer?.[field], `${relativePath}: input.scorers.implementations[${index}].${field}`, errors);
+    if (!SCORER_IMPLEMENTATION_TYPES.has(scorer?.type)) errors.push(`${relativePath}: input.scorers.implementations[${index}].type is unsupported`);
+  }
+  const caseScorerIdentity = value?.input?.scorers?.identity;
+  if (verifyNonEmptyObject(caseScorerIdentity, `${relativePath}: input.scorers.identity`, errors)) {
+    for (const field of ["immutable_id", "status", "implementation_hash", "config_hash", "runtime_identity", "input_schema_version", "output_schema_version"]) verifyNonEmptyString(caseScorerIdentity[field], `${relativePath}: input.scorers.identity.${field}`, errors);
+    if (!new Set(["design-only", "implemented", "validated"]).has(caseScorerIdentity.status)) errors.push(`${relativePath}: input.scorers.identity.status must be design-only, implemented or validated`);
+  }
+  verifyA16DisjointScorerIdentities({
+    manifestId: value?.input?.scorers?.manifest_id,
+    immutableId: caseScorerIdentity?.immutable_id,
+    implementationIds: definitionMap.scorer_ids.filter(Boolean),
+    label: `${relativePath}: input.scorers`,
+    errors,
+  });
+  const caseScorerSecurity = value?.input?.scorers?.security;
+  if (verifyNonEmptyObject(caseScorerSecurity, `${relativePath}: input.scorers.security`, errors)) {
+    for (const field of ["reference_fields_read_only", "candidate_output_untrusted", "prompt_injection_treated_as_data", "secrets_prohibited", "logs_redacted"]) if (caseScorerSecurity[field] !== true) errors.push(`${relativePath}: input.scorers.security.${field} must be true`);
+    verifyNonEmptyString(caseScorerSecurity.network_access, `${relativePath}: input.scorers.security.network_access`, errors);
+  }
+  for (const [index, unit] of asArray(value?.input?.scoring_units?.units).entries()) {
+    for (const field of ["id", "level", "purpose"]) verifyNonEmptyString(unit?.[field], `${relativePath}: input.scoring_units.units[${index}].${field}`, errors);
+    verifyNonEmptyStringArray(unit?.identity_keys, `${relativePath}: input.scoring_units.units[${index}].identity_keys`, errors);
+  }
+  for (const field of ["identity", "initial_state", "event_stream", "final_output", "final_state", "evidence_metadata"]) verifyNonEmptyStringArray(value?.input?.observation_contract?.bundle?.[field], `${relativePath}: input.observation_contract.bundle.${field}`, errors);
+  if (value?.input?.observation_contract?.critical_missing_action !== "unscorable") errors.push(`${relativePath}: input.observation_contract.critical_missing_action must be unscorable`);
+  if (value?.input?.observation_contract?.candidate_cannot_write_reference_fields !== true) errors.push(`${relativePath}: input.observation_contract.candidate_cannot_write_reference_fields must be true`);
+  if (value?.input?.rubric?.type !== "analytic") errors.push(`${relativePath}: input.rubric.type must be analytic`);
+  const caseDimensionIds = verifyA16EntityArray(value?.input?.rubric?.dimensions, ["id", "construct_id", "scoring_unit_ids", "scale", "anchors"], `${relativePath}: input.rubric.dimensions`, errors);
+  for (const [index, dimension] of asArray(value?.input?.rubric?.dimensions).entries()) {
+    verifyReferencesKnown([dimension?.construct_id], new Set(canonical?.construct_ids ?? []), `${relativePath}: input.rubric.dimensions[${index}].construct_id`, errors);
+    const ids = verifyStringIdList(dimension?.scoring_unit_ids, `${relativePath}: input.rubric.dimensions[${index}].scoring_unit_ids`, errors);
+    verifyReferencesKnown(ids, new Set(unitIds), `${relativePath}: input.rubric.dimensions[${index}].scoring_unit_ids`, errors);
+    if (verifyNonEmptyObject(dimension?.scale, `${relativePath}: input.rubric.dimensions[${index}].scale`, errors)) verifyNonEmptyArray(dimension.scale.values, `${relativePath}: input.rubric.dimensions[${index}].scale.values`, errors);
+    verifyNonEmptyArray(dimension?.anchors, `${relativePath}: input.rubric.dimensions[${index}].anchors`, errors);
+    for (const [anchorIndex, anchor] of asArray(dimension?.anchors).entries()) {
+      if (typeof anchor?.score !== "number") errors.push(`${relativePath}: input.rubric.dimensions[${index}].anchors[${anchorIndex}].score must be a number`);
+      verifyNonEmptyStringArray(anchor?.observable_conditions, `${relativePath}: input.rubric.dimensions[${index}].anchors[${anchorIndex}].observable_conditions`, errors);
+      verifyNonEmptyStringArray(anchor?.required_evidence, `${relativePath}: input.rubric.dimensions[${index}].anchors[${anchorIndex}].required_evidence`, errors);
+    }
+  }
+  verifyNonEmptyArray(value?.input?.rubric?.critical_errors, `${relativePath}: input.rubric.critical_errors`, errors);
+  for (const [index, critical] of asArray(value?.input?.rubric?.critical_errors).entries()) {
+    verifyNonEmptyString(critical?.id, `${relativePath}: input.rubric.critical_errors[${index}].id`, errors);
+    const risks = verifyStringIdList(critical?.risk_ids, `${relativePath}: input.rubric.critical_errors[${index}].risk_ids`, errors);
+    verifyReferencesKnown(risks, new Set(canonical?.risk_ids ?? []), `${relativePath}: input.rubric.critical_errors[${index}].risk_ids`, errors);
+    if (critical?.compensable !== false) errors.push(`${relativePath}: input.rubric.critical_errors[${index}].compensable must be false`);
+    if (critical?.judge_override_allowed !== false) errors.push(`${relativePath}: input.rubric.critical_errors[${index}].judge_override_allowed must be false`);
+  }
+  if (value?.input?.adjudication?.disagreement?.preserve_raw_decisions !== true) errors.push(`${relativePath}: input.adjudication.disagreement.preserve_raw_decisions must be true`);
+  verifyNonEmptyArray(value?.input?.adjudication?.disagreement?.categories, `${relativePath}: input.adjudication.disagreement.categories`, errors);
+  verifyNonEmptyArray(value?.input?.adjudication?.outcomes, `${relativePath}: input.adjudication.outcomes`, errors);
+  verifyNonEmptyString(value?.input?.adjudication?.critical_rule, `${relativePath}: input.adjudication.critical_rule`, errors);
+  verifyExactSet(value?.input?.scorers?.output_statuses ?? [], [...SCORE_RECORD_STATUSES], `${relativePath}: input.scorers.output_statuses`, errors);
+  const implementationIds = definitionMap.scorer_ids.filter(Boolean);
+  const nonCompositeIds = asArray(value?.input?.scorers?.implementations)
+    .filter((implementation) => implementation?.type !== "composite")
+    .map((implementation) => implementation?.id)
+    .filter(Boolean);
+  verifyMatchingIdSet(value?.input?.scorers?.precedence?.order, nonCompositeIds, `${relativePath}: input.scorers.precedence.order`, errors);
+  verifyNonEmptyStringArray(value?.input?.scorers?.precedence?.judge_cannot_override, `${relativePath}: input.scorers.precedence.judge_cannot_override`, errors);
+  verifyExactSet(Object.keys(value?.input?.validation?.error_profile ?? {}), ["false_pass", "false_fail", "abstain_error", "unscorable_detection_error"], `${relativePath}: input.validation.error_profile`, errors);
+  verifyNonEmptyArray(value?.input?.validation?.bias_and_robustness?.slices, `${relativePath}: input.validation.bias_and_robustness.slices`, errors);
+  verifyNonEmptyArray(value?.input?.validation?.bias_and_robustness?.perturbations, `${relativePath}: input.validation.bias_and_robustness.perturbations`, errors);
+  verifyNonEmptyArray(value?.input?.validation?.security?.tests, `${relativePath}: input.validation.security.tests`, errors);
+  verifyA16ThresholdDeclarations(value?.input?.validation?.acceptance, `${relativePath}: input.validation.acceptance`, errors);
+  verifyNonEmptyStringArray(value?.evidence?.design_artifacts, `${relativePath}: evidence.design_artifacts`, errors);
+  verifyNonEmptyStringArray(value?.evidence?.limitations, `${relativePath}: evidence.limitations`, errors);
+
+  const knownIds = collectNestedIds(value?.input);
+  for (const ids of Object.values(canonical ?? {})) for (const id of ids) knownIds.add(id);
+  for (const ids of Object.values(definitionMap)) for (const id of ids) if (id) knownIds.add(id);
+  const traces = value?.expected?.trace_closure;
+  const traceIds = verifyA16EntityArray(traces, ["id", "links", "action"], `${relativePath}: expected.trace_closure`, errors);
+  const traced = new Set();
+  for (const [index, trace] of asArray(traces).entries()) {
+    const links = verifyStringIdList(trace?.links, `${relativePath}: expected.trace_closure[${index}].links`, errors);
+    verifyReferencesKnown(links, knownIds, `${relativePath}: expected.trace_closure[${index}].links`, errors, traced);
+  }
+  for (const [field, ids] of Object.entries(value?.references ?? {})) {
+    if (field === "scoring_trace_ids") continue;
+    for (const id of asArray(ids)) if (!traced.has(id)) errors.push(`${relativePath}: reference ${id} is not covered by expected.trace_closure`);
+  }
+  for (const id of caseDimensionIds) {
+    if (!traced.has(id)) errors.push(`${relativePath}: rubric dimension ${id} is not covered by expected.trace_closure`);
+  }
+  verifyMatchingIdSet(value?.evidence?.traceability, traceIds, `${relativePath}: evidence.traceability`, errors);
+
+  const validation = value?.input?.validation;
+  const manifest = {
+    id: value?.input?.scorers?.manifest_id,
+    scorer_identity: value?.input?.scorers?.identity,
+    implementations: value?.input?.scorers?.implementations,
+    scorer_charter_id: value?.input?.scorers?.scorer_charter_id,
+    scoring_unit_spec_id: value?.input?.scorers?.scoring_unit_spec_id,
+    observation_contract_id: value?.input?.scorers?.observation_contract_id,
+    rubric_id: value?.input?.scorers?.rubric_id,
+    adjudication_protocol_id: value?.input?.scorers?.adjudication_protocol_id,
+  };
+  for (const record of [...asArray(validation?.evidence?.sample_records), ...asArray(validation?.evidence?.evidence_links)]) {
+    const id = typeof record === "string" ? record : record?.id;
+    if (typeof id === "string") knownIds.add(id);
+  }
+  const caseForbiddenEvidenceIds = new Set([
+    ...Object.values(canonical ?? {}).flat(),
+    ...Object.values(definitionMap).flat().filter(Boolean),
+    ...caseDimensionIds,
+    ...asArray(value?.input?.rubric?.critical_errors).map((entry) => entry?.id).filter(Boolean),
+  ]);
+  verifyA16Gate({gate: value?.input?.quality_gate, validation, manifest, expectedChecks: A16_CASE_GATE_CHECKS[relativePath], knownEvidenceIds: knownIds, forbiddenEvidenceIds: caseForbiddenEvidenceIds, label: `${relativePath}: input.quality_gate`, errors});
+}
+
+function verifyA16GlobalScorerIdentityUniqueness(exampleValues, errors) {
+  const seen = new Map();
+  for (const [relativePath, value] of exampleValues) {
+    const identityId = value?.input?.scorers?.identity?.immutable_id;
+    if (typeof identityId !== "string" || identityId.length === 0) continue;
+    if (seen.has(identityId)) {
+      errors.push(`${relativePath}: scorer identity ${identityId} duplicates ${seen.get(identityId)}; canonical case scorer identities must be globally unique`);
+    } else {
+      seen.set(identityId, relativePath);
+    }
+  }
+}
+
 function expectedUnitId(unitDir) {
   const match = path.basename(unitDir).match(/^unit-([a-z]\d+)-(\d+)$/i);
   return match ? `${match[1].toUpperCase()}.${match[2]}` : null;
@@ -3510,10 +4610,12 @@ export async function verifyAcademyUnit(unitDir) {
     templateValues.set(templatePath, value);
   }
 
+  const exampleValues = new Map();
   for (const examplePath of manifest?.contents?.examples ?? []) {
     if (!isSafeRelativePath(examplePath)) continue;
     const contract = PROFILE_CONTRACTS[profileName]?.example ?? EXAMPLE_CONTRACT;
     const value = await verifyYaml(resolvedUnitDir, examplePath, contract, errors);
+    exampleValues.set(examplePath, value);
     if (profileName === "requirements-to-evidence-v1") {
       verifyEvaluationCaseReferences(value, examplePath, errors);
     } else if (profileName === "target-boundary-version-v1") {
@@ -3522,6 +4624,8 @@ export async function verifyAcademyUnit(unitDir) {
       verifyQuestionTaskScenarioCase(value, examplePath, errors);
     } else if (profileName === "task-scenario-to-evaluation-data-v1") {
       verifyTaskScenarioDataCase(value, examplePath, errors);
+    } else if (profileName === "reference-to-scorer-v1") {
+      verifyReferenceToScorerCase(value, examplePath, errors);
     }
   }
 
@@ -3537,12 +4641,15 @@ export async function verifyAcademyUnit(unitDir) {
     verifyQuestionTaskScenarioTemplates(templateValues, errors);
   } else if (profileName === "task-scenario-to-evaluation-data-v1") {
     verifyTaskScenarioDataTemplates(templateValues, errors);
+  } else if (profileName === "reference-to-scorer-v1") {
+    verifyA16GlobalScorerIdentityUniqueness(exampleValues, errors);
+    verifyReferenceToScorerTemplates(templateValues, errors);
   }
 
   await verifyHtml(
     resolvedUnitDir,
     errors,
-    profileName === "task-scenario-to-evaluation-data-v1",
+    ["task-scenario-to-evaluation-data-v1", "reference-to-scorer-v1"].includes(profileName),
   );
   return errors;
 }

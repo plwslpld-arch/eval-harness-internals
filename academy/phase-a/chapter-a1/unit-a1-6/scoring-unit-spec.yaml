@@ -1,0 +1,23 @@
+schema_version: 1
+kind: ScoringUnitSpec
+metadata: {id: scoring-unit.example.v1, name: 评分单位规格模板, owner: scorer-owner, version: 1.0.0}
+scorer_charter_id: scorer-charter.example.v1
+traceability: {question_ids: [eq.example], risk_ids: [risk.example], task_ids: [task.example.v1], reference_item_ids: [reference.example.v1]}
+units:
+  - id: unit.example.trial
+    level: trial
+    identity_keys: [trial_id, task_id, dataset_item_id, target_identity, environment_identity, seed]
+    parent_key: task_opportunity_id
+    child_units: [unit.example.claim, unit.example.tool-call, unit.example.transition, unit.example.turn, unit.example.trajectory]
+    aggregation_boundary: 子单位可以形成 trial 判定，但不得在此跨 trial 聚合为 Metric
+  - {id: unit.example.claim, level: atomic-claim, identity_keys: [trial_id, claim_id], parent_key: trial_id, child_units: [], aggregation_boundary: 每个可验证事实主张单独绑定证据}
+  - {id: unit.example.tool-call, level: tool-call, identity_keys: [trial_id, call_id], parent_key: trial_id, child_units: [], aggregation_boundary: 参数、权限、结果和副作用分别观察}
+  - {id: unit.example.transition, level: state-transition, identity_keys: [trial_id, transition_id], parent_key: trial_id, child_units: [], aggregation_boundary: 初始状态、事件与最终状态必须成对判断}
+  - {id: unit.example.turn, level: turn, identity_keys: [trial_id, turn_index], parent_key: trial_id, child_units: [], aggregation_boundary: 多轮上下文不得拆成独立样本}
+  - {id: unit.example.trajectory, level: trajectory, identity_keys: [trial_id, trajectory_id], parent_key: trial_id, child_units: [unit.example.tool-call, unit.example.transition, unit.example.turn], aggregation_boundary: 过程约束与最终结果并列}
+dependence:
+  repeated_trial_key: task_opportunity_id
+  cluster_keys: [parent_case_id, entity_id, document_family_id, template_id]
+  warning: 同一父案例或实体的重复运行不自动构成独立证据
+missing_or_duplicate_identity: unscorable
+evidence_boundary: {establishes: [评分单位、身份、父子与聚合边界], does_not_establish: [存在真实 trial, 跨样本 Metric 或不确定性估计]}

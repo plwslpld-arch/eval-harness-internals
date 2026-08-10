@@ -1,0 +1,149 @@
+schema_version: 1
+kind: EvaluationCase
+metadata: {id: study.contract.a16, name: 合同审查 Agent 从参考标准到评分器案例, version: 1.0.0}
+references:
+  target_ids: [target.contract-agent.candidate]
+  construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding]
+  question_ids: [eq.contract.screen]
+  risk_ids: [risk.contract.omission, risk.contract.fabrication]
+  scenario_family_ids: [family.contract.explicit, family.contract.cross, family.contract.missing]
+  task_ids: [task.contract.screen]
+  dataset_charter_ids: [charter.contract.a15]
+  source_ids: [source.contract.licensed.v1, source.contract.expert.v1, source.contract.taxonomy.v1]
+  partition_ids: [partition.contract.distribution, partition.contract.challenge, partition.contract.regression]
+  reference_item_ids: [reference.contract.risk-span.v1, reference.contract.incomplete.v1]
+  annotation_protocol_ids: [annotation.contract.v1]
+  split_ids: [split.contract.development, split.contract.gate, split.contract.regression]
+  dataset_version_ids: [dataset.contract.a15.v1]
+  quality_gate_ids: [gate.contract.data.v1]
+  trace_ids: [trace.contract.omission, trace.contract.fabrication]
+  scorer_charter_ids: [scorer-charter.contract.a16]
+  scoring_unit_spec_ids: [scoring-unit.contract.a16]
+  scoring_unit_ids: [unit.contract.claim, unit.contract.risk-finding, unit.contract.trajectory, unit.contract.trial]
+  observation_contract_ids: [observation.contract.a16]
+  rubric_ids: [rubric.contract.a16]
+  adjudication_protocol_ids: [adjudication.contract.a16]
+  scorer_manifest_ids: [scorer-manifest.contract.a16]
+  scorer_identity_ids: [scorer-identity.contract.a16]
+  scorer_ids: [scorer.contract.span-check, scorer.contract.set-match, scorer.contract.legal-review, scorer.contract.explanation-judge, scorer.contract.composite.a16]
+  scorer_validation_ids: [validation.contract.scorer.a16]
+  scorer_quality_gate_ids: [gate.contract.scorer.a16]
+  scoring_trace_ids: [trace.contract.scoring.omission, trace.contract.scoring.fabrication]
+input:
+  scorer_charter:
+    id: scorer-charter.contract.a16
+    upstream_traceability: {target_ids: [target.contract-agent.candidate], construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding], question_ids: [eq.contract.screen], risk_ids: [risk.contract.omission, risk.contract.fabrication], scenario_family_ids: [family.contract.explicit, family.contract.cross, family.contract.missing], task_ids: [task.contract.screen], dataset_charter_ids: [charter.contract.a15], source_ids: [source.contract.licensed.v1, source.contract.expert.v1, source.contract.taxonomy.v1], partition_ids: [partition.contract.distribution, partition.contract.challenge, partition.contract.regression], reference_item_ids: [reference.contract.risk-span.v1, reference.contract.incomplete.v1], annotation_protocol_ids: [annotation.contract.v1], split_ids: [split.contract.development, split.contract.gate, split.contract.regression], dataset_version_ids: [dataset.contract.a15.v1], quality_gate_ids: [gate.contract.data.v1], trace_ids: [trace.contract.omission, trace.contract.fabrication]}
+    scoring_claim: 判断一次合同首轮筛查是否覆盖关键风险并由真实原文 span 支持，不判断是否达到律师水平
+    authority_order: [versioned-contract-and-attachments, set-valued-expert-reference, executable-span-check, independent-legal-adjudication, calibrated-judge]
+    non_compensation: {critical_failures_override: true, judge_override_allowed: false, rule: 关键条款漏检或伪造 span 不得被语言专业度高分补偿}
+    evidence_boundary: 仅定义评分设计；无真实合同、trial、Score、Metric、Harness 或系统 Gate
+  scoring_units:
+    spec_id: scoring-unit.contract.a16
+    scorer_charter_id: scorer-charter.contract.a16
+    units:
+      - {id: unit.contract.claim, level: atomic-claim, identity_keys: [trial_id, claim_id], purpose: 风险结论与解释中的原子法律主张}
+      - {id: unit.contract.risk-finding, level: task-subunit, identity_keys: [trial_id, risk_category, finding_id], purpose: 单一风险类别、严重性和 span 组合}
+      - {id: unit.contract.trajectory, level: trajectory, identity_keys: [trial_id, trajectory_id], purpose: 文档附件读取、证据定位与升级路径}
+      - {id: unit.contract.trial, level: trial, identity_keys: [trial_id, task_id, dataset_item_id, target_identity, environment_identity, seed], purpose: 一份合同的一次首轮筛查}
+    dependence: {parent_key: transaction_package_id, repeated_trial_key: contract_revision_family, aggregation_boundary: 本单元止于 trial score，不计算跨合同 Metric}
+  observation_contract:
+    id: observation.contract.a16
+    scoring_unit_spec_id: scoring-unit.contract.a16
+    scoring_unit_ids: [unit.contract.claim, unit.contract.risk-finding, unit.contract.trajectory, unit.contract.trial]
+    bundle:
+      identity: [observation_bundle_id, trial_id, task.contract.screen, dataset_item_id, target.contract-agent.candidate, environment_identity]
+      initial_state: [contract_version, attachment_manifest, jurisdiction, taxonomy_v8, parse_quality]
+      event_stream: [document_accesses, attachment_accesses, cited_offsets, escalation_events, ordered_timestamps]
+      final_output: [risk_findings, severity, cited_spans, uncertainty, escalation]
+      final_state: [review-package, unresolved-attachments, completion-status]
+      evidence_metadata: [source.contract.licensed.v1, source.contract.taxonomy.v1, reference_items, document_hashes, completeness_status]
+    critical_missing_action: unscorable
+    candidate_cannot_write_reference_fields: true
+  rubric:
+    id: rubric.contract.a16
+    scorer_charter_id: scorer-charter.contract.a16
+    scoring_unit_spec_id: scoring-unit.contract.a16
+    observation_contract_id: observation.contract.a16
+    type: analytic
+    dimensions:
+      - id: dimension.contract.critical-recall
+        construct_id: construct.contract.critical-recall
+        scoring_unit_ids: [unit.contract.risk-finding, unit.contract.trial]
+        scale: {type: ordinal, values: [0, 1, 2]}
+        anchors: [{score: 0, observable_conditions: [漏掉 Reference 中任一关键风险或在附件缺失时作确定完整结论], required_evidence: [reference.contract.risk-span.v1, candidate-findings]}, {score: 1, observable_conditions: [关键类别已覆盖但严重性、跨条款关系或升级说明部分缺失], required_evidence: [expert-reference, candidate-findings]}, {score: 2, observable_conditions: [关键风险完整且在合理多值参考集合内并恰当处理不确定性], required_evidence: [set-valued-reference, candidate-findings, escalation] }]
+      - id: dimension.contract.span-grounding
+        construct_id: construct.contract.span-grounding
+        scoring_unit_ids: [unit.contract.claim, unit.contract.risk-finding, unit.contract.trajectory]
+        scale: {type: ordinal, values: [0, 1, 2]}
+        anchors: [{score: 0, observable_conditions: [引用不存在或不支持主张的 span], required_evidence: [versioned-document, cited-offset]}, {score: 1, observable_conditions: [span 存在且部分支持但遗漏跨条款或附件关系], required_evidence: [document-family, cited-spans]}, {score: 2, observable_conditions: [所有关键主张均由正确版本的单条或多条 span 支持], required_evidence: [document-family, cited-spans]}]
+    critical_errors:
+      - {id: critical.contract.omission, risk_ids: [risk.contract.omission], trigger: Reference 确认的关键风险完全漏检, score_effect: force-fail, compensable: false, judge_override_allowed: false}
+      - {id: critical.contract.fabricated-span, risk_ids: [risk.contract.fabrication], trigger: 引用偏移不存在或原文不支持主张, score_effect: force-fail, compensable: false, judge_override_allowed: false}
+    unscorable: {reasons: [missing-attachment, parse-offset-corruption, target-identity-mismatch, unresolved-expert-reference], score: null}
+  adjudication:
+    id: adjudication.contract.a16
+    rubric_id: rubric.contract.a16
+    preserve_raw: true
+    disagreement_categories: [reasonable-legal-interpretation, taxonomy-ambiguity, missing-attachment, scorer-bug, rubric-boundary, clerical-error]
+    disagreement: {preserve_raw_decisions: true, categories: [reasonable-legal-interpretation, taxonomy-ambiguity, missing-attachment, scorer-bug, rubric-boundary, clerical-error]}
+    adjudicator: independent-senior-contract-lawyer
+    outcomes: [confirmed-score, corrected-score, set-valued-resolution, abstained, unscorable, inconclusive, protocol-defect]
+    critical_rule: 多值法律解释不强压唯一答案；但确定不存在的 span 不能被 Judge 或多数票变成有效证据
+  scorers:
+    manifest_id: scorer-manifest.contract.a16
+    scorer_charter_id: scorer-charter.contract.a16
+    scoring_unit_spec_id: scoring-unit.contract.a16
+    observation_contract_id: observation.contract.a16
+    rubric_id: rubric.contract.a16
+    adjudication_protocol_id: adjudication.contract.a16
+    identity: {immutable_id: scorer-identity.contract.a16, status: design-only, implementation_hash: not-implemented, config_hash: not-implemented, runtime_identity: not-implemented, input_schema_version: observation.contract.a16, output_schema_version: score-record.v1}
+    implementations:
+      - {id: scorer.contract.span-check, type: deterministic, role: 校验版本、字符偏移与原文存在性, status: planned}
+      - {id: scorer.contract.set-match, type: programmatic, role: 比较风险类别与可接受多值集合, status: planned}
+      - {id: scorer.contract.legal-review, type: human, role: 判断合理解释、严重性与升级, status: planned}
+      - {id: scorer.contract.explanation-judge, type: llm-as-judge, role: 仅在校准范围判断解释组织与完整性, status: planned}
+      - {id: scorer.contract.composite.a16, type: composite, role: 按证据权威合并 trial score, status: planned}
+    precedence: {order: [scorer.contract.span-check, scorer.contract.set-match, scorer.contract.legal-review, scorer.contract.explanation-judge], conflict_rule: fabricated span 或确定性关键失败 force-fail；合理多值分歧交仲裁, judge_cannot_override: [document-existence, span-offset, critical-omission-confirmed-by-reference]}
+    output_statuses: [scored, uncertain, abstained, unscorable, inconclusive]
+    security: {reference_fields_read_only: true, candidate_output_untrusted: true, prompt_injection_treated_as_data: true, network_access: denied-unless-declared, secrets_prohibited: true, logs_redacted: true}
+  validation:
+    id: validation.contract.scorer.a16
+    scorer_manifest_id: scorer-manifest.contract.a16
+    rubric_id: rubric.contract.a16
+    adjudication_protocol_id: adjudication.contract.a16
+    validation_identity: {report_id: validation.contract.scorer.a16, scorer_immutable_id: scorer-identity.contract.a16, dataset_version: independent-calibration-set.contract.a16, status: planned-not-observed, executed_at: null}
+    status: planned-not-observed
+    evidence: {materialized: false, independent_from_development: required, sample_records: [], evidence_links: []}
+    dimensions: {reliability: not-observed, validity: not-observed, calibration: not-observed}
+    error_profile: {false_pass: {observed_count: null}, false_fail: {observed_count: null}, abstain_error: {observed_count: null}, unscorable_detection_error: {observed_count: null}}
+    bias_and_robustness: {slices: [contract-type, jurisdiction, clause-style, document-length, parse-quality], perturbations: [clause-order, formatting, irrelevant-length, pairwise-order], results: not-observed}
+    security: {tests: [contract-text-injection, fabricated-offset, reference-exfiltration, judge-prompt-tampering], results: not-observed}
+    acceptance:
+      thresholds_declared_before_execution: true
+      thresholds: {reliability: {metric: inter-rater-agreement, operator: gte, value: 0.8}, validity: {metric: critical-reference-agreement, operator: gte, value: 0.95}, calibration: {metric: threshold-decision-accuracy, operator: gte, value: 0.9}, bias_and_robustness: {metric: minimum-critical-slice-accuracy, operator: gte, value: 0.9}, security: {metric: adversarial-test-pass-rate, operator: equals, value: 1}}
+      error_thresholds: {false_pass: {max_count: 0}, false_fail: {max_count: 2}, abstain_error: {max_count: 2}, unscorable_detection_error: {max_count: 0}}
+      required_results: [reliability, validity, calibration, error-profile, bias-and-robustness, security]
+      current_conclusion: blocked
+      reason: 无独立物化验证证据
+  quality_gate:
+    id: gate.contract.scorer.a16
+    scorer_manifest_id: scorer-manifest.contract.a16
+    validation_report_id: validation.contract.scorer.a16
+    status_values: {ready: 所有关键检查由独立物化证据支持并达预声明阈值, partial: 仅可隔离且验证充分的子范围继续, blocked: 关键实现或验证证据缺失, invalid: 身份权威效度或安全存在不可接受缺陷}
+    checks:
+      - {id: contract.scorer.check.identity, category: reproducibility, critical: true, requirement: 锁定实现配置运行时和 schema 身份, status: blocked, evidence: {materialized: false, planned_only: true, semantic_basis: 当前只有 design-only 身份且无实现 hash, evidence_links: [scorer.contract.composite.a16]}, failure_action: 实现并锁定 scorer 后重验}
+      - {id: contract.scorer.check.precedence, category: safety, critical: true, requirement: 确定性 span 和关键漏检失败不可被 Judge 覆盖, status: blocked, evidence: {materialized: false, planned_only: true, semantic_basis: 规则已定义但未执行反例验证, evidence_links: [critical.contract.omission, critical.contract.fabricated-span]}, failure_action: 执行伪造 span 与关键漏检反例}
+      - {id: contract.scorer.check.reliability, category: reliability, critical: true, requirement: 重测与法律评审一致性达阈值, status: blocked, evidence: {materialized: false, planned_only: true, semantic_basis: 无重复或跨评审者记录, evidence_links: [validation.contract.scorer.a16]}, failure_action: 物化独立双审记录}
+      - {id: contract.scorer.check.validity, category: validity, critical: true, requirement: 评分支持关键召回与 span 有据性构念, status: blocked, evidence: {materialized: false, planned_only: true, semantic_basis: 无独立效度结果, evidence_links: [validation.contract.scorer.a16]}, failure_action: 完成领域效度研究或缩小范围}
+      - {id: contract.scorer.check.calibration, category: calibration, critical: true, requirement: 多值解释置信 abstain 和 unscorable 已校准, status: blocked, evidence: {materialized: false, planned_only: true, semantic_basis: 无校准与阈值错误分析, evidence_links: [validation.contract.scorer.a16]}, failure_action: 物化校准记录}
+      - {id: contract.scorer.check.error-profile, category: error, critical: true, requirement: false pass false fail 与缺附件强判错误在容忍度内, status: blocked, evidence: {materialized: false, planned_only: true, semantic_basis: 错误画像均未观测, evidence_links: [validation.contract.scorer.a16]}, failure_action: 物化错误样本并复核}
+      - {id: contract.scorer.check.bias-security, category: bias-robustness-security, critical: true, requirement: 合同切片扰动注入泄露与篡改测试达标, status: blocked, evidence: {materialized: false, planned_only: true, semantic_basis: 偏差稳健性与安全测试未执行, evidence_links: [validation.contract.scorer.a16]}, failure_action: 在隔离环境执行完整测试}
+    decision: {status: blocked, blocking_check_ids: [contract.scorer.check.identity, contract.scorer.check.precedence, contract.scorer.check.reliability, contract.scorer.check.validity, contract.scorer.check.calibration, contract.scorer.check.error-profile, contract.scorer.check.bias-security], partial_check_ids: [], invalidating_check_ids: [], reason: scorer 未实现且无独立物化验证记录, allowed_next_step: 仅实现与验证 scorer，不得调度正式 trial, prohibited_claims: [真实 score 已产生, Metric 已计算, 合同 Agent 已评测或达到律师水平, Harness 或系统 Gate 已通过]}
+expected:
+  trace_closure:
+    - {id: trace.contract.scoring.omission, links: [target.contract-agent.candidate, construct.contract.critical-recall, eq.contract.screen, risk.contract.omission, family.contract.explicit, family.contract.cross, task.contract.screen, charter.contract.a15, source.contract.licensed.v1, source.contract.expert.v1, partition.contract.distribution, partition.contract.challenge, reference.contract.risk-span.v1, annotation.contract.v1, split.contract.development, split.contract.gate, dataset.contract.a15.v1, gate.contract.data.v1, trace.contract.omission, scorer-charter.contract.a16, scoring-unit.contract.a16, unit.contract.risk-finding, unit.contract.trajectory, unit.contract.trial, observation.contract.a16, rubric.contract.a16, dimension.contract.critical-recall, critical.contract.omission, adjudication.contract.a16, scorer-manifest.contract.a16, scorer-identity.contract.a16, scorer.contract.set-match, scorer.contract.legal-review, scorer.contract.explanation-judge, scorer.contract.composite.a16, validation.contract.scorer.a16, gate.contract.scorer.a16], action: 关键风险漏检不可补偿；多值解释保留并可仲裁；无验证证据则 gate blocked}
+    - {id: trace.contract.scoring.fabrication, links: [target.contract-agent.candidate, construct.contract.span-grounding, eq.contract.screen, risk.contract.fabrication, family.contract.missing, task.contract.screen, charter.contract.a15, source.contract.licensed.v1, source.contract.taxonomy.v1, partition.contract.regression, reference.contract.incomplete.v1, annotation.contract.v1, split.contract.regression, dataset.contract.a15.v1, gate.contract.data.v1, trace.contract.fabrication, scorer-charter.contract.a16, scoring-unit.contract.a16, unit.contract.claim, observation.contract.a16, rubric.contract.a16, dimension.contract.span-grounding, critical.contract.fabricated-span, scorer-manifest.contract.a16, scorer-identity.contract.a16, scorer.contract.span-check, adjudication.contract.a16, validation.contract.scorer.a16, gate.contract.scorer.a16], action: 不存在或不支持的 span force-fail；附件或偏移损坏则 unscorable}
+evidence:
+  design_artifacts: [scorer-charter.contract.a16, scoring-unit.contract.a16, observation.contract.a16, rubric.contract.a16, adjudication.contract.a16, scorer-manifest.contract.a16, scorer-identity.contract.a16, validation.contract.scorer.a16, gate.contract.scorer.a16]
+  traceability: [trace.contract.scoring.omission, trace.contract.scoring.fabrication]
+  limitations: [本案只有评分设计资产, A1.5 数据仍为 design-only 且 data gate blocked, 没有真实 scorer 实现、合同数据或运行, 没有 Observation Bundle、trial 或 score record, 没有 Metric、统计推断、Harness 或系统 Gate, 不证明律师替代、生产适用性或个人能力]

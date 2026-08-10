@@ -130,6 +130,11 @@ const A15_UNIT = path.resolve(
   "../academy/phase-a/chapter-a1/unit-a1-5",
 );
 
+const A16_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a1/unit-a1-6",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -147,6 +152,97 @@ async function mutateYaml(root, relativePath, mutate) {
   const value = parseYaml(await readFile(filePath, "utf8"));
   mutate(value);
   await writeFile(filePath, stringifyYaml(value));
+}
+
+async function materializeA16TemplateReady(root) {
+  await mutateYaml(root, "scorer-manifest.yaml", (value) => {
+    value.scorer_identity.status = "implemented";
+    value.scorer_identity.implementation_hash = `sha256:${"a".repeat(64)}`;
+    value.scorer_identity.config_hash = `sha256:${"b".repeat(64)}`;
+    value.scorer_identity.runtime_identity = "runtime.scorer.example.v1";
+  });
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.validation_identity.status = "executed";
+    value.validation_identity.executed_at = "2026-08-10T12:00:00Z";
+    value.evidence.materialized = true;
+    value.evidence.independent_from_scorer_development = true;
+    value.evidence.sample_records = [{id: "record.independent.scorer-validation.example.v1", category: "reliability", hash: `sha256:${"c".repeat(64)}`, status: "materialized"}];
+    value.evidence.evidence_links = ["identity", "precedence", "reliability", "validity", "calibration", "error-profile", "bias-robustness-security"].map((name, index) => ({id: `evidence.independent.${name}.example.v1`, category: name, hash: `sha256:${String(index + 1).repeat(64)}`, status: "materialized"}));
+    const observed = {reliability: 0.96, validity: 0.94, calibration: 0.04};
+    const metrics = {reliability: "agreement_rate", validity: "expert_acceptance_rate", calibration: "expected_calibration_error"};
+    for (const dimension of ["reliability", "validity", "calibration"]) value.dimensions[dimension].result = {status: "accepted", metric: metrics[dimension], observed_value: observed[dimension], evidence_id: `evidence.independent.${dimension}.example.v1`};
+    for (const profile of Object.values(value.error_profile)) profile.observed_count = 0;
+    value.bias_and_robustness.results = {status: "accepted", metric: "maximum_slice_gap", observed_value: 0.03, evidence_id: "evidence.independent.bias-robustness-security.example.v1"};
+    value.security.results = {status: "accepted", metric: "critical_security_failures", observed_value: 0, evidence_id: "evidence.independent.bias-robustness-security.example.v1"};
+    value.acceptance.thresholds = {
+      reliability: {metric: "agreement_rate", operator: "gte", value: 0.9},
+      validity: {metric: "expert_acceptance_rate", operator: "gte", value: 0.9},
+      calibration: {metric: "expected_calibration_error", operator: "lte", value: 0.1},
+      bias_and_robustness: {metric: "maximum_slice_gap", operator: "lte", value: 0.1},
+      security: {metric: "critical_security_failures", operator: "equals", value: 0},
+    };
+    value.acceptance.error_thresholds = {
+      false_pass: {max_count: 0},
+      false_fail: {max_count: 0},
+      abstain_error: {max_count: 0},
+      unscorable_detection_error: {max_count: 0},
+    };
+    value.acceptance.current_conclusion = "ready";
+  });
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    const evidenceCategory = {
+      reproducibility: "identity",
+      safety: "precedence",
+      reliability: "reliability",
+      validity: "validity",
+      calibration: "calibration",
+      error: "error-profile",
+      robustness: "bias-robustness-security",
+      security: "bias-robustness-security",
+    };
+    for (const check of value.checks) {
+      check.status = "passed";
+      check.evidence.materialized = true;
+      check.evidence.planned_only = false;
+      check.evidence.evidence_links = [`evidence.independent.${evidenceCategory[check.category]}.example.v1`];
+    }
+    value.decision = {
+      status: "ready",
+      blocking_check_ids: [],
+      partial_check_ids: [],
+      invalidating_check_ids: [],
+      reason: "independent materialized validation accepted",
+      allowed_next_step: "prepare controlled trials",
+      prohibited_claims: ["does not establish system release"],
+    };
+  });
+}
+
+async function materializeA16TemplatePartial(root) {
+  await materializeA16TemplateReady(root);
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.validation_identity.status = "validated";
+    value.acceptance.current_conclusion = "partial";
+  });
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    const partialCheck = value.checks.find((check) => check.id === "check.validity");
+    partialCheck.status = "partial";
+    value.decision = {
+      status: "partial",
+      blocking_check_ids: [],
+      partial_check_ids: [partialCheck.id],
+      invalidating_check_ids: [],
+      reason: "only a validated bounded use is supported",
+      allowed_next_step: "use only inside the declared partial scope",
+      prohibited_claims: ["does not establish unrestricted scorer readiness"],
+      partial_scope: {
+        id: "scope.scorer.example.partial.v1",
+        allowed_uses: ["bounded expert-assisted review"],
+        prohibited_uses: ["autonomous release gating"],
+        evidence_ids: ["evidence.independent.validity.example.v1"],
+      },
+    };
+  });
 }
 
 async function createValidUnit() {
@@ -1809,4 +1905,680 @@ test("A1.5 case decision structures reject id-only and boolean placeholders", as
   assert.match(report, /input\.dataset_version\.contents\[0\]\.role: must be a non-empty string/);
   assert.match(report, /input\.dataset_version\.item_schema\[0\]: must be a non-empty string/);
   assert.match(report, /drift_and_refresh\.monitors: must be a non-empty array/);
+});
+
+test("the complete A1.6 reference-to-scorer package is accepted", async () => {
+  assert.deepEqual(await verifyAcademyUnit(A16_UNIT), []);
+});
+
+test("A1.6 cannot disable its canonical profile or shrink templates and domain cases", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-profile-");
+  await mutateYaml(root, "artifact-manifest.yaml", (manifest) => {
+    delete manifest.verification.profile;
+    manifest.contents.templates = manifest.contents.templates.filter((item) => item !== "scorer-manifest.yaml");
+    manifest.contents.examples = manifest.contents.examples.filter((item) => !item.includes("knowledge-assistant"));
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /A1\.6 requires verification\.profile/);
+  assert.match(report, /profile reference-to-scorer-v1 requires scorer-manifest\.yaml/);
+  assert.match(report, /profile reference-to-scorer-v1 requires examples\/knowledge-assistant\/evaluation-case\.yaml/);
+});
+
+test("A1.6 cannot replace its canonical profile", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-wrong-profile-");
+  await mutateYaml(root, "artifact-manifest.yaml", (manifest) => { manifest.verification.profile = "task-scenario-to-evaluation-data-v1"; });
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /unit A1\.6 must use verification\.profile reference-to-scorer-v1/);
+});
+
+test("A1.6 binds every template to the exact declared scorer design graph", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-template-graph-");
+  await mutateYaml(root, "scoring-rubric.yaml", (value) => { value.observation_contract_id = "observation-contract.borrowed.v9"; });
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => { value.scorer_manifest_id = "scorer-manifest.borrowed.v9"; });
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => { value.validation_report_id = "scorer-validation.borrowed.v9"; });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /scoring-rubric\.yaml: observation_contract_id: expected observation-contract\.example\.v1/);
+  assert.match(report, /scorer-validation-report\.yaml: scorer_manifest_id: expected scorer-manifest\.example\.v1/);
+  assert.match(report, /scorer-quality-gate\.yaml: validation_report_id: expected scorer-validation\.example\.v1/);
+});
+
+test("A1.6 rejects id-only and boolean scoring unit and observation shells", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-unit-types-");
+  await mutateYaml(root, "scoring-unit-spec.yaml", (value) => {
+    value.units[0].identity_keys = true;
+    value.units[0].child_units = true;
+    value.missing_or_duplicate_identity = false;
+  });
+  await mutateYaml(root, "observation-contract.yaml", (value) => {
+    value.bundle.identity = {id: "placeholder"};
+    value.integrity.hashes_required = false;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /units\[0\]\.identity_keys: must be a non-empty array/);
+  assert.match(report, /units\[0\]\.child_units: must be an array/);
+  assert.match(report, /missing_or_duplicate_identity must be unscorable/);
+  assert.match(report, /bundle\.identity\.required: must be a non-empty array/);
+  assert.match(report, /integrity\.hashes_required must be true/);
+});
+
+test("A1.6 keeps Reference Rubric Scorer Score Metric and Gate semantics separate", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-rubric-semantics-");
+  await mutateYaml(root, "scoring-rubric.yaml", (value) => {
+    value.rubric_type = "metric";
+    value.dimensions[0].anchors[0].score = true;
+    value.dimensions[0].anchors[0].required_evidence = [];
+    value.critical_errors[0].compensable = true;
+    value.critical_errors[0].judge_override_allowed = true;
+    value.unscorable.output = {status: "scored", score: 1};
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /rubric_type must be analytic/);
+  assert.match(report, /anchors\[0\]\.score must be a number/);
+  assert.match(report, /anchors\[0\]\.required_evidence: must be a non-empty array/);
+  assert.match(report, /critical_errors\[0\]\.compensable must be false/);
+  assert.match(report, /critical_errors\[0\]\.judge_override_allowed must be false/);
+  assert.match(report, /unscorable output must use status unscorable and null score/);
+});
+
+test("A1.6 preserves disagreement abstention unscorable and adjudication semantics", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-adjudication-");
+  await mutateYaml(root, "adjudication-protocol.yaml", (value) => {
+    value.disagreement.preserve_raw_decisions = false;
+    value.disagreement.categories = [];
+    value.outcomes.no_majority_rule = false;
+    value.outcomes.no_forced_resolution = false;
+    value.critical_failure_rule = true;
+  });
+  await mutateYaml(root, "scoring-rubric.yaml", (value) => { value.uncertainty = {uncertain: "guess"}; });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /preserve_raw_decisions must be true/);
+  assert.match(report, /disagreement\.categories: must be a non-empty array/);
+  assert.match(report, /outcomes must prohibit majority and forced resolution/);
+  assert.match(report, /critical_failure_rule: must be a non-empty string/);
+  assert.match(report, /uncertainty: missing related id abstain/);
+  assert.match(report, /uncertainty: missing related id inconclusive/);
+});
+
+test("A1.6 requires scorer identity implementations precedence output and security contracts", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-manifest-");
+  await mutateYaml(root, "scorer-manifest.yaml", (value) => {
+    value.implementations = [{id: "scorer.placeholder", type: "metric", role: true, authority: "none", status: "planned"}];
+    value.precedence.order = ["scorer.placeholder"];
+    value.precedence.judge_cannot_override = [];
+    value.output_record.status_values = ["passed"];
+    value.security.reference_fields_read_only = false;
+    value.security.network_access = true;
+    value.scorer_identity.immutable_id = true;
+    value.scorer_identity.status = "blocked";
+    value.scorer_identity.input_schema_version = {};
+    value.scorer_identity.output_schema_version = [];
+    value.failure_behavior.missing_input = false;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /implementations\.type: unrelated id metric/);
+  assert.match(report, /implementations\[0\]\.type is unsupported/);
+  assert.match(report, /implementations\[0\]\.role: must be a non-empty string/);
+  assert.match(report, /precedence\.judge_cannot_override: must be a non-empty array/);
+  assert.match(report, /output_record\.status_values: unrelated id passed/);
+  assert.match(report, /security\.reference_fields_read_only must be true/);
+  assert.match(report, /security\.network_access: must be a non-empty string/);
+  assert.match(report, /scorer_identity\.immutable_id: must be a non-empty string/);
+  assert.match(report, /scorer_identity\.status must be design-only, implemented or validated/);
+  assert.match(report, /scorer_identity\.input_schema_version: must be a non-empty string/);
+  assert.match(report, /scorer_identity\.output_schema_version: must be a non-empty string/);
+  assert.match(report, /failure_behavior\.missing_input: must be a non-empty string/);
+});
+
+test("A1.6 validation requires reliability validity calibration error bias robustness and security", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-validation-");
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.dimensions.reliability.methods = [];
+    delete value.dimensions.validity.result;
+    value.error_profile = {false_pass: {observed_count: null}};
+    value.bias_and_robustness.perturbations = [];
+    value.security.tests = [];
+    value.acceptance.required_results = [];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /dimensions\.reliability\.methods: must be a non-empty array/);
+  assert.match(report, /dimensions\.validity\.result is required/);
+  assert.match(report, /error_profile: missing related id false_fail/);
+  assert.match(report, /bias_and_robustness\.perturbations: must be a non-empty array/);
+  assert.match(report, /security\.tests: must be a non-empty array/);
+  assert.match(report, /acceptance\.required_results: must be a non-empty array/);
+});
+
+test("A1.6 public validation evidence and partial scope schemas cannot be deleted or weakened", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-public-schemas-");
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.evidence.record_schema.required = ["id"];
+    value.evidence.record_schema.category_values = ["reliability"];
+    value.evidence.record_schema.hash_format = "any-string";
+    value.evidence.record_schema.materialized_status = "planned";
+  });
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    value.partial_scope_schema.required_when = "optional";
+    value.partial_scope_schema.required = ["id"];
+    value.partial_scope_schema.evidence_rule = "";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /evidence\.record_schema\.required: missing related id category/);
+  assert.match(report, /evidence\.record_schema\.category_values: missing related id identity/);
+  assert.match(report, /evidence\.record_schema\.hash_format must be sha256:<64-hex>/);
+  assert.match(report, /evidence\.record_schema\.materialized_status must be materialized/);
+  assert.match(report, /partial_scope_schema\.required_when must be decision\.status=partial/);
+  assert.match(report, /partial_scope_schema\.required: missing related id allowed_uses/);
+  assert.match(report, /partial_scope_schema\.evidence_rule: must be a non-empty string/);
+
+  const deletedRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-deleted-public-schemas-");
+  await mutateYaml(deletedRoot, "scorer-validation-report.yaml", (value) => { delete value.evidence.record_schema; });
+  await mutateYaml(deletedRoot, "scorer-quality-gate.yaml", (value) => { delete value.partial_scope_schema; });
+  const deletedReport = (await verifyAcademyUnit(deletedRoot)).join("\n");
+  assert.match(deletedReport, /missing required key evidence\.record_schema\.required/);
+  assert.match(deletedReport, /missing required key partial_scope_schema\.required_when/);
+});
+
+test("A1.6 validation identities bind report scorer and non-sentinel dataset versions", async () => {
+  const templateRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-template-validation-identity-");
+  await mutateYaml(templateRoot, "scorer-validation-report.yaml", (value) => {
+    value.validation_identity.report_id = "validation.borrowed.v1";
+    value.validation_identity.scorer_immutable_id = "scorer-identity.borrowed.v1";
+    value.validation_identity.dataset_version = "planned";
+  });
+  const templateReport = (await verifyAcademyUnit(templateRoot)).join("\n");
+  assert.match(templateReport, /validation_identity\.report_id: expected scorer-validation\.example\.v1/);
+  assert.match(templateReport, /validation_identity\.scorer_immutable_id: expected scorer\.example\.v1/);
+  assert.match(templateReport, /validation_identity\.dataset_version: must identify a materialized non-sentinel value/);
+  assert.match(templateReport, /validation_identity\.dataset_version: expected independent-calibration-set\.example\.v1/);
+
+  const caseRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-case-validation-identity-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(caseRoot, relativePath, (value) => {
+    value.input.validation.validation_identity.report_id = "validation.contract.scorer.a16";
+    value.input.validation.validation_identity.scorer_immutable_id = "scorer-identity.contract.a16";
+    value.input.validation.validation_identity.dataset_version = "planned-not-observed";
+  });
+  const caseReport = (await verifyAcademyUnit(caseRoot)).join("\n");
+  assert.match(caseReport, /input\.validation\.validation_identity\.report_id: expected validation\.refund\.scorer\.a16/);
+  assert.match(caseReport, /input\.validation\.validation_identity\.scorer_immutable_id: expected scorer-identity\.refund\.a16/);
+  assert.match(caseReport, /input\.validation\.validation_identity\.dataset_version: must identify a materialized non-sentinel value/);
+});
+
+test("A1.6 canonical validation datasets cannot be synchronously borrowed across cases", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-cross-case-validation-dataset-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (value) => {
+    value.input.validation.validation_identity.dataset_version = "independent-calibration-set.contract.a16";
+  });
+  assert.match(
+    (await verifyAcademyUnit(root)).join("\n"),
+    /input\.validation\.validation_identity\.dataset_version: expected independent-calibration-set\.refund\.a16/,
+  );
+});
+
+test("A1.6 gate check ids categories and criticality cannot be deleted or relabeled", async () => {
+  const templateRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-template-check-taxonomy-");
+  await mutateYaml(templateRoot, "scorer-quality-gate.yaml", (value) => {
+    value.checks = value.checks.filter((check) => check.id !== "check.security");
+    value.decision.blocking_check_ids = value.decision.blocking_check_ids.filter((id) => id !== "check.security");
+    value.checks.find((check) => check.id === "check.reliability").category = "safety";
+    value.checks.find((check) => check.id === "check.identity").critical = false;
+    value.required_check_categories = value.required_check_categories.filter((category) => category !== "security");
+    value.all_checks_critical = false;
+  });
+  const templateReport = (await verifyAcademyUnit(templateRoot)).join("\n");
+  assert.match(templateReport, /checks\.id: missing required id check\.security/);
+  assert.match(templateReport, /checks\.category: missing related id reliability/);
+  assert.match(templateReport, /check check\.reliability must use reliability/);
+  assert.match(templateReport, /checks\[0\]\.critical must be true/);
+  assert.match(templateReport, /required_check_categories: missing related id security/);
+  assert.match(templateReport, /all_checks_critical must be true/);
+
+  const caseRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-case-check-taxonomy-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(caseRoot, relativePath, (value) => {
+    value.input.quality_gate.checks = value.input.quality_gate.checks.filter((check) => check.id !== "refund.scorer.check.bias-security");
+    value.input.quality_gate.decision.blocking_check_ids = value.input.quality_gate.decision.blocking_check_ids.filter((id) => id !== "refund.scorer.check.bias-security");
+  });
+  const caseReport = (await verifyAcademyUnit(caseRoot)).join("\n");
+  assert.match(caseReport, /checks\.id: missing required id refund\.scorer\.check\.bias-security/);
+  assert.match(caseReport, /checks\.category: missing related id bias-robustness-security/);
+});
+
+test("A1.6 ready cannot hide a blocked reliability check by marking it noncritical", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-noncritical-ready-");
+  await materializeA16TemplateReady(root);
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    const reliability = value.checks.find((check) => check.id === "check.reliability");
+    reliability.status = "blocked";
+    reliability.critical = false;
+    value.decision.blocking_check_ids = [reliability.id];
+  });
+  assert.match(
+    (await verifyAcademyUnit(root)).join("\n"),
+    /checks\[2\]\.critical must be true/,
+  );
+});
+
+test("A1.6 canonical cases cannot rename replace shrink or borrow A1.5 upstream ids", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-upstream-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (value) => {
+    value.references.target_ids = ["target.contract-agent.candidate"];
+    value.references.reference_item_ids = ["reference.contract.risk-span.v1"];
+    value.references.quality_gate_ids = ["gate.contract.data.v1"];
+    value.input.scorer_charter.upstream_traceability.task_ids = ["task.contract.screen"];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /references\.target_ids: unknown id target\.contract-agent\.candidate/);
+  assert.match(report, /references\.reference_item_ids: unknown id reference\.contract\.risk-span\.v1/);
+  assert.match(report, /references\.quality_gate_ids: unknown id gate\.contract\.data\.v1/);
+  assert.match(report, /upstream_traceability\.task_ids: unknown id task\.contract\.screen/);
+});
+
+test("A1.6 separates spec and entity identities and rejects cross-case scorer borrowing", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-case-ids-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (value) => {
+    value.references.scoring_unit_spec_ids = [value.references.scoring_unit_ids[0]];
+    value.references.scoring_unit_ids[0] = value.input.scoring_units.spec_id;
+    value.references.scorer_manifest_ids = ["scorer.contract.composite.a16"];
+    value.references.scorer_ids[0] = "scorer.contract.span-check";
+    value.input.rubric.scoring_unit_spec_id = "scoring-unit.contract.a16";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /references\.scoring_unit_spec_ids: unknown id unit\.refund/);
+  assert.match(report, /references\.scoring_unit_ids: unknown id scoring-unit\.refund\.a16/);
+  assert.match(report, /references\.scorer_manifest_ids: unknown id scorer\.contract\.composite\.a16/);
+  assert.match(report, /references\.scorer_ids: unknown id scorer\.contract\.span-check/);
+  assert.match(report, /input\.rubric\.scoring_unit_spec_id: expected scoring-unit\.refund\.a16/);
+});
+
+test("A1.6 case cross-template bindings reject contract ids borrowed into the refund graph", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-case-cross-bindings-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (value) => {
+    value.input.scoring_units.scorer_charter_id = "scorer-charter.contract.a16";
+    value.input.observation_contract.scoring_unit_spec_id = "scoring-unit.contract.a16";
+    value.input.rubric.scorer_charter_id = "scorer-charter.contract.a16";
+    value.input.rubric.scoring_unit_spec_id = "scoring-unit.contract.a16";
+    value.input.rubric.observation_contract_id = "observation.contract.a16";
+    value.input.adjudication.rubric_id = "rubric.contract.a16";
+    value.input.scorers.scorer_charter_id = "scorer-charter.contract.a16";
+    value.input.scorers.scoring_unit_spec_id = "scoring-unit.contract.a16";
+    value.input.scorers.observation_contract_id = "observation.contract.a16";
+    value.input.scorers.rubric_id = "rubric.contract.a16";
+    value.input.scorers.adjudication_protocol_id = "adjudication.contract.a16";
+    value.input.validation.scorer_manifest_id = "scorer-manifest.contract.a16";
+    value.input.quality_gate.scorer_manifest_id = "scorer-manifest.contract.a16";
+    value.input.quality_gate.validation_report_id = "validation.contract.scorer.a16";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  for (const [field, expected] of [
+    ["input.scoring_units.scorer_charter_id", "scorer-charter.refund.a16"],
+    ["input.observation_contract.scoring_unit_spec_id", "scoring-unit.refund.a16"],
+    ["input.rubric.scorer_charter_id", "scorer-charter.refund.a16"],
+    ["input.rubric.scoring_unit_spec_id", "scoring-unit.refund.a16"],
+    ["input.rubric.observation_contract_id", "observation.refund.a16"],
+    ["input.adjudication.rubric_id", "rubric.refund.a16"],
+    ["input.scorers.scorer_charter_id", "scorer-charter.refund.a16"],
+    ["input.scorers.scoring_unit_spec_id", "scoring-unit.refund.a16"],
+    ["input.scorers.observation_contract_id", "observation.refund.a16"],
+    ["input.scorers.rubric_id", "rubric.refund.a16"],
+    ["input.scorers.adjudication_protocol_id", "adjudication.refund.a16"],
+    ["input.validation.scorer_manifest_id", "scorer-manifest.refund.a16"],
+    ["input.quality_gate.scorer_manifest_id", "scorer-manifest.refund.a16"],
+    ["input.quality_gate.validation_report_id", "validation.refund.scorer.a16"],
+  ]) {
+    assert.ok(report.includes(`${field}: expected ${expected}`), `missing exact-binding error for ${field}`);
+  }
+});
+
+test("A1.6 scorer manifest identity and implementation ids remain disjoint under synchronized attacks", async () => {
+  const templateRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-template-identity-merge-");
+  await mutateYaml(templateRoot, "scorer-manifest.yaml", (value) => {
+    const mergedId = value.implementations[0].id;
+    value.metadata.id = mergedId;
+    value.scorer_identity.immutable_id = mergedId;
+  });
+  await mutateYaml(templateRoot, "scorer-validation-report.yaml", (value) => { value.scorer_manifest_id = "scorer.example.deterministic"; });
+  await mutateYaml(templateRoot, "scorer-quality-gate.yaml", (value) => { value.scorer_manifest_id = "scorer.example.deterministic"; });
+  assert.match(
+    (await verifyAcademyUnit(templateRoot)).join("\n"),
+    /scorer manifest, immutable identity and implementation ids must be pairwise disjoint; duplicate scorer\.example\.deterministic/,
+  );
+
+  const caseRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-case-identity-merge-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(caseRoot, relativePath, (value) => {
+    const oldManifestId = value.input.scorers.manifest_id;
+    const oldIdentityId = value.input.scorers.identity.immutable_id;
+    const mergedId = value.input.scorers.implementations.find((item) => item.type === "composite").id;
+    value.input.scorers.manifest_id = mergedId;
+    value.input.scorers.identity.immutable_id = mergedId;
+    value.input.validation.scorer_manifest_id = mergedId;
+    value.input.quality_gate.scorer_manifest_id = mergedId;
+    value.references.scorer_manifest_ids = [mergedId];
+    value.references.scorer_identity_ids = [mergedId];
+    for (const trace of value.expected.trace_closure) {
+      trace.links = [...new Set(trace.links.map((id) => id === oldManifestId || id === oldIdentityId ? mergedId : id))];
+    }
+    value.evidence.design_artifacts = value.evidence.design_artifacts.map((id) => id === oldManifestId ? mergedId : id);
+  });
+  assert.match(
+    (await verifyAcademyUnit(caseRoot)).join("\n"),
+    /scorer manifest, immutable identity and implementation ids must be pairwise disjoint; duplicate scorer\.refund\.composite\.a16/,
+  );
+});
+
+test("A1.6 canonical scorer identities cannot be synchronously borrowed across cases", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-cross-case-identity-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (value) => {
+    const oldId = value.input.scorers.identity.immutable_id;
+    const borrowedId = "scorer-identity.contract.a16";
+    value.input.scorers.identity.immutable_id = borrowedId;
+    value.references.scorer_identity_ids = [borrowedId];
+    for (const trace of value.expected.trace_closure) {
+      trace.links = trace.links.map((id) => id === oldId ? borrowedId : id);
+    }
+    value.evidence.design_artifacts = value.evidence.design_artifacts.map((id) => id === oldId ? borrowedId : id);
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /references\.scorer_identity_ids: unknown id scorer-identity\.contract\.a16/);
+  assert.match(report, /input\.scorers\.identity\.immutable_id: expected scorer-identity\.refund\.a16/);
+  assert.match(report, /scorer identity scorer-identity\.contract\.a16 duplicates examples\/refund-agent\/evaluation-case\.yaml; canonical case scorer identities must be globally unique/);
+});
+
+test("A1.6 cases reject boolean and id-only decision shells", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-case-types-");
+  const relativePath = "examples/contract-agent/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (value) => {
+    value.input.scoring_units.units[0] = {id: value.input.scoring_units.units[0].id};
+    value.input.observation_contract.bundle.identity = true;
+    value.input.rubric.dimensions[0].scale = {id: "placeholder"};
+    value.input.rubric.dimensions[0].anchors[0].required_evidence = false;
+    value.input.adjudication.disagreement = {preserve_raw_decisions: true};
+    value.input.scorers.precedence.judge_cannot_override = [];
+    value.input.scorers.identity.immutable_id = true;
+    value.input.scorers.identity.status = "blocked";
+    value.input.scorers.security.network_access = false;
+    value.input.validation.security.tests = true;
+    delete value.input.validation.acceptance.thresholds;
+    value.input.validation.acceptance.error_thresholds = {};
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /input\.scoring_units\.units\[0\]\.level: must be a non-empty string/);
+  assert.match(report, /input\.scoring_units\.units\[0\]\.identity_keys: must be a non-empty array/);
+  assert.match(report, /input\.observation_contract\.bundle\.identity: must be a non-empty array/);
+  assert.match(report, /input\.rubric\.dimensions\[0\]\.scale\.values: must be a non-empty array/);
+  assert.match(report, /anchors\[0\]\.required_evidence: must be a non-empty array/);
+  assert.match(report, /input\.adjudication\.disagreement\.categories: must be a non-empty array/);
+  assert.match(report, /input\.scorers\.precedence\.judge_cannot_override: must be a non-empty array/);
+  assert.match(report, /input\.scorers\.identity\.immutable_id: must be a non-empty string/);
+  assert.match(report, /input\.scorers\.identity\.status must be design-only, implemented or validated/);
+  assert.match(report, /input\.scorers\.security\.network_access: must be a non-empty string/);
+  assert.match(report, /input\.validation\.security\.tests: must be a non-empty array/);
+  assert.match(report, /input\.validation\.acceptance\.thresholds: missing related id reliability/);
+  assert.match(report, /input\.validation\.acceptance\.error_thresholds: missing related id false_pass/);
+});
+
+test("A1.6 case references and scoring traces are bidirectionally closed", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-trace-");
+  const relativePath = "examples/knowledge-assistant/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (value) => {
+    value.expected.trace_closure[0].links = value.expected.trace_closure[0].links.filter((id) => id !== value.references.source_ids[0]);
+    value.expected.trace_closure[0].links.push("totally.unknown.evidence");
+    const dimensionId = value.input.rubric.dimensions[0].id;
+    for (const trace of value.expected.trace_closure) trace.links = trace.links.filter((id) => id !== dimensionId);
+    value.references.scoring_trace_ids = ["trace.unrelated"];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /unknown id totally\.unknown\.evidence/);
+  assert.match(report, /reference source\.knowledge\.questions\.v1 is not covered by expected\.trace_closure/);
+  assert.match(report, /references\.scoring_trace_ids: unknown id trace\.unrelated/);
+  assert.match(report, /rubric dimension dimension\.knowledge\.groundedness is not covered by expected\.trace_closure/);
+});
+
+test("A1.6 partial decisions require exact real partial checks and exact blocking and invalid arrays", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-partial-");
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    value.decision.status = "partial";
+    value.decision.partial_check_ids = [];
+    value.decision.blocking_check_ids = [];
+    value.decision.invalidating_check_ids = [value.checks[0].id];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /blocking_check_ids: missing related id check\.identity/);
+  assert.match(report, /invalidating_check_ids: unrelated id check\.identity/);
+  assert.match(report, /status partial requires a partial check/);
+
+  const evidenceRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-partial-evidence-");
+  await mutateYaml(evidenceRoot, "scorer-quality-gate.yaml", (value) => {
+    for (const check of value.checks) check.status = "passed";
+    value.checks[0].status = "partial";
+    value.decision.status = "partial";
+    value.decision.blocking_check_ids = [];
+    value.decision.partial_check_ids = [value.checks[0].id];
+    value.decision.invalidating_check_ids = [];
+  });
+  assert.match(
+    (await verifyAcademyUnit(evidenceRoot)).join("\n"),
+    /passed or partial check requires non-planned materialized evidence/,
+  );
+});
+
+test("A1.6 has a machine-expressible future path to a legitimately validated partial scorer scope", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-valid-partial-");
+  await materializeA16TemplatePartial(root);
+  assert.deepEqual(await verifyAcademyUnit(root), []);
+});
+
+test("A1.6 partial scopes require exact evidence category coverage for their partial checks", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-partial-scope-category-");
+  await materializeA16TemplatePartial(root);
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    value.decision.partial_scope.evidence_ids = ["evidence.independent.reliability.example.v1"];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /partial_scope\.evidence_ids: unrelated evidence category reliability for partial checks/);
+  assert.match(report, /partial_scope\.evidence_categories: missing related id validity/);
+});
+
+test("A1.6 partial decisions cannot be manufactured from flags strings or an unexecuted scorer", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-false-partial-");
+  await materializeA16TemplatePartial(root);
+  await mutateYaml(root, "scorer-manifest.yaml", (value) => {
+    value.scorer_identity.status = "design-only";
+    value.scorer_identity.implementation_hash = "not-implemented";
+  });
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.validation_identity.status = "planned-not-observed";
+    value.validation_identity.executed_at = "not-a-time";
+    value.evidence.materialized = false;
+    value.evidence.independent_from_scorer_development = false;
+    value.evidence.sample_records = ["sample.only.a.flag"];
+    value.evidence.evidence_links = ["evidence.only.a.flag"];
+    value.acceptance.current_conclusion = "ready";
+  });
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    value.decision.partial_scope = {
+      id: "planned",
+      allowed_uses: [],
+      prohibited_uses: [],
+      evidence_ids: ["evidence.only.a.flag"],
+    };
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /status partial requires implemented or validated scorer identity/);
+  assert.match(report, /scorer_identity\.implementation_hash: must identify a materialized non-sentinel value/);
+  assert.match(report, /validation evidence\.materialized must be true/);
+  assert.match(report, /validation evidence must be independently produced/);
+  assert.match(report, /validation identity status must be executed, validated or accepted/);
+  assert.match(report, /validation\.validation_identity\.executed_at: must be a valid non-future ISO timestamp/);
+  assert.match(report, /validation\.evidence\.sample_records\[0\]: must be a non-empty object/);
+  assert.match(report, /validation\.evidence\.evidence_links\[0\]: must be a non-empty object/);
+  assert.match(report, /validation acceptance\.current_conclusion partial/);
+  assert.match(report, /partial_scope\.id: must identify a materialized non-sentinel value/);
+  assert.match(report, /partial_scope\.allowed_uses: must be a non-empty array/);
+  assert.match(report, /partial_scope\.prohibited_uses: must be a non-empty array/);
+  assert.match(report, /partial_scope\.evidence_ids: unknown independent materialized validation evidence id evidence\.only\.a\.flag/);
+});
+
+test("A1.6 passed and partial checks require category-compatible independent evidence", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-evidence-category-");
+  await materializeA16TemplatePartial(root);
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    for (const check of value.checks) {
+      check.evidence.evidence_links = ["evidence.independent.reliability.example.v1"];
+    }
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /checks\[0\]\.evidence\.evidence_links: requires independent materialized identity evidence/);
+  assert.match(report, /checks\[1\]\.evidence\.evidence_links: requires independent materialized precedence evidence/);
+  assert.match(report, /checks\[3\]\.evidence\.evidence_links: requires independent materialized validity evidence/);
+
+  const recordRoot = await copyUnit(A16_UNIT, "evalorium-a1-6-evidence-record-category-");
+  await materializeA16TemplateReady(recordRoot);
+  await mutateYaml(recordRoot, "scorer-validation-report.yaml", (value) => {
+    delete value.evidence.sample_records[0].category;
+    value.evidence.evidence_links[0].category = "generic-proof";
+  });
+  const recordReport = (await verifyAcademyUnit(recordRoot)).join("\n");
+  assert.match(recordReport, /sample_records\[0\]\.category: must be a non-empty string/);
+  assert.match(recordReport, /evidence_links\[0\]\.category must be a supported scorer validation evidence category/);
+});
+
+test("A1.6 ready validation results require dimension-compatible evidence categories", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-result-evidence-category-");
+  await materializeA16TemplateReady(root);
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.dimensions.reliability.result.evidence_id = "evidence.independent.validity.example.v1";
+    value.security.results.evidence_id = "evidence.independent.calibration.example.v1";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /dimensions\.reliability\.result\.evidence_id must resolve to reliability validation evidence/);
+  assert.match(report, /validation\.security\.results\.evidence_id must resolve to bias-robustness-security validation evidence/);
+});
+
+test("A1.6 executed validation timestamps reject future ISO times", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-future-validation-");
+  await materializeA16TemplateReady(root);
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.validation_identity.executed_at = "2999-01-01T00:00:00.000Z";
+  });
+  assert.match(
+    (await verifyAcademyUnit(root)).join("\n"),
+    /validation\.validation_identity\.executed_at: must be a valid non-future ISO timestamp/,
+  );
+});
+
+test("A1.6 blocked gates require real blocking checks and reject self evidence", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-blocked-gate-");
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    value.checks[0].evidence.evidence_links = [value.checks[0].id];
+    value.decision.blocking_check_ids = ["check.unknown"];
+    value.decision.reason = true;
+    value.decision.allowed_next_step = false;
+    value.decision.prohibited_claims = [];
+    value.checks[0].critical = "yes";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /critical: must be a boolean/);
+  assert.match(report, /gate cannot use self evidence id check\.identity/);
+  assert.match(report, /blocking_check_ids: unrelated id check\.unknown/);
+  assert.match(report, /decision\.reason: must be a non-empty string/);
+  assert.match(report, /decision\.allowed_next_step: must be a non-empty string/);
+  assert.match(report, /decision\.prohibited_claims: must be a non-empty array/);
+});
+
+test("A1.6 ready cannot be manufactured from planned design-only evidence", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-false-ready-");
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    for (const check of value.checks) check.status = "passed";
+    value.decision.status = "ready";
+    value.decision.blocking_check_ids = [];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /ready requires non-planned materialized evidence for every check/);
+  assert.match(report, /ready cannot use design-only scorer identity/);
+  assert.match(report, /ready requires validation evidence\.materialized true/);
+  assert.match(report, /validation identity status must be executed, validated or accepted/);
+});
+
+test("A1.6 has a machine-expressible future path to a legitimately validated ready scorer", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-valid-ready-");
+  await materializeA16TemplateReady(root);
+  assert.deepEqual(await verifyAcademyUnit(root), []);
+});
+
+test("A1.6 ready rejects non-independent rejected unbounded and above-threshold validation claims", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-ready-attacks-");
+  await materializeA16TemplateReady(root);
+  await mutateYaml(root, "scorer-manifest.yaml", (value) => {
+    value.scorer_identity.implementation_hash = "sha256:short";
+    value.scorer_identity.config_hash = `sha256:${"z".repeat(64)}`;
+    value.scorer_identity.runtime_identity = "not-implemented";
+    value.scorer_identity.immutable_id = "placeholder";
+    value.scorer_identity.input_schema_version = "planned";
+    value.scorer_identity.output_schema_version = "bad schema";
+  });
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    value.evidence.independent_from_scorer_development = false;
+    value.evidence.sample_records[0].hash = "not-a-sha256";
+    value.evidence.evidence_links[0].status = "planned";
+    value.acceptance.thresholds_declared_before_execution = false;
+    value.dimensions.reliability.result.status = "rejected";
+    value.dimensions.reliability.result.metric = "borrowed_metric";
+    value.dimensions.reliability.result.evidence_id = "evidence.missing.example.v1";
+    value.dimensions.validity.result.observed_value = 999;
+    value.dimensions.calibration.result.observed_value = 0.9;
+    value.error_profile.false_pass.observed_count = 999;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /validation evidence must be independently produced/);
+  assert.match(report, /scorer_identity\.implementation_hash: must be sha256 followed by exactly 64 hexadecimal characters/);
+  assert.match(report, /scorer_identity\.config_hash: must be sha256 followed by exactly 64 hexadecimal characters/);
+  assert.match(report, /scorer_identity\.runtime_identity: must identify a materialized non-sentinel value/);
+  assert.match(report, /scorer_identity\.immutable_id: must identify a materialized non-sentinel value/);
+  assert.match(report, /scorer_identity\.input_schema_version: must identify a materialized non-sentinel value/);
+  assert.match(report, /scorer_identity\.output_schema_version: must be a structured identity/);
+  assert.match(report, /validation thresholds must be declared before execution/);
+  assert.match(report, /sample_records\[0\]\.hash: must be sha256 followed by exactly 64 hexadecimal characters/);
+  assert.match(report, /evidence_links\[0\]\.status must be materialized/);
+  assert.match(report, /dimensions\.reliability\.result\.status must be accepted or passed/);
+  assert.match(report, /dimensions\.reliability\.result\.metric must match the predeclared threshold metric/);
+  assert.match(report, /dimensions\.reliability\.result\.evidence_id must resolve to independent materialized validation evidence/);
+  assert.match(report, /dimensions\.validity\.result\.observed_value must be within its declared bounded domain/);
+  assert.match(report, /dimensions\.calibration\.result\.observed_value does not satisfy the predeclared threshold/);
+  assert.match(report, /error_profile\.false_pass\.observed_count exceeds predeclared max_count/);
+});
+
+test("A1.6 ready validation evidence cannot self-certify with report manifest gate or check ids", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-ready-self-evidence-");
+  await materializeA16TemplateReady(root);
+  let selfId;
+  await mutateYaml(root, "scorer-validation-report.yaml", (value) => {
+    selfId = value.metadata.id;
+    value.evidence.sample_records = [{id: selfId, hash: `sha256:${"d".repeat(64)}`, status: "materialized"}];
+    value.evidence.evidence_links = [{id: selfId, hash: `sha256:${"e".repeat(64)}`, status: "materialized"}];
+    for (const dimension of ["reliability", "validity", "calibration"]) value.dimensions[dimension].result.evidence_id = selfId;
+    value.bias_and_robustness.results.evidence_id = selfId;
+    value.security.results.evidence_id = selfId;
+  });
+  await mutateYaml(root, "scorer-quality-gate.yaml", (value) => {
+    for (const check of value.checks) check.evidence.evidence_links = [selfId];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /validation\.evidence\.sample_records\[0\]\.id must not reuse a scorer design, validation report or gate id/);
+  assert.match(report, /validation\.evidence\.evidence_links\[0\]\.id must not reuse a scorer design, validation report or gate id/);
+  assert.match(report, /validation\.dimensions\.reliability\.result\.evidence_id must not reuse a scorer design, validation report or gate id/);
+  assert.match(report, /checks\[0\]\.evidence\.evidence_links: must not reuse a scorer design, validation report or gate id/);
+});
+
+test("A1.6 index rejects broken local href targets after query and fragment removal", async () => {
+  const root = await copyUnit(A16_UNIT, "evalorium-a1-6-html-href-");
+  const htmlPath = path.join(root, "index.html");
+  const source = await readFile(htmlPath, "utf8");
+  await writeFile(htmlPath, source.replace("scorer-charter.yaml", "missing-scorer.yaml?view=1#schema"));
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-scorer\.yaml\?view=1#schema/);
 });

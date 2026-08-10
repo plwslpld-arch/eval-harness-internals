@@ -1,0 +1,31 @@
+schema_version: 1
+kind: ScorerCharter
+metadata: {id: scorer-charter.example.v1, name: 评分器章程模板, owner: scorer-owner, version: 1.0.0}
+traceability:
+  target_ids: [target.example]
+  construct_ids: [construct.example]
+  question_ids: [eq.example]
+  risk_ids: [risk.example]
+  task_ids: [task.example.v1]
+  dataset_version_ids: [dataset.example.v1]
+  reference_item_ids: [reference.example.v1]
+purpose:
+  decision_supported: 将一次受控运行的观察按已声明参考与 rubric 转为可审计判断
+  intended_use: 产生样本级结构化 score record，供后续独立的 Metric 设计使用
+  prohibited_uses: [直接证明总体性能, 把分数当系统发布决定, 用 Judge 覆盖确定性关键失败, 在缺证时猜测]
+scoring_claim:
+  unit: 一次 task trial 的声明评分单位
+  construct_interpretation: 仅判断观察是否满足已操作化的构念条件
+  output_scope: 样本级判定、维度分数、证据引用、置信与异常状态
+  allowed_statuses: [scored, uncertain, abstained, unscorable, inconclusive]
+authority_order: [authoritative-state, executable-invariant, exact-programmatic-check, qualified-human-adjudication, calibrated-llm-judge]
+non_compensation:
+  critical_failures_override: true
+  rule: 已被权威状态或确定性规则确认的关键失败不得被语言质量或 Judge 高分平均、覆盖或降级
+responsibilities:
+  scorer_owner: 定义版本、实现、输入输出和失败模式
+  domain_owner: 批准 Reference 与 rubric 的业务含义
+  independent_validator: 使用独立校准数据评估 scorer 的可靠性、效度和错误画像
+evidence_boundary:
+  establishes: [评分用途、权威顺序、责任、允许结论和不可补偿原则]
+  does_not_establish: [Scorer 已实现, trial 已运行, Score 已产生, Metric 已计算, 系统 Gate 已通过]

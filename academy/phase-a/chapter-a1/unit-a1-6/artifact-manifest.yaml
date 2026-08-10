@@ -1,0 +1,14 @@
+schema_version: 1
+unit: {id: A1.6, title: 从参考标准到评分器, phase: A, chapter: A1}
+publication:
+  status: candidate
+  audience: AI 质量工程师、评测工程师、领域专家、Judge 设计者、风险与治理负责人
+  language: zh-CN
+  formats: [markdown, html, yaml]
+  content_policy: 仅包含校订后的公开课程、模板和合成案例，不包含对话、个人信息、中间草稿、真实业务数据或凭据
+contents:
+  lesson: README.md
+  html: index.html
+  templates: [scorer-charter.yaml, scoring-unit-spec.yaml, observation-contract.yaml, scoring-rubric.yaml, adjudication-protocol.yaml, scorer-manifest.yaml, scorer-validation-report.yaml, scorer-quality-gate.yaml]
+  examples: [examples/refund-agent/evaluation-case.yaml, examples/contract-agent/evaluation-case.yaml, examples/knowledge-assistant/evaluation-case.yaml]
+verification: {command: npm run check, unit_contract: scripts/verify-academy-unit.mjs, profile: reference-to-scorer-v1}

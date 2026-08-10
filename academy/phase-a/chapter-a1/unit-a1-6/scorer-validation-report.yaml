@@ -1,0 +1,61 @@
+schema_version: 1
+kind: ScorerValidationReport
+metadata: {id: scorer-validation.example.v1, name: 评分器验证报告模板, owner: independent-scorer-validator, version: 1.0.0}
+scorer_manifest_id: scorer-manifest.example.v1
+rubric_id: rubric.example.v1
+adjudication_protocol_id: adjudication.example.v1
+validation_identity: {report_id: scorer-validation.example.v1, scorer_immutable_id: scorer.example.v1, dataset_version: independent-calibration-set.example.v1, status: planned-not-observed, executed_at: null}
+evidence:
+  materialized: false
+  independent_from_scorer_development: required
+  record_schema:
+    required: [id, category, hash, status]
+    category_values: [identity, precedence, reliability, validity, calibration, error-profile, bias-robustness-security]
+    hash_format: sha256:<64-hex>
+    materialized_status: materialized
+  sample_records: []
+  evidence_links: []
+  note: 本模板定义未来验证要求，不提供或虚构测量结果
+dimensions:
+  reliability:
+    methods: [repeatability, inter-rater-agreement, test-retest, version-stability]
+    required_slices: [risk, scoring-unit, input-length, language, subgroup]
+    result: not-observed
+  validity:
+    methods: [content-validity-review, criterion-comparison, construct-convergence, known-groups-and-counterexamples]
+    threats: [construct-underrepresentation, irrelevant-style-preference, reference-error, scorer-gaming]
+    result: not-observed
+  calibration:
+    methods: [confidence-reliability-curve, abstention-coverage, threshold-error-analysis]
+    result: not-observed
+error_profile:
+  false_pass: {definition: 实际应失败却被 scorer 判为通过, severity: critical-for-safety-risks, observed_count: null, examples: []}
+  false_fail: {definition: 实际可接受却被 scorer 判为失败, severity: operational-harm, observed_count: null, examples: []}
+  abstain_error: {definition: 应判时不判或应不判时强判, observed_count: null, examples: []}
+  unscorable_detection_error: {definition: 观察缺失或损坏却仍产生确定分数, observed_count: null, examples: []}
+bias_and_robustness:
+  bias_slices: [language, dialect, verbosity, role, document-style, protected-or-risk-relevant-group]
+  perturbations: [paraphrase, order-swap, irrelevant-length, formatting, distractor, reference-position]
+  judge_specific: [position-bias, verbosity-bias, self-preference, prompt-injection, pairwise-order-effect]
+  results: not-observed
+security:
+  tests: [untrusted-output-injection, reference-exfiltration, scorer-config-tampering, evidence-link-spoofing, replay-and-version-mismatch]
+  results: not-observed
+acceptance:
+  thresholds_declared_before_execution: true
+  thresholds:
+    reliability: {metric: inter-rater-agreement, operator: gte, value: 0.8}
+    validity: {metric: critical-reference-agreement, operator: gte, value: 0.95}
+    calibration: {metric: threshold-decision-accuracy, operator: gte, value: 0.9}
+    bias_and_robustness: {metric: minimum-critical-slice-accuracy, operator: gte, value: 0.9}
+    security: {metric: adversarial-test-pass-rate, operator: equals, value: 1}
+  error_thresholds:
+    false_pass: {max_count: 0}
+    false_fail: {max_count: 2}
+    abstain_error: {max_count: 2}
+    unscorable_detection_error: {max_count: 0}
+  critical_false_pass_tolerance: zero-on-declared-calibration-set
+  required_results: [reliability, validity, calibration, error-profile, bias-and-robustness, security]
+  current_conclusion: blocked
+  reason: 无物化独立校准集、样本级判断或验证结果
+limitations: [计划字段不是执行证据, 一致性不等于效度, 单一总体结果不能替代关键切片, 本报告不证明系统表现]
