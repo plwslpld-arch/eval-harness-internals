@@ -1,0 +1,20 @@
+schema_version: 1
+kind: SystemBoundary
+metadata: {id: boundary.example.candidate, name: 系统与评测边界模板, owner: system-owner, version: 1.0.0}
+target_id: target.example.candidate
+boundaries:
+  system: 完成目标用户路径所涉及的全部组件和依赖
+  evaluation: 本次实验实际包含、控制和排除的范围
+  observation: Harness 能捕获并关联的输入、轨迹和状态
+  claim: 证据允许覆盖的对象、总体、场景、权限和时间
+components:
+  - {id: component.agent, role: included, reason: 候选行为核心, identity_required: true}
+  - {id: component.sandbox, role: controlled, reason: 可重置并支持故障注入, identity_required: true}
+  - {id: service.external, role: external, reason: 参与路径但不可控制, contract_and_state_required: true}
+  - {id: scope.excluded, role: excluded, reason: 本次不覆盖, limitation_required: true}
+rules:
+  included: 变化会形成新的候选身份
+  controlled: 固定或模拟并记录实现与配置
+  external: 记录契约、可用性和残余不确定性
+  excluded: 禁止在结论中隐式覆盖
+limitations: [不可观察的关键状态会限制或阻断相关结论]

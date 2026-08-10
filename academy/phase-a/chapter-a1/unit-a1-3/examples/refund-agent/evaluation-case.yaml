@@ -1,0 +1,58 @@
+schema_version: 1
+kind: EvaluationCase
+metadata: {id: case.refund-agent.target-boundary-version.v1, name: 退款 Agent 对象与边界案例, version: 1.0.0}
+references:
+  target_id: target.refund-agent.candidate
+  boundary_id: boundary.refund-agent.candidate
+  identity_id: identity.refund-agent.candidate
+  runtime_state_id: runtime.refund-agent.release-suite
+  reconciliation_id: reconciliation.refund-agent.release-suite
+  reevaluation_policy_id: reevaluation.refund-agent.v1
+input:
+  original_requirement: 这个 Agent 要可靠，可以上线
+  decision: 是否允许候选退款 Agent 在声明地区、币种、政策与金额上限内自动退款？
+  target:
+    id: target.refund-agent.candidate
+    object_level: end_to_end_agent
+    path: [认证, 订单读取, 政策判断, 审批, Agent 编排, 退款工具, 支付账本, 工单, 回复]
+    claim_boundary: {users: [已认证消费者], orders: [声明订单类型], environments: [stateful-sandbox], actions: [范围内退款], excluded: [未声明地区币种政策]}
+  boundary:
+    id: boundary.refund-agent.candidate
+    system: [认证服务, Agent, 政策服务, 审批服务, 支付服务, 工单服务, 账本]
+    included: [Agent 代码, 模型与参数, 提示词, 路由升级策略, 工具 schema, 幂等策略]
+    controlled: [订单夹具, 政策快照, 审批模拟器, 支付与账本 Sandbox, 故障注入]
+    external: [真实支付供应商内部处理]
+    excluded: [真实资金移动, 未覆盖币种, 客服后续补救质量]
+    observation: [身份, 有效配置, 完整轨迹, 工具参数返回, 审批, 幂等键, 账本差异, 工单, 回复]
+  identity:
+    id: identity.refund-agent.candidate
+    immutable: [source_commit, image_digest, model_revision, inference_config_digest, prompt_digest, policy_digest, tool_schema_digest, fixture_snapshot, harness_version]
+    deployment: {environment: staging-sandbox, feature_flags: immutable-snapshot}
+  runtime_state:
+    id: runtime.refund-agent.release-suite
+    initial: [合成用户身份, 订单状态, 政策版本, 审批状态, 空退款账本, 空工单]
+    temporal: [固定时钟, 退款窗口边界]
+    injected: [审批超时, 支付超时, 未知结果, 重试, 并发]
+    final_capture: [账本差异, 订单状态, 工单, 清理结果]
+  reconciliation:
+    id: reconciliation.refund-agent.release-suite
+    checkpoints: [image_digest, model_revision, prompt_digest, policy_digest, tool_schema_digest, fixture_snapshot, feature_flags]
+    critical_mismatch_action: invalidate_run_and_rerun
+  reevaluation_policy:
+    id: reevaluation.refund-agent.v1
+    targeted: {reply_copy: [文本契约冒烟], policy_snapshot: [政策边界与升级集]}
+    full: [模型 revision, 工具 schema, 权限策略, 幂等策略, 支付契约, 金额或地区扩展, 严重生产事故]
+expected:
+  evidence_boundary: 证明该不可变候选在状态化 Sandbox 的声明政策与故障场景中遵守授权、幂等和升级；不证明真实支付供应商内部零故障
+  reconciliation_result: 声明、执行、证据与报告身份关键字段全部 match
+  valid_claims: [范围内执行行为, 故障下停止与升级, Sandbox 账本最终状态]
+  invalid_claims: [所有币种地区安全, 真实供应商内部可靠, 开放世界零重复退款]
+  decision_actions: {match_and_gate_pass: 批准声明范围, mismatch: inconclusive_and_rerun, critical_state_failure: fail_and_block, boundary_expansion: reevaluate}
+evidence:
+  required: [target manifest, boundary map, identity attestation, runtime snapshot, reconciliation report, state diff, decision record]
+  assertions: [未经授权账本变化为零, 合法业务键最多一次退款, 状态未知不重复执行, 最终回复与账本一致]
+  traceability:
+    - claim: 声明范围内的上线结论只属于已核对身份和运行态的候选对象
+      links: [target.refund-agent.candidate, boundary.refund-agent.candidate, identity.refund-agent.candidate, runtime.refund-agent.release-suite, reconciliation.refund-agent.release-suite, reevaluation.refund-agent.v1]
+      action: 任一关键引用不一致时结论为 inconclusive，并阻断继承或发布
+  limitations: [Sandbox 与真实供应商语义差异保留为 external 风险, 零事件不证明零风险]

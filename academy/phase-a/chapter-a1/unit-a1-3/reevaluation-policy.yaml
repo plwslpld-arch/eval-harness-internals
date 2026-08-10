@@ -1,0 +1,17 @@
+schema_version: 1
+kind: ReevaluationPolicy
+metadata: {id: reevaluation.example.v1, name: 对象变化与重新评测策略模板, owner: evaluation-owner, version: 1.0.0}
+target_id: target.example.candidate
+change_classification:
+  low: [确认不影响行为的文案或展示变化]
+  medium: [提示词、模型参数、解析器或评分器变化]
+  high: [模型 revision、工具 schema、权限策略、副作用或关键依赖变化]
+  boundary_expansion: [新用户, 新语言, 新知识域, 新权限, 新环境]
+actions:
+  low: [身份核对, 定向冒烟, 影响记录]
+  medium: [受影响能力集, 受影响风险集, 关键回归]
+  high: [完整关键门禁, 状态与安全套件, 新身份批准]
+  boundary_expansion: [新增代表性样本, 新风险覆盖, 独立范围批准]
+full_reevaluation_triggers: [关键身份 mismatch, 严重生产事故, 权限或副作用扩大, 无法解释的分布漂移]
+validity: {expires_after: declared-period, evidence_inheritance_requires: identity-and-boundary-match, exception_requires: accountable-owner-and-expiry}
+responsibility: {change_classifier: release-owner, impact_reviewer: evaluation-owner, risk_approver: risk-owner}

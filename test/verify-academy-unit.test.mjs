@@ -113,6 +113,11 @@ const A12_UNIT = path.resolve(
   "../academy/phase-a/chapter-a1/unit-a1-2",
 );
 
+const A13_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a1/unit-a1-3",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -531,4 +536,191 @@ test("A1.2 cases reject entities omitted from every traceability chain", async (
     errors.join("\n"),
     /eq\.refund\.authorization is not covered by evidence\.traceability/,
   );
+});
+
+test("the complete A1.3 target-boundary-version package is accepted", async () => {
+  assert.deepEqual(await verifyAcademyUnit(A13_UNIT), []);
+});
+
+test("A1.3 cannot disable its canonical profile or shrink the target graph", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-profile-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const manifestPath = path.join(root, "artifact-manifest.yaml");
+  const source = await readFile(manifestPath, "utf8");
+  await writeFile(
+    manifestPath,
+    source
+      .replace("    - system-boundary.yaml\n", "")
+      .replace("  profile: target-boundary-version-v1\n", ""),
+  );
+  await rm(path.join(root, "system-boundary.yaml"));
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(errors.join("\n"), /A1\.3 requires verification\.profile/);
+  assert.match(
+    errors.join("\n"),
+    /profile target-boundary-version-v1 requires system-boundary\.yaml/,
+  );
+});
+
+test("A1.3 cannot replace its canonical profile with another unit contract", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-wrong-profile-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const manifestPath = path.join(root, "artifact-manifest.yaml");
+  const source = await readFile(manifestPath, "utf8");
+  await writeFile(
+    manifestPath,
+    source.replace("profile: target-boundary-version-v1", "profile: requirements-to-evidence-v1"),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /unit A1\.3 must use verification\.profile target-boundary-version-v1/,
+  );
+});
+
+test("A1.3 rejects a dangling identity across canonical templates", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-template-ref-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const relativePath = "runtime-state.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(root, relativePath, source.replace(
+    "identity_id: identity.example.candidate",
+    "identity_id: identity.example.unknown",
+  ));
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /runtime-state\.yaml: identity_id: expected identity\.example\.candidate, received identity\.example\.unknown/,
+  );
+});
+
+test("A1.3 rejects a case reference that does not match its defined entity", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-case-ref-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(root, relativePath, source.replace(
+    "boundary_id: boundary.refund-agent.candidate",
+    "boundary_id: boundary.refund-agent.unknown",
+  ));
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /references\.boundary_id: expected boundary\.refund-agent\.candidate, received boundary\.refund-agent\.unknown/,
+  );
+});
+
+test("A1.3 rejects target entities omitted from evidence traceability", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-case-orphan-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(root, relativePath, source.replace(
+    ", reevaluation.refund-agent.v1]",
+    "]",
+  ));
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /reevaluation\.refund-agent\.v1 is not covered by evidence\.traceability/,
+  );
+});
+
+test("A1.3 rejects a reconciled outcome with an unresolved checkpoint", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-reconciliation-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const relativePath = "target-reconciliation.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(
+    root,
+    relativePath,
+    source
+      .replace("status: match}", "status: mismatch}")
+      .replace("outcome: {status: pending", "outcome: {status: reconciled"),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /outcome\.status cannot be reconciled when a checkpoint is mismatch or unobserved/,
+  );
+});
+
+test("A1.3 rejects a checkpoint that labels four different identities as a match", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-false-match-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const relativePath = "target-reconciliation.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(
+    root,
+    relativePath,
+    source.replace(
+      "executed: artifact-digest-placeholder",
+      "executed: different-artifact-digest",
+    ),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(
+    errors.join("\n"),
+    /cannot be match when declared, executed, evidence and reported differ/,
+  );
+});
+
+test("A1.3 rejects an id-only case with no decision-bearing target detail", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-empty-case-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(
+    root,
+    relativePath,
+    source
+      .replace("    object_level: end_to_end_agent\n", "")
+      .replace("  reconciliation_result: 声明、执行、证据与报告身份关键字段全部 match\n", ""),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(errors.join("\n"), /missing required key input\.target\.object_level/);
+  assert.match(errors.join("\n"), /missing required key expected\.reconciliation_result/);
+});
+
+test("A1.3 rejects wrong container types in decision-bearing case fields", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "evalorium-a1-3-case-types-"));
+  await cp(A13_UNIT, root, { recursive: true });
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  await write(
+    root,
+    relativePath,
+    source
+      .replace("    object_level: end_to_end_agent\n", "    object_level: true\n")
+      .replace(
+        "    path: [认证, 订单读取, 政策判断, 审批, Agent 编排, 退款工具, 支付账本, 工单, 回复]\n",
+        "    path: true\n",
+      )
+      .replace(
+        "    claim_boundary: {users: [已认证消费者], orders: [声明订单类型], environments: [stateful-sandbox], actions: [范围内退款], excluded: [未声明地区币种政策]}\n",
+        "    claim_boundary: true\n",
+      ),
+  );
+
+  const errors = await verifyAcademyUnit(root);
+
+  assert.match(errors.join("\n"), /input\.target\.object_level must be a non-empty string/);
+  assert.match(errors.join("\n"), /input\.target\.path must be a non-empty array/);
+  assert.match(errors.join("\n"), /input\.target\.claim_boundary must be a non-empty object/);
 });
