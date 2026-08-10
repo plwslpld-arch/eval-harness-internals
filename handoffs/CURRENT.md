@@ -1,6 +1,6 @@
 # Current Handoff
 
-<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
 
 ## 已确认决策
 
@@ -20,8 +20,8 @@
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
-- 当前单元：A1.5（尚未开始；正式标题与范围待定义）
-- 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》、A1.3《评测对象、系统边界与版本》、A1.4《从评测问题到任务与场景》
+- 当前单元：A1.6（尚未开始；正式标题与范围待定义）
+- 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》、A1.3《评测对象、系统边界与版本》、A1.4《从评测问题到任务与场景》、A1.5《从任务与场景到评测数据》
 
 ## A1.1 交付证据
 
@@ -67,11 +67,22 @@
 - Linux 远程门禁：[Documentation Quality run 31361998848](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848)。
 - 证据边界：只证明公开成果的任务、场景、覆盖与内部完整性合同；不证明真实 Harness 运行、生产效果、科学效度或个人能力等级。
 
+## A1.5 交付证据
+
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-5/README.md)与[独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-5/index.html)，覆盖目标总体、分析单位、抽样框、三类分区、来源治理、Reference Standard、独立盲标与仲裁、泄漏控制、不可变版本与 Data Quality Gate。
+- Dataset Charter、Source Register、Sampling Plan、Reference Standard、Annotation Protocol、Split Manifest、Dataset Manifest、Data Quality Gate 共 8 类模板。
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个完整案例，分别处理资金状态与幂等、法律 Reference 多值解释与附件边界、当前授权证据与 ACL/缓存边界。
+- 单元验证器新增 canonical `task-scenario-to-evaluation-data-v1` profile，检查八模板与三案例的引用闭合、权利与血缘、Reference/Annotation、五类泄漏、受保护视图、不可变版本、Data Quality Gate 语义、字段类型与缩水绕过。
+- Node 24.13 本地 `npm ci && npm run check` 共 96 项自动化测试通过，品牌检查和仓库验证通过；第三轮独立终审 clean。
+- 候选内容提交：[`ea6c538`](https://github.com/plwslpld-arch/evalorium/commit/ea6c53834c453ca8430c9d7ca57a4eeaf854dd82)。
+- Linux 远程门禁：[Documentation Quality run 31377072773](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773)，精确匹配候选 head SHA，状态为 `completed/success`。
+- 证据边界：只证明公开评测数据治理与内部完整性合同；不证明真实数据已物化、Agent trial、Scorer、Metric、Harness 或系统 Gate、生产效果或个人能力。
+
 ## 下一次准确动作
 
 1. 开始前重新只读确认 `main`、工作树与最新远端门禁。
-2. 先定义 A1.5 的正式标题与学习范围，再开始循序学习。
-3. A1.5 学习完成前不创建正式单元成果或占位正文。
+2. 先定义 A1.6 的正式标题与学习范围，再开始循序学习。
+3. A1.6 学习完成前不创建正式单元成果或占位正文。
 
 ## 未解决问题与风险
 
@@ -82,8 +93,8 @@
 
 ## Git 状态语义
 
-- 本 Handoff 的完成证据基于 A1.4 内容提交 `719113a511ba044c13d494ebfa08c69bc785b880`。
-- 对应远程证据为 [Documentation Quality run 31361998848](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848)。
+- 本 Handoff 的完成证据基于 A1.5 候选内容提交 `ea6c53834c453ca8430c9d7ca57a4eeaf854dd82`。
+- 对应远程证据为 [Documentation Quality run 31377072773](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773)，该 run 的 head SHA 与候选内容提交精确匹配。
 - Handoff 与状态元数据提交本身的远程运行号不做递归自引用；在最终交接中读取最新 GitHub Actions 即可。
 - 当前仓库的准确 HEAD、同步状态和远程门禁必须在恢复时通过 Git 与 `gh` 实时读取，不把会变化的 HEAD 或 run ID 固化为“当前值”。
 - 完整换机步骤见 [`docs/workflows/cross-device-github.md`](../docs/workflows/cross-device-github.md)。

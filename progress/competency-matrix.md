@@ -1,13 +1,13 @@
 # Competency Evidence Matrix
 
-<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
 
 Only evidence-supported capability is recorded. Reading a topic is not equivalent to designing or validating a system.
 
 | Capability domain | Target level | Current level | Required evidence | Evidence path | Last verified | Limitation |
 |---|---|---|---|---|---|---|
-| AI quality standards | Validation | Not assessed | Quality baseline, risk taxonomy, policy review, and gate outcome | A1.1–A1.4 public artifact packages | 2026-08-10 | Artifact contracts passed; no executable evaluation or personal competency evidence is claimed |
-| Evaluation methodology | Validation | Learning | Multi-dimensional design, statistical report, and boundary analysis | `academy/phase-a/chapter-a1/unit-a1-1/` through `academy/phase-a/chapter-a1/unit-a1-4/`, and `progress/state.yaml` | 2026-08-10 | A1.1–A1.4 artifact contracts validated; A1.4 has three cases, six templates, 64 local tests, and [remote evidence](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848); this is not a real Harness run, scientific validity, or personal competency evidence; A1.5 is not started and has no placeholder |
+| AI quality standards | Validation | Not assessed | Quality baseline, risk taxonomy, policy review, and gate outcome | A1.1–A1.5 public artifact packages | 2026-08-10 | Artifact contracts passed; no executable evaluation or personal competency evidence is claimed |
+| Evaluation methodology | Validation | Learning | Multi-dimensional design, statistical report, and boundary analysis | `academy/phase-a/chapter-a1/unit-a1-1/` through `academy/phase-a/chapter-a1/unit-a1-5/`, and `progress/state.yaml` | 2026-08-10 | A1.1–A1.5 artifact contracts validated; A1.5 has three cases, eight templates, 96 local tests, and exact-candidate [remote evidence](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773) for [`ea6c538`](https://github.com/plwslpld-arch/evalorium/commit/ea6c53834c453ca8430c9d7ca57a4eeaf854dd82). This does not prove materialized real data, an Agent trial, a Scorer, Metric, Harness or system Gate, production outcomes, or personal competency; A1.6 is not started and has no placeholder |
 | LLM-as-Judge | Validation | Not started | Calibration, bias analysis, and human comparison | Not available | Not verified | No study completed |
 | Human evaluation | Design | Not started | Annotation protocol, sampling, adjudication, and agreement | Not available | Not verified | No study completed |
 | Agent evaluation | Validation | Not started | Environment, trajectory, state assertion, fault injection, and scorer | Not available | Not verified | Harness is planned |

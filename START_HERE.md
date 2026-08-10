@@ -1,6 +1,6 @@
 # Evalorium：跨设备恢复入口
 
-<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
 
 本文件是所有电脑、新任务和贡献者的统一恢复入口。对话用于交互，Git 仓库是持久事实来源。
 
@@ -10,7 +10,7 @@ Evalorium 是独立、开源、企业级的 AI 质量工程平台，目标覆盖
 
 当前先通过 Academy 逐单元交付经过校订与验证的课程、模板和案例，再逐步实现 Platform。课程不会因为一个月的节奏目标而缩减。
 
-当前 A1.4《从评测问题到任务与场景》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-4/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-4/index.html)、6 类工程模板和 3 个端到端案例均纳入合同；Node 24 本地 `npm run check` 共 64 项测试通过，[Documentation Quality run 31361998848](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848) 成功。该证据只证明任务、场景、覆盖与内部完整性合同，不证明真实 Harness 运行、科学效度或个人能力。当前 A1.5 尚未开始，必须先定义正式标题与范围，学习完成前不创建占位成果。
+当前 A1.5《从任务与场景到评测数据》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-5/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-5/index.html)、Dataset Charter、Source Register、Sampling Plan、Reference Standard、Annotation Protocol、Split Manifest、Dataset Manifest、Data Quality Gate 共 8 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个端到端案例均纳入合同。Node 24 本地 `npm ci && npm run check` 共 96 项测试、品牌与仓库验证通过；候选内容提交 [`ea6c538`](https://github.com/plwslpld-arch/evalorium/commit/ea6c53834c453ca8430c9d7ca57a4eeaf854dd82) 的 [Documentation Quality run 31377072773](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773) 精确匹配 head SHA 且 `completed/success`。该证据只证明公开评测数据治理与完整性合同，不证明真实数据已物化、Agent trial、Scorer、Metric、Harness 或系统 Gate、生产效果或个人能力。当前 A1.6 尚未开始，必须先定义正式标题与范围，学习完成前不创建正式成果或占位正文。
 
 ## 每次恢复的固定顺序
 

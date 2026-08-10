@@ -1,6 +1,6 @@
 # Project Maturity Model
 
-<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
 
 Evalorium separates intent from evidence. Every capability uses one of five states.
 
@@ -17,7 +17,7 @@ Evalorium separates intent from evidence. Every capability uses one of five stat
 | Area | State | Evidence | Limitation |
 |---|---|---|---|
 | Repository quality foundation | `implemented` | Versioned validator, tests, brand renderer, and GitHub Actions quality gate | The gate validates repository contracts; it is not evidence of a production AI runtime |
-| Academy | `learning` | A1.1–A1.3 and [A1.4](../academy/phase-a/chapter-a1/unit-a1-4/README.md) public artifact contracts validated; A1.4 has three cases, six templates, 64 local tests, and [remote run 31361998848](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848); A1.5 is not started | No executable Harness result, scientific outcome validation, or personal competency assessment is claimed by artifact delivery; no A1.5 placeholder exists |
+| Academy | `learning` | A1.1–A1.4 and [A1.5](../academy/phase-a/chapter-a1/unit-a1-5/README.md) public artifact contracts validated; A1.5 has three cases, eight templates, 96 local tests, and exact-candidate [remote run 31377072773](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773) for [`ea6c538`](https://github.com/plwslpld-arch/evalorium/commit/ea6c53834c453ca8430c9d7ca57a4eeaf854dd82); A1.6 is not started | The gate proves only the public evaluation-data governance and integrity contract. It does not prove materialized real data, an Agent trial, a Scorer, Metric, Harness or system Gate, production outcomes, or personal competency; no A1.6 placeholder exists |
 | Platform | `planned` | Vision, scope, architecture, and roadmap | No runtime implementation exists |
 | Agent Environment Harness | `planned` | Defined target boundary | No executable environment harness exists |
 | Production adoption | not claimed | None | Requires external organizational evidence |

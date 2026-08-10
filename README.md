@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1–A1.3 and [A1.4](academy/phase-a/chapter-a1/unit-a1-4/README.md) public artifact contracts validated; A1.4 includes three cases, six templates, 64 local tests, and [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848); A1.5 is not started |
+| Academy curriculum | Learning | A1.1–A1.4 and [A1.5](academy/phase-a/chapter-a1/unit-a1-5/README.md) public artifact contracts validated; A1.5 includes three cases, eight templates, 96 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773) for [`ea6c538`](https://github.com/plwslpld-arch/evalorium/commit/ea6c53834c453ca8430c9d7ca57a4eeaf854dd82); A1.6 is not started. This validates the public evaluation-data governance and integrity contract only—not materialized real data, an Agent trial, a Scorer, Metric, Harness or system Gate, production outcomes, or personal competency. |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 

@@ -1,15 +1,15 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A1.5 current_status=not_started last_completed=A1.4 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
 - 章节：A1
-- 当前知识单元：A1.5（正式标题与范围待定义）
+- 当前知识单元：A1.6（正式标题与范围待定义）
 - 当前状态：尚未开始
-- 公开成果合同已验证知识单元：4
-- 最近完成：A1.4《从评测问题到任务与场景》
+- 公开成果合同已验证知识单元：5
+- 最近完成：A1.5《从任务与场景到评测数据》
 
 ## A1.1 公开成果结构合同已验证
 
@@ -54,6 +54,17 @@
 - 远程验证：[Documentation Quality run 31361998848](https://github.com/plwslpld-arch/evalorium/actions/runs/31361998848)
 - 限制：验证证明公开成果的任务、场景、覆盖与内部完整性合同，不证明真实 Harness 运行、生产适用性、科学效度或个人掌握程度
 
+## A1.5 评测数据治理与完整性合同已验证
+
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-5/README.md)与[独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-5/index.html)
+- Dataset Charter、Source Register、Sampling Plan、Reference Standard、Annotation Protocol、Split Manifest、Dataset Manifest、Data Quality Gate 共 8 类模板
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个 task-scenario-to-evaluation-data 完整案例
+- Canonical profile 检查总体与抽样框、来源血缘与授权、Reference/Annotation、五类泄漏边界、不可变版本、受保护视图、Data Quality Gate 语义、引用闭合和缩水绕过
+- Node 24 本地 `npm ci && npm run check`：96 项测试、品牌检查和仓库验证通过
+- 候选内容提交：[`ea6c538`](https://github.com/plwslpld-arch/evalorium/commit/ea6c53834c453ca8430c9d7ca57a4eeaf854dd82)
+- 远程验证：[Documentation Quality run 31377072773](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773)，head SHA 精确匹配候选提交，状态为 `completed/success`
+- 限制：验证只证明公开评测数据治理与内部完整性合同，不证明真实数据已物化、Agent trial、Scorer、Metric、Harness 或系统 Gate、生产效果或个人能力
+
 ## 完整范围
 
 - 8 个阶段
@@ -73,7 +84,7 @@
 
 公开仓库只保存正式成果，不保存对话、个人回答、错误历史、私人学习笔记或中间草稿。单元状态描述的是开源交付物，不用于公开判断个人能力。
 
-## A1.5 下一步
+## A1.6 下一步
 
-1. 先定义 A1.5 的正式标题与学习范围，再开始循序学习。
-2. A1.5 学习完成前不创建正式单元成果或占位正文。
+1. 先定义 A1.6 的正式标题与学习范围，再开始循序学习。
+2. A1.6 学习完成前不创建正式单元成果或占位正文。
