@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1–A1.4 and [A1.5](academy/phase-a/chapter-a1/unit-a1-5/README.md) public artifact contracts validated; A1.5 includes three cases, eight templates, 96 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773) for [`ea6c538`](https://github.com/plwslpld-arch/evalorium/commit/ea6c53834c453ca8430c9d7ca57a4eeaf854dd82); A1.6 is not started. This validates the public evaluation-data governance and integrity contract only—not materialized real data, an Agent trial, a Scorer, Metric, Harness or system Gate, production outcomes, or personal competency. |
+| Academy curriculum | Learning | A1.1–A1.5 and [A1.6](academy/phase-a/chapter-a1/unit-a1-6/README.md) public artifact contracts validated; A1.6 includes three cases, eight templates, 130 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383) for [`dfd0c77`](https://github.com/plwslpld-arch/evalorium/commit/dfd0c77ad95f6c1c20f6011454bd626b9e2824f5); A1.7 is not started. This validates only the public scorer design, identity, evidence-traceability, and quality-readiness contract—not materialized A1.5 data, a real scorer implementation or calibration, trials, Scores, Metrics, a Harness, statistical inference, a system Gate, production outcomes, or personal competency. |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 

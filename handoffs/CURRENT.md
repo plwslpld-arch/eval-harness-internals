@@ -1,6 +1,6 @@
 # Current Handoff
 
-<!-- evalorium-progress current=A1.6 current_status=not_started last_completed=A1.5 last_status=artifact_validated -->
+<!-- evalorium-progress current=A1.7 current_status=not_started last_completed=A1.6 last_status=artifact_validated -->
 
 ## 已确认决策
 
@@ -20,8 +20,8 @@
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
-- 当前单元：A1.6（尚未开始；正式标题与范围待定义）
-- 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》、A1.3《评测对象、系统边界与版本》、A1.4《从评测问题到任务与场景》、A1.5《从任务与场景到评测数据》
+- 当前单元：A1.7（尚未开始；正式标题与范围待定义）
+- 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》、A1.3《评测对象、系统边界与版本》、A1.4《从评测问题到任务与场景》、A1.5《从任务与场景到评测数据》、A1.6《从参考标准到评分器》
 
 ## A1.1 交付证据
 
@@ -78,11 +78,22 @@
 - Linux 远程门禁：[Documentation Quality run 31377072773](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773)，精确匹配候选 head SHA，状态为 `completed/success`。
 - 证据边界：只证明公开评测数据治理与内部完整性合同；不证明真实数据已物化、Agent trial、Scorer、Metric、Harness 或系统 Gate、生产效果或个人能力。
 
+## A1.6 交付证据
+
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-6/README.md)与[独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-6/index.html)，覆盖评分单位、Observation Bundle、Reference/Rubric/Scorer/Score/Metric/Gate 分离、五类评分器、Rubric anchors、关键错误、不确定与分歧仲裁、评分器身份、验证与质量就绪门。
+- Scorer Charter、Scoring Unit Spec、Observation Contract、Scoring Rubric、Adjudication Protocol、Scorer Manifest、Scorer Validation Report、Scorer Quality Gate 共 8 类模板。
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个完整案例，分别处理资金状态与幂等关键失败、合同多值法律解释与证据跨度、当前 ACL/语料版本与引用支持。
+- 单元验证器新增 canonical `reference-to-scorer-v1` profile，检查 A1.5 上游身份继承、跨模板引用闭合、评分语义分离、确定性关键失败优先级、不确定/弃权/不可评分/分歧与仲裁、评分器版本身份、验证维度、质量 Gate 语义及缩水绕过。
+- Node 24 本地 `npm ci && npm run check` 共 130 项自动化测试通过，品牌检查和仓库验证通过。
+- 候选内容提交：[`dfd0c77`](https://github.com/plwslpld-arch/evalorium/commit/dfd0c77ad95f6c1c20f6011454bd626b9e2824f5)。
+- Linux 远程门禁：[Documentation Quality run 31393199383](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383)，精确匹配候选 head SHA，状态为 `completed/success`。
+- 证据边界：只证明公开 Scorer 设计、身份、证据追踪与质量就绪合同；不证明 A1.5 数据已物化、真实评分器实现或校准、trial、Score、Metric、Harness、统计推断、系统 Gate、生产效果或个人能力。
+
 ## 下一次准确动作
 
 1. 开始前重新只读确认 `main`、工作树与最新远端门禁。
-2. 先定义 A1.6 的正式标题与学习范围，再开始循序学习。
-3. A1.6 学习完成前不创建正式单元成果或占位正文。
+2. 先定义 A1.7 的正式标题与学习范围，再开始循序学习。
+3. A1.7 学习完成前不创建正式单元成果或占位正文。
 
 ## 未解决问题与风险
 
@@ -93,8 +104,8 @@
 
 ## Git 状态语义
 
-- 本 Handoff 的完成证据基于 A1.5 候选内容提交 `ea6c53834c453ca8430c9d7ca57a4eeaf854dd82`。
-- 对应远程证据为 [Documentation Quality run 31377072773](https://github.com/plwslpld-arch/evalorium/actions/runs/31377072773)，该 run 的 head SHA 与候选内容提交精确匹配。
+- 本 Handoff 的完成证据基于 A1.6 候选内容提交 `dfd0c77ad95f6c1c20f6011454bd626b9e2824f5`。
+- 对应远程证据为 [Documentation Quality run 31393199383](https://github.com/plwslpld-arch/evalorium/actions/runs/31393199383)，该 run 的 head SHA 与候选内容提交精确匹配。
 - Handoff 与状态元数据提交本身的远程运行号不做递归自引用；在最终交接中读取最新 GitHub Actions 即可。
 - 当前仓库的准确 HEAD、同步状态和远程门禁必须在恢复时通过 Git 与 `gh` 实时读取，不把会变化的 HEAD 或 run ID 固化为“当前值”。
 - 完整换机步骤见 [`docs/workflows/cross-device-github.md`](../docs/workflows/cross-device-github.md)。
