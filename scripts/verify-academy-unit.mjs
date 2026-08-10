@@ -59,15 +59,31 @@ const VERIFICATION_PROFILES = {
       "examples/knowledge-assistant/evaluation-case.yaml",
     ],
   },
+  "question-to-task-scenario-v1": {
+    templates: [
+      "scenario-space.yaml",
+      "task-spec.yaml",
+      "test-case.yaml",
+      "variant-plan.yaml",
+      "trajectory-contract.yaml",
+      "coverage-matrix.yaml",
+    ],
+    examples: [
+      "examples/refund-agent/evaluation-case.yaml",
+      "examples/contract-agent/evaluation-case.yaml",
+      "examples/knowledge-assistant/evaluation-case.yaml",
+    ],
+  },
 };
 
 const CANONICAL_UNIT_PROFILES = {
   "A1.1": "a1-1-foundations-v1",
   "A1.2": "requirements-to-evidence-v1",
   "A1.3": "target-boundary-version-v1",
+  "A1.4": "question-to-task-scenario-v1",
 };
 
-const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3"]);
+const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4"]);
 
 const TEMPLATE_CONTRACTS = {
   "artifact-manifest.yaml": {
@@ -159,6 +175,26 @@ const TEMPLATE_CONTRACTS = {
   "reevaluation-policy.yaml": {
     kind: "ReevaluationPolicy",
     required: ["metadata.id", "target_id", "change_classification", "actions"],
+  },
+  "scenario-space.yaml": {
+    kind: "ScenarioSpace",
+    required: ["metadata.id", "dimensions", "partitions", "scenario_families"],
+  },
+  "test-case.yaml": {
+    kind: "TestCase",
+    required: ["metadata.id", "scenario_space_id", "task_spec_id", "cases"],
+  },
+  "variant-plan.yaml": {
+    kind: "VariantPlan",
+    required: ["metadata.id", "scenario_space_id", "task_spec_id", "test_case_id", "variants"],
+  },
+  "trajectory-contract.yaml": {
+    kind: "TrajectoryContract",
+    required: ["metadata.id", "task_spec_id", "test_case_id", "initial_state", "allowed_transitions"],
+  },
+  "coverage-matrix.yaml": {
+    kind: "CoverageMatrix",
+    required: ["metadata.id", "scenario_space_id", "task_spec_id", "test_case_id", "items"],
   },
 };
 
@@ -358,6 +394,142 @@ const PROFILE_CONTRACTS = {
         "expected.decision_actions",
         "evidence.required",
         "evidence.assertions",
+        "evidence.traceability",
+        "evidence.limitations",
+      ],
+    },
+  },
+  "question-to-task-scenario-v1": {
+    "scenario-space.yaml": {
+      kind: "ScenarioSpace",
+      required: [
+        "metadata.id",
+        "metadata.version",
+        "target_id",
+        "question_ids",
+        "risk_ids",
+        "construct_ids",
+        "risks",
+        "dimensions",
+        "partitions",
+        "scenario_families",
+        "sampling_policy.representative",
+        "sampling_policy.risk_directed",
+        "coverage_policy",
+      ],
+    },
+    "task-spec.yaml": {
+      kind: "TaskSpec",
+      required: [
+        "metadata.id",
+        "metadata.version",
+        "scenario_space_id",
+        "target_id",
+        "construct_ids",
+        "questions",
+        "tasks",
+        "generation_rules",
+      ],
+    },
+    "test-case.yaml": {
+      kind: "TestCase",
+      required: [
+        "metadata.id",
+        "metadata.version",
+        "scenario_space_id",
+        "task_spec_id",
+        "target_id",
+        "construct_ids",
+        "cases",
+        "oracle_policy",
+      ],
+    },
+    "variant-plan.yaml": {
+      kind: "VariantPlan",
+      required: [
+        "metadata.id",
+        "metadata.version",
+        "scenario_space_id",
+        "task_spec_id",
+        "test_case_id",
+        "variants",
+        "control_policy",
+      ],
+    },
+    "trajectory-contract.yaml": {
+      kind: "TrajectoryContract",
+      required: [
+        "metadata.id",
+        "metadata.version",
+        "task_spec_id",
+        "test_case_id",
+        "initial_state",
+        "actions",
+        "observations",
+        "allowed_transitions",
+        "recovery_invariants.fault",
+        "recovery_invariants.time",
+        "recovery_invariants.concurrency",
+        "evidence_observations",
+        "budgets",
+      ],
+    },
+    "coverage-matrix.yaml": {
+      kind: "CoverageMatrix",
+      required: [
+        "metadata.id",
+        "metadata.version",
+        "scenario_space_id",
+        "task_spec_id",
+        "test_case_id",
+        "variant_plan_id",
+        "trajectory_contract_id",
+        "target_id",
+        "construct_ids",
+        "items",
+        "coverage_claims",
+        "limitations",
+      ],
+    },
+    example: {
+      kind: "EvaluationCase",
+      required: [
+        "metadata.id",
+        "references.scenario_space_id",
+        "references.target_id",
+        "references.construct_ids",
+        "references.risk_ids",
+        "references.dimension_ids",
+        "references.partition_ids",
+        "references.scenario_family_ids",
+        "references.question_ids",
+        "references.task_ids",
+        "references.case_ids",
+        "references.variant_ids",
+        "references.transition_ids",
+        "references.evidence_ids",
+        "references.coverage_item_ids",
+        "input.scenario_space.id",
+        "input.scenario_space.target_id",
+        "input.scenario_space.construct_ids",
+        "input.risks",
+        "input.dimensions",
+        "input.partitions",
+        "input.scenario_families",
+        "input.questions",
+        "input.tasks",
+        "input.cases",
+        "input.variants",
+        "input.trajectory.initial_state",
+        "input.trajectory.actions",
+        "input.trajectory.observations",
+        "input.trajectory.transitions",
+        "input.trajectory.recovery_invariants.fault",
+        "input.trajectory.recovery_invariants.time",
+        "input.trajectory.recovery_invariants.concurrency",
+        "expected.coverage_items",
+        "expected.decision_actions",
+        "evidence.requirements",
         "evidence.traceability",
         "evidence.limitations",
       ],
@@ -906,6 +1078,1003 @@ function verifyTargetBoundaryVersionCase(value, relativePath, errors) {
   }
 }
 
+function isNonEmptyObject(value) {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value).length > 0
+  );
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function verifyNonEmptyObject(value, label, errors) {
+  if (!isNonEmptyObject(value)) {
+    errors.push(`${label}: must be a non-empty object`);
+    return false;
+  }
+  return true;
+}
+
+function verifyNonEmptyArray(value, label, errors) {
+  if (!Array.isArray(value) || value.length === 0) {
+    errors.push(`${label}: must be a non-empty array`);
+    return false;
+  }
+  return true;
+}
+
+function verifyNonEmptyString(value, label, errors) {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    errors.push(`${label}: must be a non-empty string`);
+    return false;
+  }
+  return true;
+}
+
+function verifyNonEmptyStringArray(value, label, errors) {
+  if (!verifyNonEmptyArray(value, label, errors)) return [];
+  const strings = [];
+  for (const [index, entry] of value.entries()) {
+    if (verifyNonEmptyString(entry, `${label}[${index}]`, errors)) strings.push(entry);
+  }
+  return strings;
+}
+
+function verifyCoverageBasis(value, label, errors) {
+  if (!verifyNonEmptyObject(value, label, errors)) return false;
+  verifyNonEmptyString(value.semantic_basis, `${label}.semantic_basis`, errors);
+  verifyNonEmptyStringArray(value.evidence_logic, `${label}.evidence_logic`, errors);
+  if (value.sample_count_only !== false) {
+    errors.push(`${label}.sample_count_only: must be false`);
+  }
+  return true;
+}
+
+function verifyStringIdList(value, label, errors) {
+  return verifyStringIdArray(value, label, errors, false);
+}
+
+function verifyStringIdArray(value, label, errors, allowEmpty) {
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
+    errors.push(`${label}: must be ${allowEmpty ? "an array" : "a non-empty array"}`);
+    return [];
+  }
+  const ids = [];
+  for (const [index, id] of value.entries()) {
+    if (typeof id !== "string" || id.length === 0) {
+      errors.push(`${label}[${index}]: must be a non-empty string id`);
+      continue;
+    }
+    ids.push(id);
+  }
+  for (const duplicate of new Set(ids.filter((id, index) => ids.indexOf(id) !== index))) {
+    errors.push(`${label}: duplicate id ${duplicate}`);
+  }
+  return ids;
+}
+
+function verifyRiskSeverities(risks, label, errors) {
+  const allowed = new Set(["critical", "high", "medium", "low"]);
+  for (const [index, risk] of asArray(risks).entries()) {
+    if (!allowed.has(risk?.severity)) {
+      errors.push(`${label}[${index}].severity: must be critical, high, medium or low`);
+    }
+  }
+}
+
+function verifyEntityStringFields(entities, fields, label, errors) {
+  for (const [index, entity] of asArray(entities).entries()) {
+    for (const field of fields) {
+      verifyNonEmptyString(entity?.[field], `${label}[${index}].${field}`, errors);
+    }
+  }
+}
+
+function verifyMatchingIdSet(value, expectedIds, label, errors) {
+  const ids = verifyStringIdList(value, label, errors);
+  const actual = new Set(ids);
+  const expected = new Set(expectedIds);
+  for (const id of actual) {
+    if (!expected.has(id)) errors.push(`${label}: unknown id ${id}`);
+  }
+  for (const id of expected) {
+    if (!actual.has(id)) errors.push(`${label}: missing required id ${id}`);
+  }
+  return ids;
+}
+
+function verifyExactSet(actualIds, expectedIds, label, errors) {
+  const actual = new Set(actualIds);
+  const expected = new Set(expectedIds);
+  for (const id of actual) {
+    if (!expected.has(id)) errors.push(`${label}: unrelated id ${id}`);
+  }
+  for (const id of expected) {
+    if (!actual.has(id)) errors.push(`${label}: missing related id ${id}`);
+  }
+}
+
+function verifyObjectEntities(value, fields, label, errors) {
+  if (!verifyNonEmptyArray(value, label, errors)) return [];
+  const ids = [];
+  for (const [index, entity] of value.entries()) {
+    const entityLabel = `${label}[${index}]`;
+    if (!verifyNonEmptyObject(entity, entityLabel, errors)) continue;
+    for (const field of fields) {
+      if (isMissing(getPath(entity, field))) {
+        errors.push(`${entityLabel}: missing required key ${field}`);
+      }
+    }
+    if (typeof entity.id !== "string" || entity.id.length === 0) {
+      errors.push(`${entityLabel}.id: must be a non-empty string`);
+    } else {
+      ids.push(entity.id);
+    }
+  }
+  for (const duplicate of new Set(ids.filter((id, index) => ids.indexOf(id) !== index))) {
+    errors.push(`${label}: duplicate id ${duplicate}`);
+  }
+  return ids;
+}
+
+function verifyReferencesKnown(ids, knownIds, label, errors, usedIds = null) {
+  for (const id of ids) {
+    if (!knownIds.has(id)) errors.push(`${label}: unknown id ${id}`);
+    if (usedIds) usedIds.add(id);
+  }
+}
+
+function verifyBidirectionalIds(referencedValue, definedIds, label, errors) {
+  const referencedIds = verifyStringIdList(referencedValue, label, errors);
+  const referenced = new Set(referencedIds);
+  const defined = new Set(definedIds);
+  for (const id of referenced) {
+    if (!defined.has(id)) errors.push(`${label}: unknown id ${id}`);
+  }
+  for (const id of defined) {
+    if (!referenced.has(id)) errors.push(`${label}: missing defined id ${id}`);
+  }
+  return referencedIds;
+}
+
+const COVERAGE_STATUSES = new Set([
+  "planned",
+  "implemented",
+  "executed",
+  "blocked",
+  "excluded",
+]);
+
+function verifyCaseTaskCompatibility({ cases, tasks, families, label, errors }) {
+  const taskById = new Map(asArray(tasks).map((task) => [task?.id, task]));
+  const familyById = new Map(asArray(families).map((family) => [family?.id, family]));
+  for (const [index, testCase] of asArray(cases).entries()) {
+    const caseLabel = `${label}[${index}]`;
+    const parentTask = taskById.get(testCase?.task_id);
+    if (!parentTask) continue;
+    if (testCase.target_id !== parentTask.target_id) {
+      errors.push(`${caseLabel}.target_id: must match parent task ${parentTask.id}`);
+    }
+    verifyMatchingIdSet(
+      testCase?.construct_ids,
+      asArray(parentTask.construct_ids),
+      `${caseLabel}.construct_ids`,
+      errors,
+    );
+    if (!asArray(parentTask.scenario_family_ids).includes(testCase.scenario_family_id)) {
+      errors.push(
+        `${caseLabel}.scenario_family_id: ${testCase.scenario_family_id} is not declared by parent task ${parentTask.id}`,
+      );
+    }
+    const family = familyById.get(testCase.scenario_family_id);
+    if (family) {
+      const familyRisks = new Set(asArray(family.risk_ids));
+      for (const riskId of asArray(testCase.risk_ids)) {
+        if (!familyRisks.has(riskId)) {
+          errors.push(
+            `${caseLabel}.risk_ids: ${riskId} is not declared by scenario family ${family.id}`,
+          );
+        }
+      }
+    }
+    for (const [field, taskField] of [
+      ["risk_ids", "risk_ids"],
+      ["evidence_ids", "evidence_ids"],
+    ]) {
+      const allowed = new Set(asArray(parentTask?.[taskField]));
+      for (const id of asArray(testCase?.[field])) {
+        if (!allowed.has(id)) {
+          errors.push(`${caseLabel}.${field}: ${id} is not declared by parent task ${parentTask.id}`);
+        }
+      }
+    }
+  }
+}
+
+function verifyCoverageItems({
+  items,
+  label,
+  knownByType,
+  cases,
+  tasks,
+  variants,
+  risks,
+  targetId,
+  constructIds,
+  errors,
+}) {
+  verifyObjectEntities(
+    items,
+    [
+      "id",
+      "target_id",
+      "construct_ids",
+      "risk_ids",
+      "question_ids",
+      "scenario_family_ids",
+      "coverage_basis",
+      "status",
+    ],
+    label,
+    errors,
+  );
+  const coveredByType = Object.fromEntries(
+    Object.keys(knownByType).map((field) => [field, new Set()]),
+  );
+  const caseById = new Map(asArray(cases).map((item) => [item?.id, item]));
+  const taskById = new Map(asArray(tasks).map((item) => [item?.id, item]));
+  const variantById = new Map(asArray(variants).map((item) => [item?.id, item]));
+  const definedConstructIds = new Set(constructIds);
+
+  for (const [index, item] of asArray(items).entries()) {
+    const itemLabel = `${label}[${index}]`;
+    const status = item?.status;
+    if (!COVERAGE_STATUSES.has(status)) {
+      errors.push(`${itemLabel}.status: must be planned, implemented, executed, blocked or excluded`);
+    }
+    if (typeof item?.target_id !== "string" || item.target_id.length === 0) {
+      errors.push(`${itemLabel}.target_id: must be a non-empty string id`);
+    } else if (item.target_id !== targetId) {
+      errors.push(`${itemLabel}.target_id: expected ${targetId}, received ${item.target_id}`);
+    }
+    const itemConstructIds = verifyStringIdList(
+      item?.construct_ids,
+      `${itemLabel}.construct_ids`,
+      errors,
+    );
+    verifyReferencesKnown(
+      itemConstructIds,
+      definedConstructIds,
+      `${itemLabel}.construct_ids`,
+      errors,
+      coveredByType.construct_ids,
+    );
+
+    const requiresDesignLinks = status === "implemented" || status === "executed";
+    for (const [field, known] of Object.entries(knownByType)) {
+      if (field === "construct_ids") continue;
+      const coreField = new Set(["risk_ids", "question_ids", "scenario_family_ids"]).has(field);
+      let ids;
+      if (!coreField && !requiresDesignLinks && item?.[field] === undefined) {
+        ids = [];
+      } else {
+        ids = coreField
+          ? verifyStringIdList(item?.[field], `${itemLabel}.${field}`, errors)
+          : verifyStringIdArray(item?.[field], `${itemLabel}.${field}`, errors, !requiresDesignLinks);
+      }
+      verifyReferencesKnown(ids, known, `${itemLabel}.${field}`, errors, coveredByType[field]);
+    }
+
+    verifyCoverageBasis(item?.coverage_basis, `${itemLabel}.coverage_basis`, errors);
+    if (status === "implemented") {
+      verifyNonEmptyString(item?.claim, `${itemLabel}.claim`, errors);
+      verifyNonEmptyString(item?.limitation, `${itemLabel}.limitation`, errors);
+      if (item?.execution !== undefined) {
+        errors.push(`${itemLabel}.execution: implemented coverage must not claim execution`);
+      }
+    }
+    if (status === "executed") {
+      if (verifyNonEmptyObject(item?.execution, `${itemLabel}.execution`, errors)) {
+        verifyStringIdList(item.execution.trial_ids, `${itemLabel}.execution.trial_ids`, errors);
+        verifyStringIdList(
+          item.execution.evidence_bundle_ids,
+          `${itemLabel}.execution.evidence_bundle_ids`,
+          errors,
+        );
+        verifyNonEmptyObject(item.execution.provenance, `${itemLabel}.execution.provenance`, errors);
+      }
+    }
+    if (status === "blocked" || status === "excluded") {
+      for (const field of ["reason", "owner", "action"]) {
+        verifyNonEmptyString(item?.[field], `${itemLabel}.${field}`, errors);
+      }
+    }
+
+    const itemTaskIds = new Set(asArray(item?.task_ids));
+    const itemQuestionIds = new Set(asArray(item?.question_ids));
+    const itemFamilyIds = new Set(asArray(item?.scenario_family_ids));
+    const itemRiskIds = new Set(asArray(item?.risk_ids));
+    const itemVariantIds = new Set(asArray(item?.variant_ids));
+    const itemCaseIds = new Set(asArray(item?.case_ids));
+    for (const taskId of itemTaskIds) {
+      const task = taskById.get(taskId);
+      if (!task) continue;
+      for (const questionId of asArray(task.question_ids)) {
+        if (!itemQuestionIds.has(questionId)) {
+          errors.push(`${itemLabel}: task ${taskId} requires question_id ${questionId}`);
+        }
+      }
+    }
+    for (const caseId of itemCaseIds) {
+      const testCase = caseById.get(caseId);
+      if (!testCase) continue;
+      if (!itemTaskIds.has(testCase.task_id)) {
+        errors.push(`${itemLabel}: case ${caseId} requires task_id ${testCase.task_id}`);
+      }
+      if (!itemFamilyIds.has(testCase.scenario_family_id)) {
+        errors.push(`${itemLabel}: case ${caseId} requires scenario_family_id ${testCase.scenario_family_id}`);
+      }
+      for (const riskId of asArray(testCase.risk_ids)) {
+        if (!itemRiskIds.has(riskId)) {
+          errors.push(`${itemLabel}: case ${caseId} requires risk_id ${riskId}`);
+        }
+      }
+      for (const variantId of asArray(testCase.variant_ids)) {
+        if (!itemVariantIds.has(variantId)) {
+          errors.push(`${itemLabel}: case ${caseId} requires variant_id ${variantId}`);
+        }
+      }
+      if (testCase.target_id !== targetId || item.target_id !== testCase.target_id) {
+        errors.push(`${itemLabel}: case ${caseId} target_id is incompatible with the coverage item`);
+      }
+      for (const constructId of asArray(testCase.construct_ids)) {
+        if (!itemConstructIds.includes(constructId)) {
+          errors.push(`${itemLabel}: case ${caseId} requires construct_id ${constructId}`);
+        }
+      }
+    }
+    for (const variantId of itemVariantIds) {
+      const variant = variantById.get(variantId);
+      if (variant && !itemCaseIds.has(variant.parent_case_id)) {
+        errors.push(
+          `${itemLabel}: variant ${variantId} requires parent case ${variant.parent_case_id}`,
+        );
+      }
+    }
+    if (requiresDesignLinks) {
+      const relatedTaskIds = new Set();
+      const relatedFamilyIds = new Set();
+      const relatedRiskIds = new Set();
+      const relatedVariantIds = new Set();
+      const relatedConstructIds = new Set();
+      for (const caseId of itemCaseIds) {
+        const testCase = caseById.get(caseId);
+        if (!testCase) continue;
+        relatedTaskIds.add(testCase.task_id);
+        relatedFamilyIds.add(testCase.scenario_family_id);
+        for (const id of asArray(testCase.risk_ids)) relatedRiskIds.add(id);
+        for (const id of asArray(testCase.variant_ids)) relatedVariantIds.add(id);
+        for (const id of asArray(testCase.construct_ids)) relatedConstructIds.add(id);
+      }
+      const relatedQuestionIds = new Set();
+      for (const taskId of relatedTaskIds) {
+        for (const id of asArray(taskById.get(taskId)?.question_ids)) relatedQuestionIds.add(id);
+      }
+      for (const [field, actual, expected] of [
+        ["task_ids", itemTaskIds, relatedTaskIds],
+        ["question_ids", itemQuestionIds, relatedQuestionIds],
+        ["scenario_family_ids", itemFamilyIds, relatedFamilyIds],
+        ["risk_ids", itemRiskIds, relatedRiskIds],
+        ["variant_ids", itemVariantIds, relatedVariantIds],
+        ["construct_ids", new Set(itemConstructIds), relatedConstructIds],
+      ]) {
+        verifyExactSet(actual, expected, `${itemLabel}.${field}`, errors);
+      }
+    }
+  }
+
+  const entityLabels = {
+    risk_ids: "risk",
+    question_ids: "question",
+    scenario_family_ids: "scenario family",
+    task_ids: "task",
+    case_ids: "case",
+    variant_ids: "variant",
+    transition_ids: "transition",
+    evidence_ids: "evidence",
+    construct_ids: "construct",
+  };
+  for (const [field, knownIds] of Object.entries(knownByType)) {
+    for (const id of knownIds) {
+      if (!coveredByType[field].has(id)) {
+        errors.push(`${label}: ${entityLabels[field] ?? field} ${id} is not covered by any matrix item`);
+      }
+    }
+  }
+  for (const risk of asArray(risks)) {
+    if (risk?.severity !== "critical") continue;
+    const qualifying = asArray(items).some((item) => {
+      if (item?.status !== "implemented" && item?.status !== "executed") return false;
+      if (!asArray(item?.risk_ids).includes(risk.id)) return false;
+      if (asArray(item?.task_ids).length === 0 || asArray(item?.evidence_ids).length === 0) {
+        return false;
+      }
+      return asArray(item?.case_ids).some((caseId) =>
+        asArray(caseById.get(caseId)?.risk_ids).includes(risk.id),
+      );
+    });
+    if (!qualifying) {
+      errors.push(
+        `${label}: critical risk ${risk.id} must have implemented or executed task, case and evidence design links`,
+      );
+    }
+  }
+
+  return coveredByType;
+}
+
+function verifyQuestionTaskScenarioTemplates(templateValues, errors) {
+  const scenarioSpace = templateValues.get("scenario-space.yaml");
+  const taskSpec = templateValues.get("task-spec.yaml");
+  const testCase = templateValues.get("test-case.yaml");
+  const variantPlan = templateValues.get("variant-plan.yaml");
+  const trajectory = templateValues.get("trajectory-contract.yaml");
+  const coverage = templateValues.get("coverage-matrix.yaml");
+
+  const scenarioSpaceId = scenarioSpace?.metadata?.id;
+  const taskSpecId = taskSpec?.metadata?.id;
+  const testCaseId = testCase?.metadata?.id;
+  const variantPlanId = variantPlan?.metadata?.id;
+  const trajectoryId = trajectory?.metadata?.id;
+  for (const [relativePath, value] of [
+    ["task-spec.yaml", taskSpec],
+    ["test-case.yaml", testCase],
+    ["variant-plan.yaml", variantPlan],
+    ["coverage-matrix.yaml", coverage],
+  ]) {
+    verifyEqualReference(
+      value?.scenario_space_id,
+      scenarioSpaceId,
+      `${relativePath}: scenario_space_id`,
+      errors,
+    );
+  }
+  for (const [relativePath, value] of [
+    ["test-case.yaml", testCase],
+    ["variant-plan.yaml", variantPlan],
+    ["trajectory-contract.yaml", trajectory],
+    ["coverage-matrix.yaml", coverage],
+  ]) {
+    verifyEqualReference(
+      value?.task_spec_id,
+      taskSpecId,
+      `${relativePath}: task_spec_id`,
+      errors,
+    );
+  }
+  for (const [relativePath, value] of [
+    ["variant-plan.yaml", variantPlan],
+    ["trajectory-contract.yaml", trajectory],
+    ["coverage-matrix.yaml", coverage],
+  ]) {
+    verifyEqualReference(
+      value?.test_case_id,
+      testCaseId,
+      `${relativePath}: test_case_id`,
+      errors,
+    );
+  }
+  verifyEqualReference(
+    coverage?.variant_plan_id,
+    variantPlanId,
+    "coverage-matrix.yaml: variant_plan_id",
+    errors,
+  );
+  verifyEqualReference(
+    coverage?.trajectory_contract_id,
+    trajectoryId,
+    "coverage-matrix.yaml: trajectory_contract_id",
+    errors,
+  );
+
+  const riskIds = verifyObjectEntities(
+    scenarioSpace?.risks,
+    ["id", "severity", "statement"],
+    "scenario-space.yaml: risks",
+    errors,
+  );
+  verifyRiskSeverities(scenarioSpace?.risks, "scenario-space.yaml: risks", errors);
+  verifyEntityStringFields(scenarioSpace?.risks, ["statement"], "scenario-space.yaml: risks", errors);
+  verifyBidirectionalIds(
+    scenarioSpace?.risk_ids,
+    riskIds,
+    "scenario-space.yaml: risk_ids",
+    errors,
+  );
+  const constructIds = verifyStringIdList(
+    scenarioSpace?.construct_ids,
+    "scenario-space.yaml: construct_ids",
+    errors,
+  );
+  const targetId = scenarioSpace?.target_id;
+  if (!verifyNonEmptyString(targetId, "scenario-space.yaml: target_id", errors)) {
+    // Keep validating the rest of the graph so one malformed anchor cannot hide other errors.
+  }
+  for (const [relativePath, value] of [
+    ["task-spec.yaml", taskSpec],
+    ["test-case.yaml", testCase],
+    ["coverage-matrix.yaml", coverage],
+  ]) {
+    verifyEqualReference(value?.target_id, targetId, `${relativePath}: target_id`, errors);
+    verifyMatchingIdSet(
+      value?.construct_ids,
+      constructIds,
+      `${relativePath}: construct_ids`,
+      errors,
+    );
+  }
+  const dimensionIds = verifyObjectEntities(
+    scenarioSpace?.dimensions,
+    ["id", "description", "values"],
+    "scenario-space.yaml: dimensions",
+    errors,
+  );
+  const partitionIds = verifyObjectEntities(
+    scenarioSpace?.partitions,
+    ["id", "dimension_ids", "rule"],
+    "scenario-space.yaml: partitions",
+    errors,
+  );
+  const familyIds = verifyObjectEntities(
+    scenarioSpace?.scenario_families,
+    ["id", "partition_ids", "risk_ids", "description"],
+    "scenario-space.yaml: scenario_families",
+    errors,
+  );
+  for (const [index, dimension] of asArray(scenarioSpace?.dimensions).entries()) {
+    verifyNonEmptyString(dimension?.description, `scenario-space.yaml: dimensions[${index}].description`, errors);
+    verifyNonEmptyStringArray(
+      dimension?.values,
+      `scenario-space.yaml: dimensions[${index}].values`,
+      errors,
+    );
+  }
+  const usedDimensions = new Set();
+  for (const [index, partition] of asArray(scenarioSpace?.partitions).entries()) {
+    verifyNonEmptyString(partition?.rule, `scenario-space.yaml: partitions[${index}].rule`, errors);
+    const ids = verifyStringIdList(
+      partition?.dimension_ids,
+      `scenario-space.yaml: partitions[${index}].dimension_ids`,
+      errors,
+    );
+    verifyReferencesKnown(ids, new Set(dimensionIds), `scenario-space.yaml: partitions[${index}].dimension_ids`, errors, usedDimensions);
+  }
+  const usedPartitions = new Set();
+  const usedRisks = new Set();
+  for (const [index, family] of asArray(scenarioSpace?.scenario_families).entries()) {
+    verifyNonEmptyString(family?.description, `scenario-space.yaml: scenario_families[${index}].description`, errors);
+    const partitionRefs = verifyStringIdList(
+      family?.partition_ids,
+      `scenario-space.yaml: scenario_families[${index}].partition_ids`,
+      errors,
+    );
+    verifyReferencesKnown(partitionRefs, new Set(partitionIds), `scenario-space.yaml: scenario_families[${index}].partition_ids`, errors, usedPartitions);
+    const riskRefs = verifyStringIdList(
+      family?.risk_ids,
+      `scenario-space.yaml: scenario_families[${index}].risk_ids`,
+      errors,
+    );
+    verifyReferencesKnown(riskRefs, new Set(riskIds), `scenario-space.yaml: scenario_families[${index}].risk_ids`, errors, usedRisks);
+  }
+  for (const id of dimensionIds) {
+    if (!usedDimensions.has(id)) errors.push(`scenario-space.yaml: dimension ${id} is not used by any partition`);
+  }
+  for (const id of partitionIds) {
+    if (!usedPartitions.has(id)) errors.push(`scenario-space.yaml: partition ${id} is not used by any scenario family`);
+  }
+
+  const questionIds = verifyObjectEntities(
+    taskSpec?.questions,
+    ["id", "text", "risk_ids"],
+    "task-spec.yaml: questions",
+    errors,
+  );
+  verifyBidirectionalIds(
+    scenarioSpace?.question_ids,
+    questionIds,
+    "scenario-space.yaml: question_ids",
+    errors,
+  );
+  for (const [index, question] of asArray(taskSpec?.questions).entries()) {
+    verifyNonEmptyString(question?.text, `task-spec.yaml: questions[${index}].text`, errors);
+    const ids = verifyStringIdList(question?.risk_ids, `task-spec.yaml: questions[${index}].risk_ids`, errors);
+    verifyReferencesKnown(ids, new Set(riskIds), `task-spec.yaml: questions[${index}].risk_ids`, errors, usedRisks);
+  }
+  const taskIds = verifyObjectEntities(
+    taskSpec?.tasks,
+    ["id", "target_id", "question_ids", "construct_ids", "scenario_family_ids", "risk_ids", "evidence_ids", "input_contract", "success_contract"],
+    "task-spec.yaml: tasks",
+    errors,
+  );
+  const usedQuestions = new Set();
+  const usedConstructs = new Set();
+  const usedFamilies = new Set();
+  const usedEvidence = new Set();
+  for (const [index, task] of asArray(taskSpec?.tasks).entries()) {
+    const label = `task-spec.yaml: tasks[${index}]`;
+    verifyEqualReference(task?.target_id, targetId, `${label}.target_id`, errors);
+    verifyNonEmptyObject(task?.input_contract, `${label}.input_contract`, errors);
+    verifyNonEmptyObject(task?.success_contract, `${label}.success_contract`, errors);
+    for (const [field, known, used] of [
+      ["question_ids", new Set(questionIds), usedQuestions],
+      ["construct_ids", new Set(constructIds), usedConstructs],
+      ["scenario_family_ids", new Set(familyIds), usedFamilies],
+      ["risk_ids", new Set(riskIds), usedRisks],
+    ]) {
+      const ids = verifyStringIdList(task?.[field], `${label}.${field}`, errors);
+      verifyReferencesKnown(ids, known, `${label}.${field}`, errors, used);
+    }
+    const evidenceIds = verifyStringIdList(task?.evidence_ids, `${label}.evidence_ids`, errors);
+    for (const id of evidenceIds) usedEvidence.add(id);
+  }
+
+  const caseIds = verifyObjectEntities(
+    testCase?.cases,
+    ["id", "target_id", "construct_ids", "task_id", "scenario_family_id", "variant_ids", "risk_ids", "evidence_ids", "initial_state", "stimulus", "expected"],
+    "test-case.yaml: cases",
+    errors,
+  );
+  const usedTasks = new Set();
+  const declaredVariantRefs = new Set();
+  for (const [index, item] of asArray(testCase?.cases).entries()) {
+    const label = `test-case.yaml: cases[${index}]`;
+    verifyEqualReference(item?.target_id, targetId, `${label}.target_id`, errors);
+    verifyNonEmptyObject(item?.initial_state, `${label}.initial_state`, errors);
+    verifyNonEmptyObject(item?.stimulus, `${label}.stimulus`, errors);
+    verifyNonEmptyObject(item?.expected, `${label}.expected`, errors);
+    for (const [field, known, used] of [
+      ["task_id", new Set(taskIds), usedTasks],
+      ["scenario_family_id", new Set(familyIds), usedFamilies],
+    ]) {
+      const id = item?.[field];
+      if (typeof id !== "string" || id.length === 0) errors.push(`${label}.${field}: must be a non-empty string id`);
+      else verifyReferencesKnown([id], known, `${label}.${field}`, errors, used);
+    }
+    const caseConstructIds = verifyStringIdList(item?.construct_ids, `${label}.construct_ids`, errors);
+    verifyReferencesKnown(caseConstructIds, new Set(constructIds), `${label}.construct_ids`, errors, usedConstructs);
+    const riskRefs = verifyStringIdList(item?.risk_ids, `${label}.risk_ids`, errors);
+    verifyReferencesKnown(riskRefs, new Set(riskIds), `${label}.risk_ids`, errors, usedRisks);
+    for (const id of verifyStringIdList(item?.evidence_ids, `${label}.evidence_ids`, errors)) usedEvidence.add(id);
+    for (const id of verifyStringIdList(item?.variant_ids, `${label}.variant_ids`, errors)) declaredVariantRefs.add(id);
+  }
+  verifyCaseTaskCompatibility({
+    cases: testCase?.cases,
+    tasks: taskSpec?.tasks,
+    families: scenarioSpace?.scenario_families,
+    label: "test-case.yaml: cases",
+    errors,
+  });
+
+  const variantIds = verifyObjectEntities(
+    variantPlan?.variants,
+    ["id", "parent_case_id", "changed", "controlled", "expected_relation"],
+    "variant-plan.yaml: variants",
+    errors,
+  );
+  const usedCases = new Set();
+  for (const [index, variant] of asArray(variantPlan?.variants).entries()) {
+    const label = `variant-plan.yaml: variants[${index}]`;
+    verifyReferencesKnown([variant?.parent_case_id], new Set(caseIds), `${label}.parent_case_id`, errors, usedCases);
+    verifyNonEmptyObject(variant?.changed, `${label}.changed`, errors);
+    verifyNonEmptyObject(variant?.controlled, `${label}.controlled`, errors);
+    if (isNonEmptyObject(variant?.changed) && isNonEmptyObject(variant?.controlled)) {
+      for (const key of Object.keys(variant.changed)) {
+        if (Object.hasOwn(variant.controlled, key)) {
+          errors.push(`${label}: field ${key} cannot be both changed and controlled`);
+        }
+      }
+    }
+    verifyNonEmptyObject(variant?.expected_relation, `${label}.expected_relation`, errors);
+    if (isNonEmptyObject(variant?.expected_relation)) {
+      for (const field of ["type", "assertion"]) {
+        if (typeof variant.expected_relation[field] !== "string" || variant.expected_relation[field].length === 0) {
+          errors.push(`${label}.expected_relation.${field}: must be a non-empty string`);
+        }
+      }
+    }
+  }
+  for (const id of variantIds) {
+    if (!declaredVariantRefs.has(id)) errors.push(`variant-plan.yaml: variant ${id} is not declared by any test case`);
+  }
+  for (const id of declaredVariantRefs) {
+    if (!new Set(variantIds).has(id)) errors.push(`test-case.yaml: variant_ids has unknown id ${id}`);
+  }
+
+  verifyNonEmptyObject(trajectory?.initial_state, "trajectory-contract.yaml: initial_state", errors);
+  const actionIds = verifyObjectEntities(
+    trajectory?.actions,
+    ["id", "actor", "operation"],
+    "trajectory-contract.yaml: actions",
+    errors,
+  );
+  verifyEntityStringFields(trajectory?.actions, ["actor", "operation"], "trajectory-contract.yaml: actions", errors);
+  const observationIds = verifyObjectEntities(
+    trajectory?.observations,
+    ["id", "source", "capture"],
+    "trajectory-contract.yaml: observations",
+    errors,
+  );
+  verifyEntityStringFields(trajectory?.observations, ["source", "capture"], "trajectory-contract.yaml: observations", errors);
+  const transitionIds = verifyObjectEntities(
+    trajectory?.allowed_transitions,
+    ["id", "from", "action_id", "to", "observation_id"],
+    "trajectory-contract.yaml: allowed_transitions",
+    errors,
+  );
+  const usedActions = new Set();
+  const usedObservations = new Set();
+  for (const [index, transition] of asArray(trajectory?.allowed_transitions).entries()) {
+    const label = `trajectory-contract.yaml: allowed_transitions[${index}]`;
+    verifyReferencesKnown([transition?.action_id], new Set(actionIds), `${label}.action_id`, errors, usedActions);
+    verifyReferencesKnown([transition?.observation_id], new Set(observationIds), `${label}.observation_id`, errors, usedObservations);
+  }
+  for (const id of actionIds) {
+    if (!usedActions.has(id)) errors.push(`trajectory-contract.yaml: action ${id} is not used by any transition`);
+  }
+  for (const id of observationIds) {
+    if (!usedObservations.has(id)) errors.push(`trajectory-contract.yaml: observation ${id} is not used by any transition`);
+  }
+  for (const field of ["fault", "time", "concurrency"]) {
+    verifyNonEmptyArray(trajectory?.recovery_invariants?.[field], `trajectory-contract.yaml: recovery_invariants.${field}`, errors);
+  }
+  const evidenceIds = verifyObjectEntities(
+    trajectory?.evidence_observations,
+    ["id", "source", "capture"],
+    "trajectory-contract.yaml: evidence_observations",
+    errors,
+  );
+  verifyEntityStringFields(trajectory?.evidence_observations, ["source", "capture"], "trajectory-contract.yaml: evidence_observations", errors);
+  verifyNonEmptyObject(trajectory?.budgets, "trajectory-contract.yaml: budgets", errors);
+  if (typeof scenarioSpace?.coverage_policy !== "string" || scenarioSpace.coverage_policy.length === 0) {
+    errors.push("scenario-space.yaml: coverage_policy must be a non-empty string");
+  }
+  verifyNonEmptyObject(taskSpec?.generation_rules, "task-spec.yaml: generation_rules", errors);
+  verifyNonEmptyObject(testCase?.oracle_policy, "test-case.yaml: oracle_policy", errors);
+  verifyNonEmptyObject(variantPlan?.control_policy, "variant-plan.yaml: control_policy", errors);
+  verifyNonEmptyArray(coverage?.coverage_claims, "coverage-matrix.yaml: coverage_claims", errors);
+  verifyNonEmptyArray(coverage?.limitations, "coverage-matrix.yaml: limitations", errors);
+
+  const knownByType = {
+    risk_ids: new Set(riskIds), question_ids: new Set(questionIds),
+    scenario_family_ids: new Set(familyIds), task_ids: new Set(taskIds),
+    case_ids: new Set(caseIds), variant_ids: new Set(variantIds),
+    transition_ids: new Set(transitionIds), evidence_ids: new Set(evidenceIds),
+    construct_ids: new Set(constructIds),
+  };
+  verifyCoverageItems({
+    items: coverage?.items,
+    label: "coverage-matrix.yaml: items",
+    knownByType,
+    cases: testCase?.cases,
+    tasks: taskSpec?.tasks,
+    variants: variantPlan?.variants,
+    risks: scenarioSpace?.risks,
+    targetId,
+    constructIds,
+    errors,
+  });
+  for (const id of usedEvidence) {
+    if (!new Set(evidenceIds).has(id)) errors.push(`task or test case evidence_ids has unknown id ${id}`);
+  }
+  for (const [label, ids, used] of [
+    ["risk", riskIds, usedRisks], ["question", questionIds, usedQuestions],
+    ["construct", constructIds, usedConstructs],
+    ["scenario family", familyIds, usedFamilies], ["task", taskIds, usedTasks],
+    ["test case", caseIds, usedCases],
+  ]) {
+    for (const id of ids) {
+      if (!used.has(id)) errors.push(`${label} ${id} is orphaned from downstream definitions`);
+    }
+  }
+}
+
+function verifyQuestionTaskScenarioCase(value, relativePath, errors) {
+  if (!value) return;
+  const scenarioSpaceId = value?.input?.scenario_space?.id;
+  const targetId = value?.input?.scenario_space?.target_id;
+  const constructIds = verifyStringIdList(
+    value?.input?.scenario_space?.construct_ids,
+    `${relativePath}: input.scenario_space.construct_ids`,
+    errors,
+  );
+  verifyEqualReference(
+    value?.references?.scenario_space_id,
+    scenarioSpaceId,
+    `${relativePath}: references.scenario_space_id`,
+    errors,
+  );
+  verifyEqualReference(
+    value?.references?.target_id,
+    targetId,
+    `${relativePath}: references.target_id`,
+    errors,
+  );
+  verifyMatchingIdSet(
+    value?.references?.construct_ids,
+    constructIds,
+    `${relativePath}: references.construct_ids`,
+    errors,
+  );
+  const coverageItems = value?.expected?.coverage_items;
+  const coverageItemIds = verifyObjectEntities(
+    coverageItems,
+    ["id", "risk_ids", "question_ids", "scenario_family_ids", "coverage_basis", "status"],
+    `${relativePath}: expected.coverage_items`,
+    errors,
+  );
+  const definitions = {
+    risk_ids: verifyObjectEntities(value?.input?.risks, ["id", "severity", "statement"], `${relativePath}: input.risks`, errors),
+    dimension_ids: verifyObjectEntities(value?.input?.dimensions, ["id", "description", "values"], `${relativePath}: input.dimensions`, errors),
+    partition_ids: verifyObjectEntities(value?.input?.partitions, ["id", "dimension_ids", "rule"], `${relativePath}: input.partitions`, errors),
+    scenario_family_ids: verifyObjectEntities(value?.input?.scenario_families, ["id", "partition_ids", "risk_ids", "description"], `${relativePath}: input.scenario_families`, errors),
+    question_ids: verifyObjectEntities(value?.input?.questions, ["id", "text", "risk_ids"], `${relativePath}: input.questions`, errors),
+    task_ids: verifyObjectEntities(value?.input?.tasks, ["id", "target_id", "construct_ids", "question_ids", "scenario_family_ids", "risk_ids", "evidence_ids", "input_contract", "success_contract"], `${relativePath}: input.tasks`, errors),
+    case_ids: verifyObjectEntities(value?.input?.cases, ["id", "target_id", "construct_ids", "task_id", "scenario_family_id", "variant_ids", "risk_ids", "evidence_ids", "initial_state", "stimulus", "expected"], `${relativePath}: input.cases`, errors),
+    variant_ids: verifyObjectEntities(value?.input?.variants, ["id", "parent_case_id", "changed", "controlled", "expected_relation"], `${relativePath}: input.variants`, errors),
+    transition_ids: verifyObjectEntities(value?.input?.trajectory?.transitions, ["id", "from", "action_id", "to", "observation_id"], `${relativePath}: input.trajectory.transitions`, errors),
+    evidence_ids: verifyObjectEntities(value?.evidence?.requirements, ["id", "source", "capture"], `${relativePath}: evidence.requirements`, errors),
+    coverage_item_ids: coverageItemIds,
+  };
+  verifyRiskSeverities(value?.input?.risks, `${relativePath}: input.risks`, errors);
+  verifyEntityStringFields(value?.input?.risks, ["statement"], `${relativePath}: input.risks`, errors);
+  verifyEntityStringFields(value?.evidence?.requirements, ["source", "capture"], `${relativePath}: evidence.requirements`, errors);
+  const allIds = new Set([scenarioSpaceId, targetId, ...constructIds]);
+  for (const [field, ids] of Object.entries(definitions)) {
+    verifyBidirectionalIds(value?.references?.[field], ids, `${relativePath}: references.${field}`, errors);
+    for (const id of ids) {
+      if (allIds.has(id)) errors.push(`${relativePath}: entity id ${id} is reused across entity types`);
+      allIds.add(id);
+    }
+  }
+  for (const field of ["fault", "time", "concurrency"]) {
+    verifyNonEmptyArray(value?.input?.trajectory?.recovery_invariants?.[field], `${relativePath}: input.trajectory.recovery_invariants.${field}`, errors);
+  }
+  verifyNonEmptyObject(value?.input?.trajectory?.initial_state, `${relativePath}: input.trajectory.initial_state`, errors);
+  const actionIds = verifyObjectEntities(value?.input?.trajectory?.actions, ["id", "actor", "operation"], `${relativePath}: input.trajectory.actions`, errors);
+  const observationIds = verifyObjectEntities(value?.input?.trajectory?.observations, ["id", "source", "capture"], `${relativePath}: input.trajectory.observations`, errors);
+  verifyEntityStringFields(value?.input?.trajectory?.actions, ["actor", "operation"], `${relativePath}: input.trajectory.actions`, errors);
+  verifyEntityStringFields(value?.input?.trajectory?.observations, ["source", "capture"], `${relativePath}: input.trajectory.observations`, errors);
+  const known = Object.fromEntries(
+    Object.entries(definitions).map(([field, ids]) => [field, new Set(ids)]),
+  );
+  for (const [index, dimension] of asArray(value?.input?.dimensions).entries()) {
+    verifyNonEmptyString(dimension?.description, `${relativePath}: input.dimensions[${index}].description`, errors);
+    verifyNonEmptyStringArray(dimension?.values, `${relativePath}: input.dimensions[${index}].values`, errors);
+  }
+  for (const [index, partition] of asArray(value?.input?.partitions).entries()) {
+    verifyNonEmptyString(partition?.rule, `${relativePath}: input.partitions[${index}].rule`, errors);
+    const ids = verifyStringIdList(partition?.dimension_ids, `${relativePath}: input.partitions[${index}].dimension_ids`, errors);
+    verifyReferencesKnown(ids, known.dimension_ids, `${relativePath}: input.partitions[${index}].dimension_ids`, errors);
+  }
+  for (const [index, family] of asArray(value?.input?.scenario_families).entries()) {
+    verifyNonEmptyString(family?.description, `${relativePath}: input.scenario_families[${index}].description`, errors);
+    for (const [field, knownIds] of [["partition_ids", known.partition_ids], ["risk_ids", known.risk_ids]]) {
+      const ids = verifyStringIdList(family?.[field], `${relativePath}: input.scenario_families[${index}].${field}`, errors);
+      verifyReferencesKnown(ids, knownIds, `${relativePath}: input.scenario_families[${index}].${field}`, errors);
+    }
+  }
+  for (const [index, question] of asArray(value?.input?.questions).entries()) {
+    verifyNonEmptyString(question?.text, `${relativePath}: input.questions[${index}].text`, errors);
+    const ids = verifyStringIdList(question?.risk_ids, `${relativePath}: input.questions[${index}].risk_ids`, errors);
+    verifyReferencesKnown(ids, known.risk_ids, `${relativePath}: input.questions[${index}].risk_ids`, errors);
+  }
+  for (const [index, task] of asArray(value?.input?.tasks).entries()) {
+    const label = `${relativePath}: input.tasks[${index}]`;
+    verifyEqualReference(task?.target_id, targetId, `${label}.target_id`, errors);
+    verifyNonEmptyObject(task?.input_contract, `${label}.input_contract`, errors);
+    verifyNonEmptyObject(task?.success_contract, `${label}.success_contract`, errors);
+    for (const [field, knownIds] of [
+      ["construct_ids", new Set(constructIds)], ["question_ids", known.question_ids], ["scenario_family_ids", known.scenario_family_ids],
+      ["risk_ids", known.risk_ids], ["evidence_ids", known.evidence_ids],
+    ]) {
+      const ids = verifyStringIdList(task?.[field], `${label}.${field}`, errors);
+      verifyReferencesKnown(ids, knownIds, `${label}.${field}`, errors);
+    }
+  }
+  for (const [index, item] of asArray(value?.input?.cases).entries()) {
+    const label = `${relativePath}: input.cases[${index}]`;
+    verifyEqualReference(item?.target_id, targetId, `${label}.target_id`, errors);
+    for (const [field, knownIds] of [["task_id", known.task_ids], ["scenario_family_id", known.scenario_family_ids]]) {
+      const id = item?.[field];
+      if (typeof id !== "string" || id.length === 0) errors.push(`${label}.${field}: must be a non-empty string id`);
+      else verifyReferencesKnown([id], knownIds, `${label}.${field}`, errors);
+    }
+    const caseConstructIds = verifyStringIdList(item?.construct_ids, `${label}.construct_ids`, errors);
+    verifyReferencesKnown(caseConstructIds, new Set(constructIds), `${label}.construct_ids`, errors);
+    for (const [field, knownIds] of [["variant_ids", known.variant_ids], ["risk_ids", known.risk_ids], ["evidence_ids", known.evidence_ids]]) {
+      const ids = verifyStringIdList(item?.[field], `${label}.${field}`, errors);
+      verifyReferencesKnown(ids, knownIds, `${label}.${field}`, errors);
+    }
+    for (const field of ["initial_state", "stimulus", "expected"]) {
+      verifyNonEmptyObject(item?.[field], `${label}.${field}`, errors);
+    }
+  }
+  verifyCaseTaskCompatibility({
+    cases: value?.input?.cases,
+    tasks: value?.input?.tasks,
+    families: value?.input?.scenario_families,
+    label: `${relativePath}: input.cases`,
+    errors,
+  });
+  for (const [index, variant] of asArray(value?.input?.variants).entries()) {
+    const label = `${relativePath}: input.variants[${index}]`;
+    verifyReferencesKnown([variant?.parent_case_id], known.case_ids, `${label}.parent_case_id`, errors);
+    verifyNonEmptyObject(variant?.changed, `${label}.changed`, errors);
+    verifyNonEmptyObject(variant?.controlled, `${label}.controlled`, errors);
+    verifyNonEmptyObject(variant?.expected_relation, `${label}.expected_relation`, errors);
+    if (isNonEmptyObject(variant?.expected_relation)) {
+      for (const field of ["type", "assertion"]) {
+        if (typeof variant.expected_relation[field] !== "string" || variant.expected_relation[field].length === 0) {
+          errors.push(`${label}.expected_relation.${field}: must be a non-empty string`);
+        }
+      }
+    }
+  }
+  const usedActions = new Set();
+  const usedObservations = new Set();
+  for (const [index, transition] of asArray(value?.input?.trajectory?.transitions).entries()) {
+    const label = `${relativePath}: input.trajectory.transitions[${index}]`;
+    verifyReferencesKnown([transition?.action_id], new Set(actionIds), `${label}.action_id`, errors, usedActions);
+    verifyReferencesKnown([transition?.observation_id], new Set(observationIds), `${label}.observation_id`, errors, usedObservations);
+  }
+  for (const id of actionIds) {
+    if (!usedActions.has(id)) errors.push(`${relativePath}: action ${id} is not used by any transition`);
+  }
+  for (const id of observationIds) {
+    if (!usedObservations.has(id)) errors.push(`${relativePath}: observation ${id} is not used by any transition`);
+  }
+  verifyCoverageItems({
+    items: coverageItems,
+    label: `${relativePath}: expected.coverage_items`,
+    knownByType: {
+      risk_ids: known.risk_ids,
+      question_ids: known.question_ids,
+      scenario_family_ids: known.scenario_family_ids,
+      task_ids: known.task_ids,
+      case_ids: known.case_ids,
+      variant_ids: known.variant_ids,
+      transition_ids: known.transition_ids,
+      evidence_ids: known.evidence_ids,
+      construct_ids: new Set(constructIds),
+    },
+    cases: value?.input?.cases,
+    tasks: value?.input?.tasks,
+    variants: value?.input?.variants,
+    risks: value?.input?.risks,
+    targetId,
+    constructIds,
+    errors,
+  });
+  verifyNonEmptyObject(value?.expected?.decision_actions, `${relativePath}: expected.decision_actions`, errors);
+  verifyNonEmptyArray(value?.evidence?.limitations, `${relativePath}: evidence.limitations`, errors);
+  const traces = value?.evidence?.traceability;
+  verifyObjectEntities(traces, ["id", "claim", "links", "action"], `${relativePath}: evidence.traceability`, errors);
+  const traced = new Set();
+  for (const [index, trace] of asArray(traces).entries()) {
+    const ids = verifyStringIdList(trace?.links, `${relativePath}: evidence.traceability[${index}].links`, errors);
+    verifyReferencesKnown(ids, allIds, `${relativePath}: evidence.traceability[${index}].links`, errors, traced);
+  }
+  for (const id of allIds) {
+    if (typeof id === "string" && id.length > 0 && !traced.has(id)) {
+      errors.push(`${relativePath}: ${id} is not covered by evidence.traceability`);
+    }
+  }
+}
+
 function expectedUnitId(unitDir) {
   const match = path.basename(unitDir).match(/^unit-([a-z]\d+)-(\d+)$/i);
   return match ? `${match[1].toUpperCase()}.${match[2]}` : null;
@@ -1006,6 +2175,8 @@ export async function verifyAcademyUnit(unitDir) {
       verifyEvaluationCaseReferences(value, examplePath, errors);
     } else if (profileName === "target-boundary-version-v1") {
       verifyTargetBoundaryVersionCase(value, examplePath, errors);
+    } else if (profileName === "question-to-task-scenario-v1") {
+      verifyQuestionTaskScenarioCase(value, examplePath, errors);
     }
   }
 
@@ -1017,6 +2188,8 @@ export async function verifyAcademyUnit(unitDir) {
     );
   } else if (profileName === "target-boundary-version-v1") {
     verifyTargetBoundaryVersionTemplates(templateValues, errors);
+  } else if (profileName === "question-to-task-scenario-v1") {
+    verifyQuestionTaskScenarioTemplates(templateValues, errors);
   }
 
   await verifyHtml(resolvedUnitDir, errors);

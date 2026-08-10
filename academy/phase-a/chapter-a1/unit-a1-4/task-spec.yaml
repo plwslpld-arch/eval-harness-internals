@@ -1,0 +1,29 @@
+schema_version: 1
+kind: TaskSpec
+metadata: {id: task.example.v1, name: Agent 可执行任务规格模板, owner: evaluation-owner, version: 1.0.0}
+scenario_space_id: scenario-space.example.v1
+target_id: target.example
+construct_ids: [construct.example]
+generation_rules: {risk_first: 每项关键风险至少生成边界和故障任务, state_explicit: 每项任务声明初态和终态, no_metric_leakage: 不把评分器实现写入任务语义}
+questions:
+  - {id: eq.example, text: 目标系统在关键场景中是否满足目标行为与状态约束？, risk_ids: [risk.example]}
+tasks:
+  - id: task.example.v1
+    target_id: target.example
+    question_ids: [eq.example]
+    risk_ids: [risk.example]
+    construct_ids: [construct.example]
+    scenario_family_ids: [family.normal, family.boundary-failure]
+    purpose: 在声明状态与风险场景中验证目标行为和最终状态
+    actors: [{id: synthetic-user, role: declared-role, authority: declared-permissions}]
+    preconditions: {business_state: versioned-fixture, time: fixed-clock, identity_and_acl: snapshot-id, dependencies: declared-health}
+    input: {request_schema: versioned-schema, required_fields: [request], optional_context: [history, attachments]}
+    input_contract: {schema: versioned-schema, required: [request], invalid_input_action: clarify-or-reject}
+    actions: {available_tools: [tool.example], parameter_constraints: [declared-constraint], prohibited: [undeclared-write]}
+    success: {outcome: expected-observable-result, final_state: expected-state-assertion, must_occur: [required-observation], must_not_occur: [prohibited-side-effect]}
+    success_contract: {outcome: expected-observable-result, final_state: expected-state-assertion, prohibited: [prohibited-side-effect]}
+    stop_and_escalation: {clarify_when: required-information-missing, stop_when: state-unknown, escalate_when: authority-or-evidence-insufficient}
+    observations: [evidence.example.output, evidence.example.trajectory, evidence.example.state]
+    evidence_ids: [evidence.example.output, evidence.example.trajectory, evidence.example.state]
+    budgets: {turns: 5, steps: 12, tool_calls: 8, wall_time_seconds: 60}
+    reset_and_replay: {reset_fixture: required, isolation_key: per-trial, replay_bundle: required}

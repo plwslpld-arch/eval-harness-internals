@@ -1,0 +1,28 @@
+schema_version: 1
+kind: ScenarioSpace
+metadata: {id: scenario-space.example.v1, name: 风险驱动场景空间模板, owner: evaluation-owner, version: 1.0.0}
+question_ids: [eq.example]
+risk_ids: [risk.example]
+construct_ids: [construct.example]
+target_id: target.example
+risks:
+  - {id: risk.example, severity: critical, statement: 声明风险在目标场景中造成不可接受伤害}
+dimensions:
+  - {id: dimension.actor, description: 用户身份与权限, values: [authorized, unauthorized, expired], rationale: 权限改变期望行为}
+  - {id: dimension.input, description: 输入完整性, values: [complete, partial, conflicting], rationale: 决定完成澄清或升级}
+  - {id: dimension.state, description: 业务实体状态, values: [initial, in_progress, completed, unknown], rationale: 决定动作合法性与幂等}
+  - {id: dimension.dependency, description: 依赖健康状态, values: [healthy, timeout, denied, partial_failure], rationale: 检验停止恢复和升级}
+  - {id: dimension.time, description: 规则时间边界, values: [before_boundary, at_boundary, after_boundary], rationale: 检验生效与到期规则}
+partitions:
+  - {id: partition.representative, dimension_ids: [dimension.actor, dimension.input, dimension.state], rule: 按声明流量分层, purpose: 估计一般表现}
+  - {id: partition.risk-directed, dimension_ids: [dimension.state, dimension.dependency, dimension.time], rule: 富集关键风险边界和故障, purpose: 发现高伤害失败}
+scenario_families:
+  - {id: family.normal, partition_ids: [partition.representative], risk_ids: [risk.example], description: 授权用户在完整输入和健康依赖下完成常规任务, coordinates: [authorized, complete, initial, healthy]}
+  - {id: family.boundary-failure, partition_ids: [partition.risk-directed], risk_ids: [risk.example], description: 状态未知且依赖超时的时间边界任务, coordinates: [authorized, complete, unknown, timeout, at_boundary]}
+sampling_policy: {representative: 按流量分层并保留自然分母, risk_directed: 按严重性和触发机制定向构造且单独报告}
+coverage_policy: 关键风险必须具有边界、故障、恢复和负向场景，不以样本数量代替语义覆盖
+selection:
+  priorities: [critical-risk triggers, decision boundaries, interacting axes, historical incidents, representative traffic]
+  method: 风险定向组合加流量代表性分层，不做无目的全笛卡尔积
+  excluded_combinations: [{combination: physically-impossible, reason: 不可达状态}]
+coverage_expectation: 每项关键风险至少包含正向、负向、边界、故障和恢复场景

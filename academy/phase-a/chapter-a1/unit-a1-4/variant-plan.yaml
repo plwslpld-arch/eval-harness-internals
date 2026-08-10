@@ -1,0 +1,41 @@
+schema_version: 1
+kind: VariantPlan
+metadata: {id: variant.example.v1, name: 受控与变形样本计划模板, owner: evaluation-owner, version: 1.0.0}
+scenario_space_id: scenario-space.example.v1
+task_spec_id: task.example.v1
+test_case_id: case.example.boundary.v1
+control_policy: {single_explanatory_change: true, immutable_fixture: required, seed_and_configuration: recorded, domain_relation_review: required}
+variants:
+  - id: variant.example.controlled
+    relation: controlled
+    variable: decision-threshold
+    held_constant: [actor, business_state, wording, dependency]
+    values: [below, at, above]
+    parent_case_id: case.example.normal.v1
+    changed: {decision-threshold: below-at-above}
+    controlled: {actor: fixed, business_state: fixed, dependency: fixed}
+    expected_relation: {type: threshold, assertion: 行为仅在声明阈值处切换}
+  - id: variant.example.counterfactual
+    relation: counterfactual
+    variable: user-authority
+    pair: [authorized, unauthorized]
+    held_constant: [request, data, time, system-state]
+    parent_case_id: case.example.normal.v1
+    changed: {user-authority: authorized-to-unauthorized}
+    controlled: {request: fixed, data: fixed, time: fixed}
+    expected_relation: {type: counterfactual, assertion: 未授权变体不得执行或暴露受限信息}
+  - id: variant.example.invariant
+    relation: invariant
+    transformations: [semantic-paraphrase, irrelevant-order-change]
+    parent_case_id: case.example.normal.v1
+    changed: {surface-form: semantic-paraphrase}
+    controlled: {semantics: fixed, state: fixed, authority: fixed}
+    expected_relation: {type: invariant, assertion: 关键决定和最终状态保持一致}
+  - id: variant.example.metamorphic
+    relation: metamorphic
+    transformation: revoke-authorization
+    parent_case_id: case.example.boundary.v1
+    changed: {authorization: revoked}
+    controlled: {request: fixed, state: fixed, time: fixed}
+    expected_relation: {type: metamorphic, assertion: 输出从允许完成变为拒绝或升级且无副作用}
+validity_controls: [一次只改变可解释变量, 记录随机种子, 领域负责人确认关系, 样本族共享版本化 fixture]

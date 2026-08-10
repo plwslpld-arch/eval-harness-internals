@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+
 import { verifyAcademyUnit } from "../scripts/verify-academy-unit.mjs";
 
 const REQUIRED_YAML = {
@@ -118,10 +120,28 @@ const A13_UNIT = path.resolve(
   "../academy/phase-a/chapter-a1/unit-a1-3",
 );
 
+const A14_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a1/unit-a1-4",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, content);
+}
+
+async function copyUnit(source, prefix) {
+  const root = await mkdtemp(path.join(tmpdir(), prefix));
+  await cp(source, root, { recursive: true });
+  return root;
+}
+
+async function mutateYaml(root, relativePath, mutate) {
+  const filePath = path.join(root, relativePath);
+  const value = parseYaml(await readFile(filePath, "utf8"));
+  mutate(value);
+  await writeFile(filePath, stringifyYaml(value));
 }
 
 async function createValidUnit() {
@@ -723,4 +743,499 @@ test("A1.3 rejects wrong container types in decision-bearing case fields", async
   assert.match(errors.join("\n"), /input\.target\.object_level must be a non-empty string/);
   assert.match(errors.join("\n"), /input\.target\.path must be a non-empty array/);
   assert.match(errors.join("\n"), /input\.target\.claim_boundary must be a non-empty object/);
+});
+
+test("the complete A1.4 question-to-task-scenario package is accepted", async () => {
+  assert.deepEqual(await verifyAcademyUnit(A14_UNIT), []);
+});
+
+test("A1.4 cannot disable its canonical profile or shrink templates and domain cases", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-profile-");
+  await mutateYaml(root, "artifact-manifest.yaml", (manifest) => {
+    delete manifest.verification.profile;
+    manifest.contents.templates = manifest.contents.templates.filter((item) => item !== "scenario-space.yaml");
+    manifest.contents.examples = manifest.contents.examples.filter((item) => !item.includes("knowledge-assistant"));
+  });
+  await rm(path.join(root, "scenario-space.yaml"));
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /A1\.4 requires verification\.profile/);
+  assert.match(report, /profile question-to-task-scenario-v1 requires scenario-space\.yaml/);
+  assert.match(report, /profile question-to-task-scenario-v1 requires examples\/knowledge-assistant\/evaluation-case\.yaml/);
+});
+
+test("A1.4 cannot replace its canonical profile", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-wrong-profile-");
+  await mutateYaml(root, "artifact-manifest.yaml", (manifest) => {
+    manifest.verification.profile = "target-boundary-version-v1";
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  assert.match(
+    errors.join("\n"),
+    /unit A1\.4 must use verification\.profile question-to-task-scenario-v1/,
+  );
+});
+
+test("A1.4 rejects dangling and orphaned scenario graph ids", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-scenario-graph-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.partitions[0].dimension_ids[0] = "dimension.unknown";
+    space.scenario_families[0].partition_ids[0] = "partition.unknown";
+    space.question_ids[0] = "eq.unknown";
+    space.risk_ids[0] = "risk.unknown";
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /partitions\[0\]\.dimension_ids: unknown id dimension\.unknown/);
+  assert.match(report, /scenario_families\[0\]\.partition_ids: unknown id partition\.unknown/);
+  assert.match(report, /dimension dimension\.actor is not used by any partition/);
+  assert.match(report, /partition partition\.representative is not used by any scenario family/);
+  assert.match(report, /scenario-space\.yaml: question_ids: unknown id eq\.unknown/);
+  assert.match(report, /scenario-space\.yaml: risk_ids: unknown id risk\.unknown/);
+});
+
+test("A1.4 rejects wrong types and empty decision-bearing template containers", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-template-types-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.dimensions = true;
+    space.coverage_policy = false;
+  });
+  await mutateYaml(root, "task-spec.yaml", (spec) => {
+    spec.tasks = [true];
+    spec.generation_rules = {};
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /scenario-space\.yaml: dimensions: must be a non-empty array/);
+  assert.match(report, /coverage_policy must be a non-empty string/);
+  assert.match(report, /task-spec\.yaml: tasks\[0\]: must be a non-empty object/);
+  assert.match(report, /task-spec\.yaml: generation_rules: must be a non-empty object/);
+});
+
+test("A1.4 rejects variants without a real parent, controlled change and relation", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-variant-");
+  await mutateYaml(root, "variant-plan.yaml", (plan) => {
+    plan.variants[0].parent_case_id = "case.unknown";
+    plan.variants[0].changed = true;
+    plan.variants[0].controlled = {};
+    plan.variants[0].expected_relation = { type: "threshold" };
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /parent_case_id: unknown id case\.unknown/);
+  assert.match(report, /changed: must be a non-empty object/);
+  assert.match(report, /controlled: must be a non-empty object/);
+  assert.match(report, /expected_relation\.assertion: must be a non-empty string/);
+});
+
+test("A1.4 rejects trajectory contracts that collapse state, events or recovery invariants", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-trajectory-");
+  await mutateYaml(root, "trajectory-contract.yaml", (contract) => {
+    contract.initial_state = true;
+    contract.actions = [true];
+    contract.allowed_transitions = [{ id: "transition.id-only" }];
+    contract.recovery_invariants = { fault: [], time: true, concurrency: [] };
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /initial_state: must be a non-empty object/);
+  assert.match(report, /actions\[0\]: must be a non-empty object/);
+  assert.match(report, /allowed_transitions\[0\]: missing required key action_id/);
+  assert.match(report, /recovery_invariants\.fault: must be a non-empty array/);
+  assert.match(report, /recovery_invariants\.time: must be a non-empty array/);
+  assert.match(report, /recovery_invariants\.concurrency: must be a non-empty array/);
+});
+
+test("A1.4 rejects coverage claims based only on sample count or missing task evidence", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-coverage-");
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    matrix.items[0].status = "executed";
+    matrix.items[0].coverage_basis = "10 samples";
+    matrix.items[0].execution = {
+      trial_ids: ["trial.example.1"],
+      evidence_bundle_ids: ["bundle.example.1"],
+      provenance: { runner: "harness.example.v1" },
+    };
+    matrix.items[0].task_ids = [];
+    matrix.items[0].evidence_ids = [];
+    matrix.items[1].risk_ids = true;
+    matrix.items[1].reason = "synthetic blocked gap";
+    matrix.items[1].owner = "evaluation-owner";
+    matrix.items[1].action = "add evidence";
+    matrix.items[1].status = "blocked";
+    matrix.items[1].coverage_basis = {
+      semantic_basis: "10 samples",
+      evidence_logic: ["count only"],
+      sample_count_only: true,
+    };
+    matrix.items[1].case_ids = [];
+    matrix.items[1].variant_ids = [];
+    matrix.items[1].transition_ids = [];
+    matrix.items[1].evidence_ids = [];
+  });
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.risks[0].severity = true;
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /coverage_basis: must be a non-empty object/);
+  assert.match(report, /coverage_basis\.sample_count_only: must be false/);
+  assert.match(report, /items\[0\]\.task_ids: must be a non-empty array/);
+  assert.match(report, /items\[0\]\.evidence_ids: must be a non-empty array/);
+  assert.match(report, /items\[1\]\.risk_ids: must be a non-empty array/);
+  assert.match(report, /risks\[0\]\.severity: must be critical, high, medium or low/);
+});
+
+test("A1.4 executed coverage requires trials, evidence bundles and provenance", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-execution-");
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    matrix.items[0].status = "executed";
+    matrix.items[0].execution = {
+      trial_ids: [],
+      evidence_bundle_ids: true,
+    };
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /items\[0\]\.execution\.trial_ids: must be a non-empty array/);
+  assert.match(report, /items\[0\]\.execution\.evidence_bundle_ids: must be a non-empty array/);
+  assert.match(
+    report,
+    /items\[0\]\.execution\.provenance: must be a non-empty object/,
+  );
+});
+
+test("A1.4 implemented coverage declares its design-only claim and limitation", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-implemented-claim-");
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    delete matrix.items[0].claim;
+    matrix.items[0].limitation = false;
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /items\[0\]\.claim: must be a non-empty string/);
+  assert.match(report, /items\[0\]\.limitation: must be a non-empty string/);
+});
+
+test("A1.4 critical design coverage cannot be satisfied by all-blocked rows", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-all-blocked-");
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    for (const item of matrix.items) {
+      item.status = "blocked";
+      item.reason = "execution dependency unavailable";
+      item.owner = "evaluation-owner";
+      item.action = "restore dependency and execute the planned trials";
+      delete item.claim;
+      delete item.limitation;
+    }
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  assert.match(
+    errors.join("\n"),
+    /critical risk risk\.example must have implemented or executed task, case and evidence design links/,
+  );
+});
+
+test("A1.4 coverage rows must agree with their cases and cover every case and variant", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-coverage-relations-");
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    matrix.items[0].scenario_family_ids = ["family.boundary-failure"];
+    matrix.items[0].case_ids = [];
+    matrix.items[0].variant_ids = matrix.items[0].variant_ids.filter(
+      (id) => id !== "variant.example.controlled",
+    );
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /case case\.example\.normal\.v1 is not covered by any matrix item/);
+  assert.match(report, /variant variant\.example\.controlled is not covered by any matrix item/);
+});
+
+test("A1.4 rejects a coverage case attached to the wrong scenario family", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-case-family-");
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    matrix.items[0].scenario_family_ids = ["family.boundary-failure"];
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  assert.match(
+    errors.join("\n"),
+    /case case\.example\.normal\.v1 requires scenario_family_id family\.normal/,
+  );
+});
+
+test("A1.4 cases cannot borrow risks or evidence outside their parent task", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-parent-task-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.risk_ids.push("risk.other");
+    space.risks.push({ id: "risk.other", severity: "low", statement: "synthetic unrelated risk" });
+    space.scenario_families[0].risk_ids.push("risk.other");
+  });
+  await mutateYaml(root, "trajectory-contract.yaml", (contract) => {
+    contract.evidence_observations.push({
+      id: "evidence.other",
+      source: "synthetic-source",
+      capture: "synthetic capture",
+    });
+  });
+  await mutateYaml(root, "test-case.yaml", (cases) => {
+    cases.cases[0].risk_ids = ["risk.other"];
+    cases.cases[0].evidence_ids.push("evidence.other");
+  });
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    matrix.items[0].risk_ids = ["risk.other"];
+    matrix.items[0].evidence_ids.push("evidence.other");
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /cases\[0\]\.risk_ids: risk\.other is not declared by parent task task\.example\.v1/);
+  assert.match(report, /cases\[0\]\.evidence_ids: evidence\.other is not declared by parent task task\.example\.v1/);
+});
+
+test("A1.4 coverage questions must belong to their tasks", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-task-question-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.question_ids.push("eq.other");
+  });
+  await mutateYaml(root, "task-spec.yaml", (spec) => {
+    spec.questions.push({ id: "eq.other", text: "synthetic unrelated question", risk_ids: ["risk.example"] });
+  });
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    matrix.items[0].question_ids = ["eq.other"];
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  assert.match(
+    errors.join("\n"),
+    /items\[0\]: task task\.example\.v1 requires question_id eq\.example/,
+  );
+});
+
+test("A1.4 coverage rows reject globally valid but unrelated question ids", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-extra-question-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.question_ids.push("eq.related.two");
+  });
+  await mutateYaml(root, "task-spec.yaml", (spec) => {
+    spec.questions.push({
+      id: "eq.related.two",
+      text: "second valid question",
+      risk_ids: ["risk.example"],
+    });
+    const task = structuredClone(spec.tasks[0]);
+    task.id = "task.related.two";
+    task.question_ids = ["eq.related.two"];
+    spec.tasks.push(task);
+  });
+  await mutateYaml(root, "test-case.yaml", (cases) => {
+    const testCase = structuredClone(cases.cases[0]);
+    testCase.id = "case.related.two";
+    testCase.task_id = "task.related.two";
+    testCase.variant_ids = ["variant.related.two"];
+    cases.cases.push(testCase);
+  });
+  await mutateYaml(root, "variant-plan.yaml", (plan) => {
+    const variant = structuredClone(plan.variants[0]);
+    variant.id = "variant.related.two";
+    variant.parent_case_id = "case.related.two";
+    plan.variants.push(variant);
+  });
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    const row = structuredClone(matrix.items[0]);
+    row.id = "coverage.related.two";
+    row.question_ids = ["eq.related.two"];
+    row.task_ids = ["task.related.two"];
+    row.case_ids = ["case.related.two"];
+    row.variant_ids = ["variant.related.two"];
+    matrix.items.push(row);
+    matrix.items[0].question_ids.push("eq.related.two");
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  assert.match(
+    errors.join("\n"),
+    /items\[0\]\.question_ids: unrelated id eq\.related\.two/,
+  );
+});
+
+test("A1.4 every declared scenario family must enter the coverage matrix", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-family-reverse-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.scenario_families.push({
+      id: "family.uncovered",
+      partition_ids: [space.partitions[0].id],
+      risk_ids: [space.risks[0].id],
+      description: "synthetic family intentionally omitted from the matrix",
+    });
+  });
+  await mutateYaml(root, "task-spec.yaml", (spec) => {
+    spec.tasks[0].scenario_family_ids.push("family.uncovered");
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  assert.match(
+    errors.join("\n"),
+    /scenario family family\.uncovered is not covered by any matrix item/,
+  );
+});
+
+test("A1.4 propagates target and constructs through every template", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-target-construct-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.target_id = "target.unrelated";
+    space.construct_ids = ["construct.unrelated"];
+  });
+  await mutateYaml(root, "test-case.yaml", (cases) => {
+    delete cases.construct_ids;
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /task-spec\.yaml: target_id: expected target\.unrelated, received target\.example/);
+  assert.match(report, /task-spec\.yaml: construct_ids: unknown id construct\.example/);
+  assert.match(report, /task-spec\.yaml: construct_ids: missing required id construct\.unrelated/);
+  assert.match(report, /test-case\.yaml: missing required key construct_ids/);
+});
+
+test("A1.4 rejects boolean decision semantics in risks, questions, dimensions and trajectories", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-semantic-types-");
+  await mutateYaml(root, "scenario-space.yaml", (space) => {
+    space.risks[0].statement = true;
+    space.dimensions[0].description = false;
+    space.dimensions[0].values = [true];
+    space.partitions[0].rule = true;
+  });
+  await mutateYaml(root, "task-spec.yaml", (spec) => {
+    spec.questions[0].text = false;
+  });
+  await mutateYaml(root, "trajectory-contract.yaml", (contract) => {
+    contract.actions[0].actor = true;
+    contract.actions[0].operation = false;
+    contract.observations[0].source = true;
+    contract.observations[0].capture = false;
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /risks\[0\]\.statement: must be a non-empty string/);
+  assert.match(report, /questions\[0\]\.text: must be a non-empty string/);
+  assert.match(report, /dimensions\[0\]\.description: must be a non-empty string/);
+  assert.match(report, /dimensions\[0\]\.values\[0\]: must be a non-empty string/);
+  assert.match(report, /partitions\[0\]\.rule: must be a non-empty string/);
+  assert.match(report, /actions\[0\]\.actor: must be a non-empty string/);
+  assert.match(report, /actions\[0\]\.operation: must be a non-empty string/);
+  assert.match(report, /observations\[0\]\.source: must be a non-empty string/);
+  assert.match(report, /observations\[0\]\.capture: must be a non-empty string/);
+});
+
+test("A1.4 can report a blocked coverage gap without inventing execution artifacts", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-blocked-gap-");
+  await mutateYaml(root, "coverage-matrix.yaml", (matrix) => {
+    matrix.items.push({
+      id: "coverage.example.blocked-gap",
+      target_id: matrix.target_id,
+      construct_ids: [...matrix.construct_ids],
+      risk_ids: [matrix.items[0].risk_ids[0]],
+      question_ids: [matrix.items[0].question_ids[0]],
+      scenario_family_ids: [matrix.items[0].scenario_family_ids[0]],
+      task_ids: [],
+      case_ids: [],
+      variant_ids: [],
+      transition_ids: [],
+      evidence_ids: [],
+      coverage_basis: {
+        semantic_basis: "known dependency gap",
+        evidence_logic: ["the missing fixture prevents execution"],
+        sample_count_only: false,
+      },
+      status: "blocked",
+      reason: "required dependency fixture is unavailable",
+      owner: "evaluation-owner",
+      action: "build the fixture before claiming execution coverage",
+    });
+  });
+
+  assert.deepEqual(await verifyAcademyUnit(root), []);
+});
+
+test("A1.4 cases reject dangling references and entities orphaned from traceability", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-case-refs-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  let orphanId;
+  let coverageOrphanId;
+  await mutateYaml(root, relativePath, (example) => {
+    const referencedRisks = Array.isArray(example?.references?.risk_ids)
+      ? example.references.risk_ids
+      : [];
+    referencedRisks[0] = "risk.refund.unknown";
+    example.references.risk_ids = referencedRisks;
+    orphanId = example?.input?.questions?.[0]?.id ?? "eq.refund.synthetic-orphan";
+    coverageOrphanId = example?.expected?.coverage_items?.[0]?.id ?? "coverage.refund.synthetic-orphan";
+    for (const trace of Array.isArray(example?.evidence?.traceability)
+      ? example.evidence.traceability
+      : []) {
+      trace.links = Array.isArray(trace.links)
+        ? trace.links.filter((id) => id !== orphanId && id !== coverageOrphanId)
+        : [];
+    }
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /references\.risk_ids: unknown id risk\.refund\.unknown/);
+  assert.match(report, new RegExp(`${orphanId.replaceAll(".", "\\.")} is not covered by evidence\\.traceability`));
+  assert.match(report, new RegExp(`${coverageOrphanId.replaceAll(".", "\\.")} is not covered by evidence\\.traceability`));
+});
+
+test("A1.4 cases reject unrelated targets and cases omitted from their coverage matrix", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-case-target-coverage-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  let omittedCaseId;
+  await mutateYaml(root, relativePath, (example) => {
+    example.references.target_id = "target.unrelated";
+    omittedCaseId = example.input.cases[0].id;
+    example.expected.coverage_items[0].case_ids =
+      example.expected.coverage_items[0].case_ids.filter((id) => id !== omittedCaseId);
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(
+    report,
+    /references\.target_id: expected target\.refund-agent\.candidate, received target\.unrelated/,
+  );
+  assert.match(
+    report,
+    new RegExp(`case ${omittedCaseId.replaceAll(".", "\\.")} is not covered by any matrix item`),
+  );
+});
+
+test("A1.4 cases reject id-only, boolean and empty-container shrinkage", async () => {
+  const root = await copyUnit(A14_UNIT, "evalorium-a1-4-case-types-");
+  const relativePath = "examples/refund-agent/evaluation-case.yaml";
+  await mutateYaml(root, relativePath, (example) => {
+    example.input.tasks = [{ id: example.input.tasks[0].id }];
+    example.input.variants[0].changed = false;
+    example.input.trajectory.initial_state = [];
+    example.expected.coverage_items = true;
+  });
+
+  const errors = await verifyAcademyUnit(root);
+  const report = errors.join("\n");
+  assert.match(report, /input\.tasks\[0\]: missing required key question_ids/);
+  assert.match(report, /input\.variants\[0\]\.changed: must be a non-empty object/);
+  assert.match(report, /input\.trajectory\.initial_state: must be a non-empty object/);
+  assert.match(report, /expected\.coverage_items: must be a non-empty array/);
 });

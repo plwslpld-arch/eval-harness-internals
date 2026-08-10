@@ -1,0 +1,14 @@
+schema_version: 1
+unit: {id: A1.4, title: 从评测问题到任务与场景, phase: A, chapter: A1}
+publication:
+  status: candidate
+  audience: AI 质量工程师、评测工程师、Agent Harness 工程师、产品与风险负责人
+  language: zh-CN
+  formats: [markdown, html, yaml]
+  content_policy: 仅包含校订后的公开课程、模板和案例，不包含对话、个人信息、中间草稿或真实凭据
+contents:
+  lesson: README.md
+  html: index.html
+  templates: [scenario-space.yaml, task-spec.yaml, test-case.yaml, variant-plan.yaml, trajectory-contract.yaml, coverage-matrix.yaml]
+  examples: [examples/refund-agent/evaluation-case.yaml, examples/contract-agent/evaluation-case.yaml, examples/knowledge-assistant/evaluation-case.yaml]
+verification: {command: npm run check, unit_contract: scripts/verify-academy-unit.mjs, profile: question-to-task-scenario-v1}

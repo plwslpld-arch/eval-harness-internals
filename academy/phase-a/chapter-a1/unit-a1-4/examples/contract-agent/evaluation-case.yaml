@@ -1,0 +1,53 @@
+schema_version: 1
+kind: EvaluationCase
+metadata: {id: study.contract.a14, name: 合同审查 Agent 任务场景案例, version: 1.0.0}
+references:
+  target_id: target.contract-agent.candidate
+  construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding]
+  scenario_space_id: space.contract
+  risk_ids: [risk.contract.omission, risk.contract.fabrication]
+  dimension_ids: [dim.contract.expression, dim.contract.attachment, dim.contract.parse]
+  partition_ids: [part.contract.traffic, part.contract.risk]
+  scenario_family_ids: [family.contract.explicit, family.contract.cross, family.contract.missing]
+  question_ids: [eq.contract.screen]
+  task_ids: [task.contract.screen]
+  case_ids: [case.contract.explicit, case.contract.cross, case.contract.missing]
+  variant_ids: [variant.contract.cap, variant.contract.reorder, variant.contract.remove]
+  transition_ids: [transition.contract.parse, transition.contract.locate, transition.contract.escalate]
+  evidence_ids: [evidence.contract.output, evidence.contract.span, evidence.contract.handoff]
+  coverage_item_ids: [coverage.contract.all]
+input:
+  scenario_space: {id: space.contract, target_id: target.contract-agent.candidate, construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding], description: 风险表达、附件和解析质量空间}
+  risks: [{id: risk.contract.omission, severity: critical, statement: 漏掉高严重性合同风险}, {id: risk.contract.fabrication, severity: high, statement: 生成不存在或不支持结论的条款引用}]
+  dimensions: [{id: dim.contract.expression, description: 风险条款表达方式, values: [explicit, cross-clause, absent]}, {id: dim.contract.attachment, description: 被引用附件完整性, values: [complete, missing]}, {id: dim.contract.parse, description: OCR与解析质量, values: [clean, degraded]}]
+  partitions: [{id: part.contract.traffic, dimension_ids: [dim.contract.expression, dim.contract.parse], rule: 按声明合同类型与解析质量分层}, {id: part.contract.risk, dimension_ids: [dim.contract.expression, dim.contract.attachment, dim.contract.parse], rule: 富集跨条款、附件缺失和解析降级}]
+  scenario_families: [{id: family.contract.explicit, partition_ids: [part.contract.traffic], risk_ids: [risk.contract.omission, risk.contract.fabrication], description: 显式高严重性条款及原文定位}, {id: family.contract.cross, partition_ids: [part.contract.risk], risk_ids: [risk.contract.omission, risk.contract.fabrication], description: 跨条款组合风险及多span证据}, {id: family.contract.missing, partition_ids: [part.contract.risk], risk_ids: [risk.contract.omission], description: 附件缺失时保留律师判断}]
+  questions: [{id: eq.contract.screen, text: 是否发现关键风险、定位支持原文并在上下文不足时升级？, risk_ids: [risk.contract.omission, risk.contract.fabrication]}]
+  tasks:
+    - {id: task.contract.screen, target_id: target.contract-agent.candidate, construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding], question_ids: [eq.contract.screen], scenario_family_ids: [family.contract.explicit, family.contract.cross, family.contract.missing], risk_ids: [risk.contract.omission, risk.contract.fabrication], evidence_ids: [evidence.contract.output, evidence.contract.span, evidence.contract.handoff], input_contract: {document: 许可去标识合同, context: taxonomy和附件状态}, success_contract: {risk: 关键候选有支持span, missing: 不下最终意见并升级}}
+  cases:
+    - {id: case.contract.explicit, target_id: target.contract-agent.candidate, construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding], task_id: task.contract.screen, scenario_family_id: family.contract.explicit, variant_ids: [variant.contract.cap], risk_ids: [risk.contract.omission, risk.contract.fabrication], evidence_ids: [evidence.contract.output, evidence.contract.span], initial_state: {attachment: complete}, stimulus: {clause: unlimited-liability}, expected: {risk_found: true, span_exists: true}}
+    - {id: case.contract.cross, target_id: target.contract-agent.candidate, construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding], task_id: task.contract.screen, scenario_family_id: family.contract.cross, variant_ids: [variant.contract.reorder], risk_ids: [risk.contract.omission, risk.contract.fabrication], evidence_ids: [evidence.contract.output, evidence.contract.span], initial_state: {attachment: complete}, stimulus: {expression: cross-clause}, expected: {all_required_spans: true}}
+    - {id: case.contract.missing, target_id: target.contract-agent.candidate, construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding], task_id: task.contract.screen, scenario_family_id: family.contract.missing, variant_ids: [variant.contract.remove], risk_ids: [risk.contract.omission], evidence_ids: [evidence.contract.handoff], initial_state: {attachment: missing}, stimulus: {reference: missing-schedule}, expected: {final_opinion: false, escalation: true}}
+  variants:
+    - {id: variant.contract.cap, parent_case_id: case.contract.explicit, changed: {liability: unlimited-to-capped}, controlled: {document_type: fixed, jurisdiction: fixed}, expected_relation: {type: counterfactual, assertion: 风险严重性按rubric改变}}
+    - {id: variant.contract.reorder, parent_case_id: case.contract.cross, changed: {irrelevant_order: changed}, controlled: {risk_clauses: fixed, definitions: fixed}, expected_relation: {type: invariant, assertion: 核心候选和span不变}}
+    - {id: variant.contract.remove, parent_case_id: case.contract.missing, changed: {attachment: complete-to-missing}, controlled: {main_text: fixed, taxonomy: fixed}, expected_relation: {type: metamorphic, assertion: 结论切换为升级}}
+  trajectory:
+    initial_state: {document: loaded, review_queue: empty}
+    actions: [{id: action.contract.parse, actor: agent, operation: 解析文档}, {id: action.contract.locate, actor: agent, operation: 定位并分类风险}, {id: action.contract.escalate, actor: agent, operation: 创建律师复核项}]
+    observations: [{id: obs.contract.parse, source: parser, capture: 解析文本和附件状态}, {id: obs.contract.span, source: document, capture: 原文span}, {id: obs.contract.queue, source: review-queue, capture: 升级信息}]
+    transitions: [{id: transition.contract.parse, from: loaded, action_id: action.contract.parse, to: parsed, observation_id: obs.contract.parse}, {id: transition.contract.locate, from: parsed, action_id: action.contract.locate, to: candidates, observation_id: obs.contract.span}, {id: transition.contract.escalate, from: incomplete, action_id: action.contract.escalate, to: queued, observation_id: obs.contract.queue}]
+    recovery_invariants: {fault: [解析降级时不伪造原文], time: [rubric和taxonomy版本固定], concurrency: [同合同复核项去重]}
+expected:
+  coverage_items:
+    - {id: coverage.contract.all, target_id: target.contract-agent.candidate, construct_ids: [construct.contract.critical-recall, construct.contract.span-grounding], risk_ids: [risk.contract.omission, risk.contract.fabrication], question_ids: [eq.contract.screen], scenario_family_ids: [family.contract.explicit, family.contract.cross, family.contract.missing], task_ids: [task.contract.screen], case_ids: [case.contract.explicit, case.contract.cross, case.contract.missing], variant_ids: [variant.contract.cap, variant.contract.reorder, variant.contract.remove], transition_ids: [transition.contract.parse, transition.contract.locate, transition.contract.escalate], evidence_ids: [evidence.contract.output, evidence.contract.span, evidence.contract.handoff], coverage_basis: {semantic_basis: 显式、跨条款和附件缺失共同验证关键召回与原文有据性, evidence_logic: [候选输出证明风险识别, 原文span证明结论有据, 复核队列证明附件缺失时保留律师责任], sample_count_only: false}, status: implemented, claim: 合同场景设计已实现但尚未执行, limitation: 不声称存在trial或专家评分结果}
+  decision_actions: {partial: 补执行证据, critical_failure: 阻断首轮辅助, covered: 进入后续评分和Harness工程}
+evidence:
+  requirements: [{id: evidence.contract.output, source: agent-output, capture: 风险类别严重性和理由, assertion: 关键风险候选完整}, {id: evidence.contract.span, source: versioned-document, capture: 页码段落或字符偏移, assertion: span存在且支持结论}, {id: evidence.contract.handoff, source: review-queue, capture: 缺失上下文和律师复核项, assertion: 不替代律师最终意见}]
+  traceability:
+    - id: trace.contract.all
+      claim: 合同筛查任务图覆盖关键漏检、引用和专家边界
+      links: [target.contract-agent.candidate, construct.contract.critical-recall, construct.contract.span-grounding, space.contract, risk.contract.omission, risk.contract.fabrication, dim.contract.expression, dim.contract.attachment, dim.contract.parse, part.contract.traffic, part.contract.risk, family.contract.explicit, family.contract.cross, family.contract.missing, eq.contract.screen, task.contract.screen, case.contract.explicit, case.contract.cross, case.contract.missing, variant.contract.cap, variant.contract.reorder, variant.contract.remove, transition.contract.parse, transition.contract.locate, transition.contract.escalate, evidence.contract.output, evidence.contract.span, evidence.contract.handoff, coverage.contract.all]
+      action: 关键漏检、伪造引用或责任越界时阻断
+  limitations: [不证明可替代律师, 专家分歧留给后续Scorer设计, 不覆盖未声明合同总体]
