@@ -1,6 +1,6 @@
 # Evalorium：跨设备恢复入口
 
-<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
 
 本文件是所有电脑、新任务和贡献者的统一恢复入口。对话用于交互，Git 仓库是持久事实来源。
 
@@ -10,7 +10,7 @@ Evalorium 是独立、开源、企业级的 AI 质量工程平台，目标覆盖
 
 当前先通过 Academy 逐单元交付经过校订与验证的课程、模板和案例，再逐步实现 Platform。课程不会因为一个月的节奏目标而缩减。
 
-当前 A1.8《从评测证据到质量决策》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-8/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-8/index.html)、Quality Baseline、Gate Policy、Gate Dependency Graph、Evidence Manifest、Gate Evaluation、Gate Decision、Waiver Request、Release Disposition、Production Response Policy 共 9 类模板，以及退款 Agent、合同审查 Agent、企业知识助手 3 个端到端案例均纳入合同。Node 24 本地 `npm ci && npm run check` 共 151 项测试、品牌与仓库验证通过；候选内容提交 [`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540) 的 [Documentation Quality run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582) 精确匹配 head SHA 且 `completed/success`。该证据只证明公开质量基线、Gate DAG、证据清单、质量决定、Waiver、发布处置与生产响应合同，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力。当前 A1.9 尚未开始，必须先定义正式标题与范围，学习完成前不创建正式成果或占位正文。
+当前 A1.9《从评测计划到可复现运行》已完成公开成果验证：[正式课程](academy/phase-a/chapter-a1/unit-a1-9/README.md)、[独立 HTML](academy/phase-a/chapter-a1/unit-a1-9/index.html)、Run Spec、Resolved Run Identity、Trial Plan、Attempt Ledger、Trace Contract、Artifact Lineage Manifest、Execution Policy、Budget and Stopping Policy、Adapter Capability Contract、Run Audit Report 共 10 类契约，以及退款 Agent、合同审查 Agent、企业知识助手 3 个端到端合成案例均纳入 canonical profile。Node 24 本地 `npm ci && npm run check` 共 163 项测试、品牌与仓库验证通过；候选内容提交 [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631) 的 [Documentation Quality run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) 精确匹配 head SHA 且 `completed/success`。该证据只证明公开运行身份、Trial/Attempt、Trace、血缘、恢复、预算、适配器和审计合同，不证明真实分布式 Harness 已实现、第三方适配器已上线、生产运行、发布授权或个人能力。A1 章节至此完成 9 个公开成果已验证单元；当前转入 A2.1，须先定义 A2 与 A2.1 的正式范围，学习完成前不创建正式成果或占位正文。
 
 ## 每次恢复的固定顺序
 

@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ Agent Environment Harness 是 Evalorium 内部的深度核心能力。它负责�
 | 领域 | 状态 | 证据 |
 |---|---|---|
 | 仓库与品牌基础 | 已实现 | 版本化资产和本地验证 |
-| Academy 课程 | 学习中 | A1.1–A1.7 与 [A1.8](academy/phase-a/chapter-a1/unit-a1-8/README.md) 公开成果合同已验证；A1.8 包含 3 个案例、9 类模板、151 项本地测试，候选提交 [`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540) 对应的[远端验证](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582) 成功；A1.9 尚未开始。这只验证公开质量基线、Gate DAG、证据清单、质量决定、Waiver、发布处置与生产响应合同，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力。 |
+| Academy 课程 | 学习中 | A1.1–A1.8 与 [A1.9](academy/phase-a/chapter-a1/unit-a1-9/README.md) 公开成果合同已验证；A1.9 包含 3 个合成案例、10 类契约、163 项本地测试，候选提交 [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631) 对应的[远端验证](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) 成功。A1 章节已完成，A2.1 尚未开始。这只验证公开运行身份、Trial/Attempt、Trace、血缘、恢复、预算、适配器和审计合同，不证明真实分布式 Harness、生产集成、发布授权、生产效果或个人能力。 |
 | Platform 运行时 | 计划中 | 只有设计和路线图 |
 | 生产采用 | 未声明 | 需要真实组织的外部证据 |
 

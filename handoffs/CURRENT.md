@@ -1,6 +1,6 @@
 # Current Handoff
 
-<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
 
 ## 已确认决策
 
@@ -20,8 +20,8 @@
 - 项目成熟度：`learning`
 - Academy：`learning`
 - Platform：`planned`
-- 当前单元：A1.9（尚未开始；正式标题与范围待定义）
-- 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》、A1.3《评测对象、系统边界与版本》、A1.4《从评测问题到任务与场景》、A1.5《从任务与场景到评测数据》、A1.6《从参考标准到评分器》、A1.7《从样本级评分到可信指标》、A1.8《从评测证据到质量决策》
+- 当前单元：A2.1（尚未开始；A2 与 A2.1 的正式标题、边界和范围待定义）
+- 已验证单元：A1.1《AI 评测的本质》、A1.2《从业务需求到评测问题》、A1.3《评测对象、系统边界与版本》、A1.4《从评测问题到任务与场景》、A1.5《从任务与场景到评测数据》、A1.6《从参考标准到评分器》、A1.7《从样本级评分到可信指标》、A1.8《从评测证据到质量决策》、A1.9《从评测计划到可复现运行》
 
 ## A1.1 交付证据
 
@@ -111,11 +111,22 @@
 - Linux 远程门禁：[Documentation Quality run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582)，精确匹配候选 head SHA，状态为 `completed/success`。
 - 证据边界：只证明公开质量决策合同存在且关键语义可由仓库校验器执行；不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力。
 
+## A1.9 交付证据
+
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-9/README.md)与[独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-9/index.html)，覆盖对象模型、不可变运行身份、随机性与复现、并发分布式语义、错误重试恢复、Trace/Artifact 血缘、预算停止、主流工具 Adapter 和端到端运行审计。
+- Run Spec、Resolved Run Identity、Trial Plan、Attempt Ledger、Trace Contract、Artifact Lineage Manifest、Execution Policy、Budget and Stopping Policy、Adapter Capability Contract、Run Audit Report 共 10 类契约。
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个完整合成案例，分别演示安全关键失败阻断、身份不一致导致直接比较无效、离线通过后由合成生产 Trace 定位检索索引退化。
+- 单元验证器新增 canonical `plan-to-reproducible-run-v1` profile，检查身份与三类 Digest、计划—实际调和、Trial/Attempt 统计边界、租约/fencing token/canonical commit、Trace 因果、隐藏推理禁采、Artifact/Bundle/Score 血缘、错误/重试/恢复、产品/Harness 预算、预声明停止、Adapter 能力真实性和审计闭环。
+- Node 24 本地 `npm ci && npm run check` 共 163 项自动化测试通过，品牌检查和仓库验证通过。
+- 候选内容提交：[`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631)。
+- Linux 远程门禁：[Documentation Quality run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040)，精确匹配候选 head SHA，状态为 `completed/success`。
+- 证据边界：只证明公开运行合同存在且关键语义可由仓库校验器执行；不证明真实分布式 Harness、第三方适配器、生产运行、发布授权或个人能力。
+
 ## 下一次准确动作
 
 1. 开始前重新只读确认 `main`、工作树与最新远端门禁。
-2. 先定义 A1.9 的正式标题与学习范围，再开始循序学习。
-3. A1.9 学习完成前不创建正式单元成果或占位正文。
+2. 先定义 A2 章节与 A2.1 单元的正式标题、边界和学习范围，再开始循序学习。
+3. A2.1 学习完成前不创建正式单元成果或占位正文。
 
 ## 未解决问题与风险
 
@@ -126,8 +137,8 @@
 
 ## Git 状态语义
 
-- 本 Handoff 的完成证据基于 A1.8 候选内容提交 `9c4fd4641dc59c795b270192465ce469c14e3540`。
-- 对应远程证据为 [Documentation Quality run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582)，该 run 的 head SHA 与候选内容提交精确匹配。
+- 本 Handoff 的完成证据基于 A1.9 候选内容提交 `5e191339200528e82ae01c54cc099dbbf6d85631`。
+- 对应远程证据为 [Documentation Quality run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040)，该 run 的 head SHA 与候选内容提交精确匹配。
 - Handoff 与状态元数据提交本身的远程运行号不做递归自引用；在最终交接中读取最新 GitHub Actions 即可。
 - 当前仓库的准确 HEAD、同步状态和远程门禁必须在恢复时通过 Git 与 `gh` 实时读取，不把会变化的 HEAD 或 run ID 固化为“当前值”。
 - 完整换机步骤见 [`docs/workflows/cross-device-github.md`](../docs/workflows/cross-device-github.md)。

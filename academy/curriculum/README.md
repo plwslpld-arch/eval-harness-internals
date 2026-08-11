@@ -1,6 +1,6 @@
 # Curriculum
 
-<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
 
 完整课程将覆盖 8 个阶段、29 个核心章节、不少于 138 个知识单元、8 个阶段 Capstone 和 1 个企业级综合 Capstone。
 
@@ -18,17 +18,21 @@
 - [A1.6｜从参考标准到评分器](../phase-a/chapter-a1/unit-a1-6/README.md)（评分器设计、身份、证据与质量就绪合同已验证）
 - [A1.7｜从样本级评分到可信指标](../phase-a/chapter-a1/unit-a1-7/README.md)（指标、分母、聚合、不确定性、分析与证据就绪合同已验证）
 - [A1.8｜从评测证据到质量决策](../phase-a/chapter-a1/unit-a1-8/README.md)（质量基线、Gate DAG、决策、豁免、发布与生产响应合同已验证）
-- A1.9（尚未开始；正式标题与范围待定义，学习完成前不创建正式成果或占位正文）
+- [A1.9｜从评测计划到可复现运行](../phase-a/chapter-a1/unit-a1-9/README.md)（运行身份、Trial/Attempt、Trace、血缘、恢复、预算、适配器与审计合同已验证）
 
-#### A1.8 已验证范围
+#### A1.9 已验证范围
 
-A1.7 将样本级 Score 转换为可信 Metric 与 Estimate；A1.8 进一步把评测证据转化为可审计、可执行、可回滚的质量决定，显式定义 Quality Baseline、非补偿关键风险、三值检查与四值状态、七层 Gate DAG、Evidence Manifest、Partial、Waiver、Release Disposition、CI/CD 授权边界与生产事故回流。正式成果包含 9 类模板与退款 Agent、合同审查 Agent、企业知识助手 3 个案例；Node 24 本地 `npm ci && npm run check` 共 151 项测试通过，候选提交 [`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540) 对应的[远端 run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582) `completed/success`。该验证只证明公开质量决策合同存在且关键语义可由仓库校验器执行，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力。
+A1.8 将评测证据转化为质量决定；A1.9 进一步把计划转化为身份不可变、统计有效、可恢复和可审计的 Harness 运行，显式定义 Study/Run/Sample/Trial/Attempt 对象模型、三类 Digest 与身份调和、并发租约和 canonical commit、Trace 与 Artifact 血缘、错误/重试/断点恢复、产品与 Harness 预算、停止规则、主流工具 Adapter 能力和运行审计。正式成果包含 10 类契约与退款 Agent、合同审查 Agent、企业知识助手 3 个案例；Node 24 本地 `npm ci && npm run check` 共 163 项测试通过，候选提交 [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631) 对应的[远端 run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) `completed/success`。该验证只证明公开运行合同存在且关键语义可由仓库校验器执行，不证明真实分布式 Harness、第三方适配器、生产运行、发布授权或个人能力。
 
 学习目标：
 
-1. 区分 Score、Metric、Estimand、Estimator、Estimate 与 Gate，先定义要估计的量，再选择计算方法。
-2. 固定目标总体、分析单位、分母与缺失处理，避免选择偏差、静默丢弃和 Simpson 悖论。
-3. 根据任务层级、重复运行与版本配对关系选择 micro、macro、目标加权和分层聚合。
-4. 使用成对整簇重采样、置信区间、最小支持和稀有事件界限表达不确定性，不把 run 错当独立样本。
-5. 预声明 superiority、non-inferiority、equivalence 或绝对阈值问题，并控制多重比较、可选停止与胜者诅咒。
-6. 通过 Estimate Record、Comparison Report 与 Metric Quality Gate 阻止设计稿伪装成统计结论或发布依据。
+1. 区分 Study、Run、Sample、Trial、Attempt、Trace、Score Event 与 Aggregation。
+2. 使用不可变身份、三类 Digest 和 Planned–Observed Reconciliation 固化运行对象与可比性。
+3. 设计租约、fencing token、幂等 canonical commit、稳定聚合、错误分类、受控重试和断点恢复。
+4. 建立 Trace、Artifact、Observation Bundle、Score Event、Metric 与 Gate 的完整数据血缘，同时禁止隐藏推理采集。
+5. 分离产品预算与 Harness 预算，预声明费用、超时、安全停止、资源停止和证据结论边界。
+6. 以明确能力声明接入 Inspect AI、OpenAI Evals、LangSmith、MLflow、Phoenix、DeepEval 与 Promptfoo，不伪造第三方缺失语义。
+
+### Chapter A2 · 正式标题与范围待定义
+
+- A2.1（尚未开始；先定义章节与单元边界，学习完成前不创建正式成果或占位正文）

@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1–A1.7 and [A1.8](academy/phase-a/chapter-a1/unit-a1-8/README.md) public artifact contracts validated; A1.8 includes three cases, nine templates, 151 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582) for [`9c4fd46`](https://github.com/plwslpld-arch/evalorium/commit/9c4fd4641dc59c795b270192465ce469c14e3540); A1.9 is not started. This validates only the public quality-baseline, Gate DAG, evidence-manifest, decision, waiver, release-disposition, and production-response contracts—not a real evaluation, AI release gate, deployment authorization, production outcome, or personal competency. |
+| Academy curriculum | Learning | A1.1–A1.8 and [A1.9](academy/phase-a/chapter-a1/unit-a1-9/README.md) public artifact contracts validated; A1.9 includes three synthetic cases, ten contracts, 163 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) for [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631). Chapter A1 is complete and A2.1 is not started. This validates only public run-identity, Trial/Attempt, Trace, lineage, recovery, budget, adapter, and audit contracts—not a live distributed Harness, production integration, release authorization, production outcome, or personal competency. |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 

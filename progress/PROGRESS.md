@@ -1,15 +1,15 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A1.9 current_status=not_started last_completed=A1.8 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
-- 章节：A1
-- 当前知识单元：A1.9（正式标题与范围待定义）
+- 章节：A2（正式标题与范围待定义）
+- 当前知识单元：A2.1（正式标题与范围待定义）
 - 当前状态：尚未开始
-- 公开成果合同已验证知识单元：8
-- 最近完成：A1.8《从评测证据到质量决策》
+- 公开成果合同已验证知识单元：9
+- 最近完成：A1.9《从评测计划到可复现运行》
 
 ## A1.1 公开成果结构合同已验证
 
@@ -117,7 +117,18 @@
 - 远端验证：[Documentation Quality run 31439279582](https://github.com/plwslpld-arch/evalorium/actions/runs/31439279582)，head SHA 精确匹配候选提交，状态为 `completed/success`
 - 限制：验证只证明公开质量决策合同存在且关键语义可由仓库校验器执行，不证明真实评测、AI 发布门禁、部署授权、生产效果或个人能力
 
-## A1.9 下一步
+## A1.9 运行身份、Trial/Attempt、Trace、恢复、预算、适配器与审计合同已验证
 
-1. 先定义 A1.9 的正式标题与学习范围，再开始循序学习。
-2. A1.9 学习完成前不创建正式单元成果或占位正文。
+- [正式 Markdown 课程](../academy/phase-a/chapter-a1/unit-a1-9/README.md) 与 [独立 HTML 阅读版](../academy/phase-a/chapter-a1/unit-a1-9/index.html)
+- Run Spec、Resolved Run Identity、Trial Plan、Attempt Ledger、Trace Contract、Artifact Lineage Manifest、Execution Policy、Budget and Stopping Policy、Adapter Capability Contract、Run Audit Report 共 10 类契约
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个 `plan-to-reproducible-run` 完整合成案例
+- Canonical profile 检查不可变身份与调和、Trial/Attempt 分母边界、租约/fencing token/canonical commit、Trace 因果与隐藏推理禁采、Artifact/Bundle/Score 血缘、错误重试恢复、产品/Harness 预算、预声明停止、Adapter 能力真实性和案例审计闭环
+- Node 24 本地 `npm ci && npm run check` 共 163 项自动化测试通过，品牌检查和仓库验证通过
+- 候选内容提交：[`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631)
+- 远端验证：[Documentation Quality run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040)，head SHA 精确匹配候选提交，状态为 `completed/success`
+- 限制：验证只证明公开运行合同存在且关键语义可由仓库校验器执行，不证明真实分布式 Harness、第三方适配器、生产运行、发布授权或个人能力
+
+## A2.1 下一步
+
+1. 先定义 A2 章节与 A2.1 单元的正式标题、边界和学习范围。
+2. A2.1 学习完成前不创建正式单元成果或占位正文。
