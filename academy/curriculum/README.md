@@ -20,6 +20,8 @@
 - [A1.8｜从评测证据到质量决策](../phase-a/chapter-a1/unit-a1-8/README.md)（质量基线、Gate DAG、决策、豁免、发布与生产响应合同已验证）
 - [A1.9｜从评测计划到可复现运行](../phase-a/chapter-a1/unit-a1-9/README.md)（运行身份、Trial/Attempt、Trace、血缘、恢复、预算、适配器与审计合同已验证）
 
+完成九个单元后，使用 [Chapter A1 综合地图与工程闭环复习](../phase-a/chapter-a1/README.md)（[独立 HTML 阅读版](../phase-a/chapter-a1/index.html)）把设计链、运行证据链、三个贯穿案例、双语术语与完整检查清单合并复习。
+
 #### A1.9 已验证范围
 
 A1.8 将评测证据转化为质量决定；A1.9 进一步把计划转化为身份不可变、统计有效、可恢复和可审计的 Harness 运行，显式定义 Study/Run/Sample/Trial/Attempt 对象模型、三类 Digest 与身份调和、并发租约和 canonical commit、Trace 与 Artifact 血缘、错误/重试/断点恢复、产品与 Harness 预算、停止规则、主流工具 Adapter 能力和运行审计。正式成果包含 10 类契约与退款 Agent、合同审查 Agent、企业知识助手 3 个案例；Node 24 本地 `npm ci && npm run check` 共 163 项测试通过，候选提交 [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631) 对应的[远端 run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) `completed/success`。该验证只证明公开运行合同存在且关键语义可由仓库校验器执行，不证明真实分布式 Harness、第三方适配器、生产运行、发布授权或个人能力。

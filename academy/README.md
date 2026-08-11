@@ -20,6 +20,8 @@ Evalorium Academy 将课程内容、实验、测评和 Capstone 作为产品的�
 
 Chapter A1 已完成 9 个公开成果合同已验证单元。当前单元是 A2.1（尚未开始）；必须先定义 A2 与 A2.1 的正式标题、边界和学习范围，学习完成前不创建正式成果或占位正文。
 
+需要一次性回顾九个单元时，可阅读 [Chapter A1 综合地图与工程闭环复习](phase-a/chapter-a1/README.md)（[独立 HTML 阅读版](phase-a/chapter-a1/index.html)）。该总结串联业务需求、评测对象、任务场景、数据、评分器、指标、质量决定与可复现运行，并集中解释核心英文术语、三个贯穿案例和证据边界。
+
 A1.9 包含 Run Spec、Resolved Run Identity、Trial Plan、Attempt Ledger、Trace Contract、Artifact Lineage Manifest、Execution Policy、Budget and Stopping Policy、Adapter Capability Contract、Run Audit Report 10 类契约，以及退款 Agent、合同审查 Agent、企业知识助手 3 个完整合成案例。Node 24 本地 `npm ci && npm run check` 共 163 项测试、品牌与仓库验证通过；候选提交 [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631) 的 [Documentation Quality run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) 精确匹配且成功。该验证只证明公开运行身份、Trial/Attempt、Trace、血缘、恢复、预算、适配器与审计合同，不证明真实分布式 Harness、第三方适配器、生产运行、发布授权或个人能力。
 
 ## 单元交付标准
