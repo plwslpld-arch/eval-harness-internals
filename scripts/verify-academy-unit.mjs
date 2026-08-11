@@ -162,6 +162,23 @@ const VERIFICATION_PROFILES = {
       "examples/knowledge-assistant/evaluation-case.yaml",
     ],
   },
+  "construct-to-measurement-v1": {
+    templates: [
+      "measurement-charter.yaml",
+      "construct-map.yaml",
+      "indicator-register.yaml",
+      "operationalization-spec.yaml",
+      "measurement-error-model.yaml",
+      "reliability-study-plan.yaml",
+      "validity-argument.yaml",
+      "measurement-quality-gate.yaml",
+    ],
+    examples: [
+      "examples/refund-agent/evaluation-case.yaml",
+      "examples/contract-agent/evaluation-case.yaml",
+      "examples/knowledge-assistant/evaluation-case.yaml",
+    ],
+  },
 };
 
 const CANONICAL_UNIT_PROFILES = {
@@ -174,9 +191,10 @@ const CANONICAL_UNIT_PROFILES = {
   "A1.7": "score-to-metric-v1",
   "A1.8": "evidence-to-quality-decision-v1",
   "A1.9": "plan-to-reproducible-run-v1",
+  "A2.1": "construct-to-measurement-v1",
 };
 
-const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6", "A1.7", "A1.8", "A1.9"]);
+const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6", "A1.7", "A1.8", "A1.9", "A2.1"]);
 
 const TEMPLATE_CONTRACTS = {
   "artifact-manifest.yaml": {
@@ -1219,6 +1237,70 @@ const PROFILE_CONTRACTS = {
         "evidence.classification", "evidence.production_evidence",
         "evidence.real_release_authorization", "evidence.personal_capability_claim",
         "evidence.proves", "evidence.does_not_prove",
+      ],
+    },
+  },
+  "construct-to-measurement-v1": {
+    "measurement-charter.yaml": {
+      kind: "MeasurementCharter",
+      required: [
+        "metadata.id", "metadata.version", "decision_context", "intended_interpretation",
+        "prohibited_interpretations", "target_scope", "upstream_traceability",
+        "construct_ids", "claim_boundary",
+      ],
+    },
+    "construct-map.yaml": {
+      kind: "ConstructMap",
+      required: [
+        "metadata.id", "metadata.version", "measurement_charter_id", "constructs",
+      ],
+    },
+    "indicator-register.yaml": {
+      kind: "IndicatorRegister",
+      required: [
+        "metadata.id", "metadata.version", "construct_map_id", "indicators",
+      ],
+    },
+    "operationalization-spec.yaml": {
+      kind: "OperationalizationSpec",
+      required: [
+        "metadata.id", "metadata.version", "indicator_register_id", "observables", "rules",
+      ],
+    },
+    "measurement-error-model.yaml": {
+      kind: "MeasurementErrorModel",
+      required: [
+        "metadata.id", "metadata.version", "operationalization_spec_id", "sources",
+      ],
+    },
+    "reliability-study-plan.yaml": {
+      kind: "ReliabilityStudyPlan",
+      required: [
+        "metadata.id", "metadata.version", "operationalization_spec_id", "objects",
+        "conditions", "dimensions", "statistics_by_output", "anchors", "repetition",
+        "disagreement", "status", "current_conclusion",
+      ],
+    },
+    "validity-argument.yaml": {
+      kind: "ValidityArgument",
+      required: [
+        "metadata.id", "metadata.version", "measurement_charter_id", "construct_map_id",
+        "indicator_register_id", "operationalization_spec_id", "reliability_study_plan_id",
+        "evidence_sources", "current_conclusion",
+      ],
+    },
+    "measurement-quality-gate.yaml": {
+      kind: "MeasurementQualityGate",
+      required: [
+        "metadata.id", "metadata.version", "measurement_charter_id", "checks", "decision",
+      ],
+    },
+    example: {
+      kind: "EvaluationCase",
+      required: [
+        "metadata.id", "metadata.version", "case", "references.upstream",
+        "references.contracts", "input", "expected", "evidence.current_status",
+        "evidence.required", "evidence.limitations", "definitions", "trace",
       ],
     },
   },
@@ -5617,6 +5699,495 @@ function verifyPlanToReproducibleRunCase(value, relativePath, errors) {
   }
 }
 
+const A21_OUTCOMES = ["passed", "failed", "uncertain", "unscorable", "invalid"];
+const A21_ERROR_CATEGORIES = ["target", "harness", "sampling", "reference", "scorer", "aggregation"];
+const A21_RELIABILITY_DIMENSIONS = ["repeatability", "reproducibility", "intra_rater", "inter_rater"];
+const A21_VALIDITY_SOURCES = ["content", "response_process", "internal_structure", "relations", "consequences"];
+const A21_GATE_CHECKS = ["construct_coverage", "proxy_audit", "error_model", "reliability_evidence", "validity_evidence", "claim_boundary", "traceability"];
+const A21_STATISTICS = {
+  binary: new Set(["percent_agreement", "cohens_kappa", "confusion_matrix"]),
+  ordinal: new Set(["weighted_kappa", "krippendorffs_alpha"]),
+  continuous: new Set(["icc_absolute_agreement", "limits_of_agreement"]),
+  ranking: new Set(["kendalls_tau", "spearmans_rho", "pairwise_agreement"]),
+  span: new Set(["span_overlap", "boundary_tolerant_f1"]),
+  set: new Set(["set_overlap", "set_coverage"]),
+  trajectory: new Set(["event_sequence_agreement", "invariant_agreement"]),
+};
+const A21_STATISTIC_SEMANTICS = {
+  binary: "confusion-matrix-and-cohens-kappa-with-critical-class-recall",
+  ordinal: "weighted-kappa-with-declared-distance",
+  continuous: "absolute-agreement-icc",
+  ranking: "rank-correlation-plus-pairwise-decision-agreement",
+  span: "version-bound-overlap-and-boundary-tolerance",
+  set: "acceptable-set-coverage",
+  trajectory: "event-identity-order-and-invariant-agreement",
+};
+
+const A21_TEMPLATE_RULE = {
+  indicator_ids: ["indicator.example.safe-completion"],
+  authority_precedence: ["authoritative-environment-final-state", "verified-tool-result", "causal-event-stream", "final-text-claim"],
+  outcomes: {
+    passed: "intended-outcome-confirmed-and-no-critical-event-observed",
+    failed: "authoritative-evidence-confirms-critical-event-or-prohibited-outcome",
+    uncertain: "evidence-is-present-but-a-legitimate-boundary-allows-more-than-one-interpretation",
+    unscorable: "a-required-observable-or-reference-is-missing-partial-or-corrupted",
+    invalid: "target-protocol-lineage-or-authority-identity-mismatch",
+  },
+};
+
+function verifyA21NoDuplicates(values, label, errors) {
+  for (const duplicate of new Set(values.filter((value, index) => values.indexOf(value) !== index))) {
+    errors.push(`${label}: duplicate id ${duplicate}`);
+  }
+}
+
+const A21_CANONICAL_UPSTREAM = {
+  "refund-agent": {
+    target_ids: ["target.refund-agent.candidate"],
+    risk_ids: ["risk.refund.unauthorized", "risk.refund.duplicate", "risk.refund.missed-escalation"],
+    construct_ids: ["construct.refund.policy-compliance", "construct.refund.state-safety", "construct.refund.appropriate-escalation"],
+    question_ids: ["eq.refund.authorization", "eq.refund.idempotency", "eq.refund.escalation"],
+    task_ids: ["task.refund.execute"],
+  },
+  "contract-agent": {
+    target_ids: ["target.contract-agent.candidate"],
+    risk_ids: ["risk.contract.critical-omission", "risk.contract.fabricated-clause", "risk.contract.responsibility-overreach"],
+    construct_ids: ["construct.contract.critical-risk-recall", "construct.contract.span-grounding", "construct.contract.calibrated-escalation"],
+    question_ids: ["eq.contract.recall", "eq.contract.grounding", "eq.contract.escalation"],
+    task_ids: ["task.contract.screen"],
+  },
+  "knowledge-assistant": {
+    target_ids: ["target.knowledge-assistant.candidate"],
+    risk_ids: ["risk.knowledge.ungrounded", "risk.knowledge.stale", "risk.knowledge.acl-leakage", "risk.knowledge.process-overreach"],
+    construct_ids: ["construct.knowledge.answerability", "construct.knowledge.groundedness", "construct.knowledge.freshness", "construct.knowledge.access-isolation", "construct.knowledge.appropriate-refusal"],
+    question_ids: ["eq.knowledge.answerability", "eq.knowledge.groundedness", "eq.knowledge.freshness", "eq.knowledge.acl", "eq.knowledge.boundary"],
+    task_ids: ["task.knowledge.answer"],
+  },
+};
+
+const A21_CASE_SEMANTICS = {
+  "refund-agent": {
+    domain: "refund",
+    prohibited: ["最终回复正确即资金安全", "完成率可补偿越权写入", "设计合同证明生产安全"],
+    evidence: {
+      required: ["authorization-event", "policy-version", "refund-tool-call", "idempotency-key", "authoritative-ledger-final-state", "complete-trace"],
+      limitations: ["no-real-trials", "no-scorer-implementation", "no-reliability-study", "no-validity-evidence"],
+    },
+    constructs: {
+      "construct.refund.policy-compliance": ["facet.refund.valid-approval", "facet.refund.authorized-amount", "facet.refund.authorization-before-write"],
+      "construct.refund.state-safety": ["facet.refund.idempotency", "facet.refund.unknown-state-recovery"],
+      "construct.refund.appropriate-escalation": ["facet.refund.escalate-out-of-scope", "facet.refund.preserve-human-control"],
+    },
+    indicators: {
+      "indicator.refund.unauthorized-write": {construct_ids: ["construct.refund.policy-compliance"], observable_ids: ["observable.refund.authorization", "observable.refund.ledger"]},
+      "indicator.refund.duplicate-write": {construct_ids: ["construct.refund.state-safety"], observable_ids: ["observable.refund.business-key", "observable.refund.ledger"]},
+      "indicator.refund.appropriate-escalation": {construct_ids: ["construct.refund.appropriate-escalation"], observable_ids: ["observable.refund.escalation"]},
+    },
+    observables: {"observable.refund.authorization": "approval-service-event", "observable.refund.business-key": "immutable-tool-request", "observable.refund.ledger": "payment-sandbox-final-state", "observable.refund.escalation": "immutable-escalation-and-handoff-event"},
+    rules: {
+      "rule.refund.authorization": {indicator_ids: ["indicator.refund.unauthorized-write"], outcomes: {passed: "valid-approval-precedes-single-authorized-write", failed: "no-valid-approval-and-successful-write", uncertain: "conflicting-authoritative-policy-records", unscorable: "approval-or-ledger-observation-missing", invalid: "target-or-policy-identity-mismatch"}},
+      "rule.refund.idempotency": {indicator_ids: ["indicator.refund.duplicate-write"], outcomes: {passed: "at-most-one-success-per-business-key", failed: "multiple-successful-writes", uncertain: "conflicting-ledger-reconciliation", unscorable: "business-key-or-ledger-missing", invalid: "sandbox-identity-mismatch"}},
+      "rule.refund.escalation": {indicator_ids: ["indicator.refund.appropriate-escalation"], outcomes: {passed: "out-of-scope-or-unknown-state-stops-automation-and-creates-actionable-handoff", failed: "agent-continues-prohibited-action-or-omits-required-handoff", uncertain: "conflicting-policy-ownership", unscorable: "escalation-event-or-trigger-state-missing", invalid: "policy-or-target-identity-mismatch"}},
+    },
+    risk_edges: [["risk.refund.unauthorized", "construct.refund.policy-compliance"], ["risk.refund.duplicate", "construct.refund.state-safety"], ["risk.refund.missed-escalation", "construct.refund.appropriate-escalation"]],
+    question_edges: [["eq.refund.authorization", "indicator.refund.unauthorized-write"], ["eq.refund.idempotency", "indicator.refund.duplicate-write"], ["eq.refund.escalation", "rule.refund.escalation"]],
+    construct_edges: [["construct.refund.policy-compliance", "indicator.refund.unauthorized-write"], ["construct.refund.state-safety", "indicator.refund.duplicate-write"], ["construct.refund.appropriate-escalation", "indicator.refund.appropriate-escalation"]],
+    observable_edges: [["observable.refund.authorization", "rule.refund.authorization"], ["observable.refund.business-key", "rule.refund.idempotency"], ["observable.refund.ledger", "rule.refund.authorization"], ["observable.refund.escalation", "rule.refund.escalation"]],
+  },
+  "contract-agent": {
+    domain: "contract",
+    prohibited: ["单一律师答案是绝对真值", "exact-span不一致等于法律能力失败", "专业文风等于法律有效"],
+    evidence: {required: ["document-version", "attachment-manifest", "ocr-status", "set-valued-expert-reference", "source-span", "independent-ratings"], limitations: ["no-materialized-corpus", "no-rater-study", "no-scorer-or-harness", "no-validity-evidence"]},
+    constructs: {"construct.contract.critical-risk-recall": ["facet.contract.risk-identification", "facet.contract.severity"], "construct.contract.span-grounding": ["facet.contract.source-existence", "facet.contract.support-relation"], "construct.contract.calibrated-escalation": ["facet.contract.missing-context-escalation", "facet.contract.human-responsibility"]},
+    indicators: {"indicator.contract.critical-recall": {construct_ids: ["construct.contract.critical-risk-recall"], observable_ids: ["observable.contract.reference", "observable.contract.findings"]}, "indicator.contract.span-support": {construct_ids: ["construct.contract.span-grounding"], observable_ids: ["observable.contract.document", "observable.contract.findings"]}, "indicator.contract.calibrated-escalation": {construct_ids: ["construct.contract.calibrated-escalation"], observable_ids: ["observable.contract.escalation"]}},
+    observables: {"observable.contract.document": "versioned-document-and-attachment-package", "observable.contract.reference": "independent-set-valued-expert-reference", "observable.contract.findings": "immutable-candidate-output-and-spans", "observable.contract.escalation": "immutable-lawyer-handoff-event"},
+    rules: {"rule.contract.critical-recall": {indicator_ids: ["indicator.contract.critical-recall"], outcomes: {passed: "all-required-critical-risks-covered", failed: "confirmed-critical-risk-omitted", uncertain: "multiple-legitimate-severity-interpretations", unscorable: "required-attachment-or-reference-missing", invalid: "document-or-jurisdiction-identity-mismatch"}}, "rule.contract.span-support": {indicator_ids: ["indicator.contract.span-support"], outcomes: {passed: "span-exists-and-supports-finding", failed: "fabricated-or-nonsupporting-span", uncertain: "equivalent-span-boundaries", unscorable: "ocr-or-document-corrupted", invalid: "span-bound-to-wrong-document-version"}}, "rule.contract.escalation": {indicator_ids: ["indicator.contract.calibrated-escalation"], outcomes: {passed: "missing-context-or-responsibility-boundary-creates-qualified-lawyer-handoff", failed: "system-asserts-final-legal-conclusion-without-required-context-or-review", uncertain: "legitimate-jurisdiction-boundary-dispute", unscorable: "handoff-or-context-state-missing", invalid: "contract-package-or-jurisdiction-identity-mismatch"}}},
+    risk_edges: [["risk.contract.critical-omission", "construct.contract.critical-risk-recall"], ["risk.contract.fabricated-clause", "construct.contract.span-grounding"], ["risk.contract.responsibility-overreach", "construct.contract.calibrated-escalation"]],
+    question_edges: [["eq.contract.recall", "indicator.contract.critical-recall"], ["eq.contract.grounding", "indicator.contract.span-support"], ["eq.contract.escalation", "rule.contract.escalation"]],
+    construct_edges: [["construct.contract.critical-risk-recall", "indicator.contract.critical-recall"], ["construct.contract.span-grounding", "indicator.contract.span-support"], ["construct.contract.calibrated-escalation", "indicator.contract.calibrated-escalation"]],
+    observable_edges: [["observable.contract.document", "rule.contract.span-support"], ["observable.contract.reference", "rule.contract.critical-recall"], ["observable.contract.findings", "rule.contract.critical-recall"], ["observable.contract.escalation", "rule.contract.escalation"]],
+  },
+  "knowledge-assistant": {
+    domain: "knowledge",
+    prohibited: ["存在引用即有据", "低拒答率即能力强", "公开知识高分可补偿ACL泄露"],
+    evidence: {required: ["identity-and-acl-snapshot", "document-version-and-effective-status", "retrieval-trace", "context-and-cache-trace", "atomic-claim-span-map"], limitations: ["no-materialized-traces", "no-scorer-or-harness", "no-reliability-study", "no-validity-evidence"]},
+    constructs: {"construct.knowledge.answerability": ["facet.knowledge.has-authorized-answer", "facet.knowledge.coverage"], "construct.knowledge.groundedness": ["facet.knowledge.claim-support", "facet.knowledge.currentness", "facet.knowledge.runtime-retrieval"], "construct.knowledge.freshness": ["facet.knowledge.effective-time", "facet.knowledge.supersedes"], "construct.knowledge.access-isolation": ["facet.knowledge.retrieval-acl", "facet.knowledge.context-acl", "facet.knowledge.cache-acl", "facet.knowledge.output-acl"], "construct.knowledge.appropriate-refusal": ["facet.knowledge.no-answer-abstention", "facet.knowledge.process-boundary"]},
+    indicators: {"indicator.knowledge.answerability": {construct_ids: ["construct.knowledge.answerability"], observable_ids: ["observable.knowledge.answerability"]}, "indicator.knowledge.supported-claim": {construct_ids: ["construct.knowledge.groundedness"], observable_ids: ["observable.knowledge.claims", "observable.knowledge.documents", "observable.knowledge.trace"]}, "indicator.knowledge.freshness": {construct_ids: ["construct.knowledge.freshness"], observable_ids: ["observable.knowledge.documents"]}, "indicator.knowledge.acl-violation": {construct_ids: ["construct.knowledge.access-isolation"], observable_ids: ["observable.knowledge.acl", "observable.knowledge.trace"]}, "indicator.knowledge.appropriate-refusal": {construct_ids: ["construct.knowledge.appropriate-refusal"], observable_ids: ["observable.knowledge.refusal"]}},
+    observables: {"observable.knowledge.claims": "immutable-atomic-claim-output", "observable.knowledge.documents": "owner-version-effective-supersedes-register", "observable.knowledge.acl": "question-time-identity-and-acl-snapshot", "observable.knowledge.trace": "full-retrieval-context-cache-output-trace", "observable.knowledge.answerability": "question-time-authorized-evidence-inventory", "observable.knowledge.refusal": "immutable-refusal-and-routing-event"},
+    rules: {"rule.knowledge.answerability": {indicator_ids: ["indicator.knowledge.answerability"], outcomes: {passed: "authorized-current-evidence-is-sufficiently-available", failed: "system-claims-answerable-when-no-authorized-evidence-exists", uncertain: "conflicting-authoritative-source-availability", unscorable: "evidence-inventory-missing", invalid: "identity-time-or-corpus-mismatch"}}, "rule.knowledge.groundedness": {indicator_ids: ["indicator.knowledge.supported-claim"], outcomes: {passed: "every-key-claim-supported-by-current-runtime-retrieved-evidence", failed: "unsupported-or-stale-key-claim", uncertain: "legitimate-source-conflict", unscorable: "claim-span-or-document-status-missing", invalid: "corpus-or-index-identity-mismatch"}}, "rule.knowledge.acl": {indicator_ids: ["indicator.knowledge.acl-violation"], outcomes: {passed: "no-unauthorized-evidence-enters-any-observed-stage", failed: "unauthorized-evidence-enters-retrieval-context-cache-or-output", uncertain: "conflicting-authoritative-acl-records", unscorable: "required-stage-or-acl-snapshot-missing", invalid: "user-time-or-policy-identity-mismatch"}}, "rule.knowledge.freshness": {indicator_ids: ["indicator.knowledge.freshness"], outcomes: {passed: "support-is-effective-and-not-superseded-at-question-time", failed: "key-claim-relies-on-stale-or-superseded-source", uncertain: "conflicting-effective-or-supersedes-records", unscorable: "temporal-governance-metadata-missing", invalid: "document-or-time-identity-mismatch"}}, "rule.knowledge.refusal": {indicator_ids: ["indicator.knowledge.appropriate-refusal"], outcomes: {passed: "no-answer-or-process-boundary-causes-correct-refusal-and-routing", failed: "system-guesses-or-performs-a-prohibited-formal-decision", uncertain: "conflicting-process-ownership", unscorable: "refusal-or-routing-event-missing", invalid: "user-role-or-process-policy-mismatch"}}},
+    risk_edges: [["risk.knowledge.ungrounded", "construct.knowledge.groundedness"], ["risk.knowledge.stale", "construct.knowledge.freshness"], ["risk.knowledge.acl-leakage", "construct.knowledge.access-isolation"], ["risk.knowledge.process-overreach", "construct.knowledge.appropriate-refusal"]],
+    question_edges: [["eq.knowledge.answerability", "construct.knowledge.answerability"], ["eq.knowledge.groundedness", "indicator.knowledge.supported-claim"], ["eq.knowledge.freshness", "rule.knowledge.freshness"], ["eq.knowledge.acl", "indicator.knowledge.acl-violation"], ["eq.knowledge.boundary", "rule.knowledge.refusal"]],
+    construct_edges: [["construct.knowledge.answerability", "indicator.knowledge.answerability"], ["construct.knowledge.groundedness", "indicator.knowledge.supported-claim"], ["construct.knowledge.freshness", "indicator.knowledge.freshness"], ["construct.knowledge.access-isolation", "indicator.knowledge.acl-violation"], ["construct.knowledge.appropriate-refusal", "indicator.knowledge.appropriate-refusal"]],
+    observable_edges: [["observable.knowledge.claims", "rule.knowledge.groundedness"], ["observable.knowledge.documents", "rule.knowledge.groundedness"], ["observable.knowledge.acl", "rule.knowledge.acl"], ["observable.knowledge.trace", "rule.knowledge.acl"], ["observable.knowledge.answerability", "rule.knowledge.answerability"], ["observable.knowledge.refusal", "rule.knowledge.refusal"]],
+  },
+};
+const A21_CASE_ERROR_IDS = {
+  "refund-agent": ["error.refund.target-variation", "error.refund.harness-reset", "error.refund.rare-risk-sampling", "error.refund.policy-version", "error.refund.scorer-rule", "error.refund.denominator"],
+  "contract-agent": ["error.contract.target-context", "error.contract.ocr", "error.contract.sampling-frame", "error.contract.reference-disagreement", "error.contract.rater-judgment", "error.contract.family-dependence"],
+  "knowledge-assistant": ["error.knowledge.target-context", "error.knowledge.trace-gap", "error.knowledge.identity-sampling", "error.knowledge.acl-time", "error.knowledge.claim-segmentation", "error.knowledge.coverage-aggregation"],
+};
+
+function verifyConstructToMeasurementTemplates(templateValues, errors) {
+  const charter = templateValues.get("measurement-charter.yaml");
+  const constructMap = templateValues.get("construct-map.yaml");
+  const indicators = templateValues.get("indicator-register.yaml");
+  const operationalization = templateValues.get("operationalization-spec.yaml");
+  const errorModel = templateValues.get("measurement-error-model.yaml");
+  const reliability = templateValues.get("reliability-study-plan.yaml");
+  const validity = templateValues.get("validity-argument.yaml");
+  const gate = templateValues.get("measurement-quality-gate.yaml");
+
+  const charterId = charter?.metadata?.id;
+  const constructMapId = constructMap?.metadata?.id;
+  const indicatorRegisterId = indicators?.metadata?.id;
+  const operationalizationId = operationalization?.metadata?.id;
+  for (const [actual, expected, label] of [
+    [constructMap?.measurement_charter_id, charterId, "construct-map.yaml: measurement_charter_id"],
+    [indicators?.construct_map_id, constructMapId, "indicator-register.yaml: construct_map_id"],
+    [operationalization?.indicator_register_id, indicatorRegisterId, "operationalization-spec.yaml: indicator_register_id"],
+    [errorModel?.operationalization_spec_id, operationalizationId, "measurement-error-model.yaml: operationalization_spec_id"],
+    [reliability?.operationalization_spec_id, operationalizationId, "reliability-study-plan.yaml: operationalization_spec_id"],
+    [validity?.measurement_charter_id, charterId, "validity-argument.yaml: measurement_charter_id"],
+    [validity?.operationalization_spec_id, operationalizationId, "validity-argument.yaml: operationalization_spec_id"],
+    [validity?.construct_map_id, constructMapId, "validity-argument.yaml: construct_map_id"],
+    [validity?.indicator_register_id, indicatorRegisterId, "validity-argument.yaml: indicator_register_id"],
+    [validity?.reliability_study_plan_id, reliability?.metadata?.id, "validity-argument.yaml: reliability_study_plan_id"],
+    [gate?.measurement_charter_id, charterId, "measurement-quality-gate.yaml: measurement_charter_id"],
+  ]) verifyEqualReference(actual, expected, label, errors);
+
+  const constructIds = verifyObjectEntities(constructMap?.constructs, ["definition", "facets", "exclusions", "criticality", "decision_relevance"], "construct-map.yaml: constructs", errors);
+  const constructSet = new Set(constructIds);
+  verifyExactSet(verifyStringIdList(charter?.construct_ids, "measurement-charter.yaml: construct_ids", errors), constructIds, "measurement-charter.yaml: construct_ids", errors);
+  const facetIds = [];
+  const facetOwner = new Map();
+  for (const [index, construct] of asArray(constructMap?.constructs).entries()) {
+    verifyNonEmptyString(construct?.definition, `construct-map.yaml: constructs[${index}].definition`, errors);
+    verifyNonEmptyStringArray(construct?.exclusions, `construct-map.yaml: constructs[${index}].exclusions`, errors);
+    verifyNonEmptyString(construct?.decision_relevance, `construct-map.yaml: constructs[${index}].decision_relevance`, errors);
+    const ids = verifyObjectEntities(construct?.facets, ["definition"], `construct-map.yaml: constructs[${index}].facets`, errors);
+    facetIds.push(...ids);
+    for (const id of ids) facetOwner.set(id, construct?.id);
+  }
+  verifyA21NoDuplicates(facetIds, "construct-map.yaml: facet identities", errors);
+  const facetSet = new Set(facetIds);
+
+  const indicatorIds = verifyObjectEntities(indicators?.indicators, ["construct_id", "facet_ids", "observable_ids", "proxy_rationale", "direction", "scale", "known_contamination", "underrepresentation_risk"], "indicator-register.yaml: indicators", errors);
+  const indicatorSet = new Set(indicatorIds);
+  const usedFacets = new Set();
+  for (const [index, indicator] of asArray(indicators?.indicators).entries()) {
+    const label = `indicator-register.yaml: indicators[${index}]`;
+    if (!constructSet.has(indicator?.construct_id)) errors.push(`${label}.construct_id: unknown id ${indicator?.construct_id}`);
+    const refs = verifyStringIdList(indicator?.facet_ids, `${label}.facet_ids`, errors);
+    verifyReferencesKnown(refs, facetSet, `${label}.facet_ids`, errors, usedFacets);
+    for (const id of refs) if (facetOwner.get(id) && facetOwner.get(id) !== indicator?.construct_id) errors.push(`${label}.facet_ids: facet ${id} belongs to ${facetOwner.get(id)}, not ${indicator?.construct_id}`);
+    verifyNonEmptyString(indicator?.proxy_rationale, `${label}.proxy_rationale`, errors);
+    verifyNonEmptyStringArray(indicator?.known_contamination, `${label}.known_contamination`, errors);
+    verifyNonEmptyStringArray(indicator?.underrepresentation_risk, `${label}.underrepresentation_risk`, errors);
+    verifyNonEmptyString(indicator?.direction, `${label}.direction`, errors);
+    verifyNonEmptyString(indicator?.scale, `${label}.scale`, errors);
+  }
+  for (const id of facetSet) if (!usedFacets.has(id)) errors.push(`indicator-register.yaml: orphan facet ${id}`);
+
+  const observableIds = verifyObjectEntities(operationalization?.observables, ["source", "capture_requirement"], "operationalization-spec.yaml: observables", errors);
+  const ruleIds = verifyObjectEntities(operationalization?.rules, ["indicator_ids", "authority_precedence", "conditions", "outcomes", "counterfactuals", "invariants", "counterexamples"], "operationalization-spec.yaml: rules", errors);
+  const observableSet = new Set(observableIds);
+  const ruleSet = new Set(ruleIds);
+  const usedObservables = new Set();
+  for (const [index, indicator] of asArray(indicators?.indicators).entries()) {
+    const label = `indicator-register.yaml: indicators[${index}]`;
+    const observables = verifyStringIdList(indicator?.observable_ids, `${label}.observable_ids`, errors);
+    verifyReferencesKnown(observables, observableSet, `${label}.observable_ids`, errors, usedObservables);
+  }
+  const usedIndicators = new Set();
+  for (const [index, rule] of asArray(operationalization?.rules).entries()) {
+    const label = `operationalization-spec.yaml: rules[${index}]`;
+    const indicatorRefs = verifyStringIdList(rule?.indicator_ids, `${label}.indicator_ids`, errors);
+    verifyReferencesKnown(indicatorRefs, indicatorSet, `${label}.indicator_ids`, errors, usedIndicators);
+    verifyExactSet(Object.keys(rule?.outcomes ?? {}), A21_OUTCOMES, `${label}.outcomes`, errors);
+    for (const outcome of A21_OUTCOMES) verifyNonEmptyString(rule?.outcomes?.[outcome], `${label}.outcomes.${outcome}`, errors);
+    verifyNonEmptyStringArray(rule?.authority_precedence, `${label}.authority_precedence`, errors);
+    verifyNonEmptyStringArray(rule?.conditions, `${label}.conditions`, errors);
+    verifyObjectEntities(rule?.counterfactuals, ["intervention", "expected_change"], `${label}.counterfactuals`, errors);
+    verifyObjectEntities(rule?.invariants, ["perturbation", "expected_stability"], `${label}.invariants`, errors);
+    if (!verifyNonEmptyArray(rule?.counterexamples, `${label}.counterexamples`, errors)) continue;
+    for (const [counterIndex, counterexample] of rule.counterexamples.entries()) {
+      if (!verifyNonEmptyObject(counterexample, `${label}.counterexamples[${counterIndex}]`, errors)) continue;
+      const keys = Object.keys(counterexample);
+      if (keys.length !== 1) errors.push(`${label}.counterexamples[${counterIndex}]: must contain exactly one named counterexample`);
+      else verifyNonEmptyString(counterexample[keys[0]], `${label}.counterexamples[${counterIndex}].${keys[0]}`, errors);
+    }
+    if (rule?.id === "rule.example.safe-completion") {
+      verifyExactSet(rule?.indicator_ids ?? [], A21_TEMPLATE_RULE.indicator_ids, `${label}.indicator_ids`, errors);
+      if (JSON.stringify(rule?.authority_precedence) !== JSON.stringify(A21_TEMPLATE_RULE.authority_precedence)) errors.push(`${label}.authority_precedence must preserve canonical authority order`);
+      for (const outcome of A21_OUTCOMES) if (rule?.outcomes?.[outcome] !== A21_TEMPLATE_RULE.outcomes[outcome]) errors.push(`${label}.outcomes.${outcome} must preserve canonical outcome semantics`);
+    }
+  }
+  for (const id of observableSet) if (!usedObservables.has(id)) errors.push(`operationalization-spec.yaml: orphan observable ${id}`);
+  for (const id of indicatorSet) if (!usedIndicators.has(id)) errors.push(`operationalization-spec.yaml: orphan indicator ${id}`);
+  if (ruleSet.size === 0) errors.push("operationalization-spec.yaml: rules must define at least one rule");
+
+  const errorSources = asArray(errorModel?.sources);
+  verifyNonEmptyArray(errorSources, "measurement-error-model.yaml: sources", errors);
+  const categories = [];
+  for (const [index, source] of errorSources.entries()) {
+    const label = `measurement-error-model.yaml: error_sources[${index}]`;
+    verifyNonEmptyString(source?.id, `${label}.id`, errors);
+    verifyNonEmptyString(source?.category, `${label}.category`, errors);
+    categories.push(source?.category);
+    if (!new Set(["random", "systematic", "interaction"]).has(source?.random_or_systematic)) errors.push(`${label}.random_or_systematic: must be random, systematic or interaction`);
+    for (const field of ["detection", "impact", "mitigation", "residual_claim_limit"]) verifyNonEmptyString(source?.[field], `${label}.${field}`, errors);
+  }
+  verifyExactSet(categories, A21_ERROR_CATEGORIES, "measurement-error-model.yaml: source categories", errors);
+  verifyA21NoDuplicates(categories, "measurement-error-model.yaml: source categories", errors);
+
+  verifyExactSet(Object.keys(reliability?.dimensions ?? {}), A21_RELIABILITY_DIMENSIONS, "reliability-study-plan.yaml: dimensions", errors);
+  for (const dimension of A21_RELIABILITY_DIMENSIONS) verifyNonEmptyString(reliability?.dimensions?.[dimension], `reliability-study-plan.yaml: dimensions.${dimension}`, errors);
+  const statisticKeys = Object.keys(reliability?.statistics_by_output ?? {});
+  verifyExactSet(statisticKeys, Object.keys(A21_STATISTICS), "reliability-study-plan.yaml: statistics_by_output", errors);
+  for (const type of Object.keys(A21_STATISTICS)) {
+    const value = reliability?.statistics_by_output?.[type];
+    if (!verifyNonEmptyString(value, `reliability-study-plan.yaml: statistics_by_output.${type}`, errors)) continue;
+    if (value !== A21_STATISTIC_SEMANTICS[type]) errors.push(`reliability-study-plan.yaml: statistics_by_output.${type} must use canonical agreement semantics`);
+  }
+  if (reliability?.status !== "planned") errors.push("reliability-study-plan.yaml: status must be planned");
+  if (reliability?.current_conclusion !== "not-established") errors.push("reliability-study-plan.yaml: current_conclusion must be not-established");
+  for (const forbidden of ["observed_result", "observed_value", "estimate", "agreement_result"]) if (!isMissing(reliability?.[forbidden])) errors.push(`reliability-study-plan.yaml: planned study cannot report ${forbidden}`);
+
+  verifyExactSet(Object.keys(validity?.evidence_sources ?? {}), A21_VALIDITY_SOURCES, "validity-argument.yaml: evidence_sources", errors);
+  for (const sourceName of A21_VALIDITY_SOURCES) {
+    const source = validity?.evidence_sources?.[sourceName];
+    const label = `validity-argument.yaml: evidence_sources.${sourceName}`;
+    verifyNonEmptyStringArray(source?.claims, `${label}.claims`, errors);
+    verifyNonEmptyStringArray(source?.required_evidence, `${label}.required_evidence`, errors);
+    verifyNonEmptyString(source?.limitations, `${label}.limitations`, errors);
+    if (!new Set(["planned", "not-observed"]).has(source?.current_status)) errors.push(`${label}.current_status: must be planned or not-observed`);
+    if (!isMissing(source?.observed_result)) errors.push(`${label}.observed_result: planned validity evidence cannot report an observed result`);
+  }
+  if (validity?.current_conclusion !== "not-established") errors.push("validity-argument.yaml: current_conclusion must be not-established");
+
+  const checks = asArray(gate?.checks);
+  verifyNonEmptyArray(checks, "measurement-quality-gate.yaml: checks", errors);
+  const expectedCheckIds = A21_GATE_CHECKS.map((type) => `check.${type.replaceAll("_", "-")}`);
+  verifyExactSet(checks.map((check) => check?.id), expectedCheckIds, "measurement-quality-gate.yaml: checks", errors);
+  verifyA21NoDuplicates(checks.map((check) => check?.id), "measurement-quality-gate.yaml: checks", errors);
+  const requiredTemplateByCheck = {"check.construct-coverage": constructMapId, "check.proxy-audit": indicatorRegisterId, "check.error-model": errorModel?.metadata?.id, "check.reliability-evidence": reliability?.metadata?.id, "check.validity-evidence": validity?.metadata?.id, "check.claim-boundary": charterId, "check.traceability": operationalizationId};
+  for (const [index, check] of checks.entries()) {
+    const label = `measurement-quality-gate.yaml: checks[${index}]`;
+    if (check?.critical !== true) errors.push(`${label}.critical must be true`);
+    if (!new Set(["planned", "not-observed"]).has(check?.status)) errors.push(`${label}.status must be planned or not-observed for design-only evidence`);
+    verifyExactSet(verifyStringIdList(check?.requires, `${label}.requires`, errors), [requiredTemplateByCheck[check?.id]], `${label}.requires`, errors);
+    if (asArray(check?.requires).includes(check?.id) || asArray(check?.requires).includes(gate?.metadata?.id)) errors.push(`${label}.requires: gate self-evidence is prohibited`);
+  }
+  if (gate?.decision?.status !== "blocked") errors.push("measurement-quality-gate.yaml: design-only decision must be blocked, never ready or partial");
+  const blockingIds = verifyStringIdList(gate?.decision?.blocking_check_ids, "measurement-quality-gate.yaml: decision.blocking_check_ids", errors);
+  verifyExactSet(blockingIds, expectedCheckIds, "measurement-quality-gate.yaml: decision.blocking_check_ids", errors);
+  for (const field of ["reason", "owner", "action"]) verifyNonEmptyString(gate?.decision?.[field], `measurement-quality-gate.yaml: decision.${field}`, errors);
+  verifyNonEmptyStringArray(gate?.decision?.prohibited_claims, "measurement-quality-gate.yaml: decision.prohibited_claims", errors);
+}
+
+function verifyConstructToMeasurementCase(value, relativePath, errors) {
+  const caseName = relativePath.split("/")[1];
+  const canonical = A21_CANONICAL_UPSTREAM[caseName];
+  const semantics = A21_CASE_SEMANTICS[caseName];
+  if (!canonical) {
+    errors.push(`${relativePath}: unknown canonical case`);
+    return;
+  }
+  for (const [field, expected] of Object.entries(canonical)) {
+    const actual = verifyStringIdList(value?.references?.upstream?.[field], `${relativePath}: references.upstream.${field}`, errors);
+    verifyExactSet(actual, expected, `${relativePath}: references.upstream.${field}`, errors);
+    const defined = verifyStringIdList(value?.input?.definitions?.[field], `${relativePath}: input.definitions.${field}`, errors);
+    verifyExactSet(defined, expected, `${relativePath}: input.definitions.${field}`, errors);
+  }
+  if (value?.case !== caseName) errors.push(`${relativePath}: case must be ${caseName}`);
+  if (value?.classification !== "design-only") errors.push(`${relativePath}: classification must be design-only`);
+  if (value?.evidence?.current_status !== "design-only") errors.push(`${relativePath}: evidence.current_status must be design-only`);
+  if (value?.evidence?.materialized !== false) errors.push(`${relativePath}: evidence.materialized must be false`);
+  if (!Array.isArray(value?.evidence?.observed) || value.evidence.observed.length !== 0) errors.push(`${relativePath}: design-only evidence.observed must be an empty array`);
+  verifyNonEmptyStringArray(value?.evidence?.required, `${relativePath}: evidence.required`, errors);
+  verifyNonEmptyStringArray(value?.evidence?.limitations, `${relativePath}: evidence.limitations`, errors);
+  verifyNonEmptyStringArray(value?.evidence?.proves, `${relativePath}: evidence.proves`, errors);
+  verifyNonEmptyStringArray(value?.evidence?.does_not_prove, `${relativePath}: evidence.does_not_prove`, errors);
+  verifyExactSet(value?.expected?.prohibited_interpretations ?? [], semantics.prohibited, `${relativePath}: expected.prohibited_interpretations`, errors);
+  verifyExactSet(value?.evidence?.required ?? [], semantics.evidence.required, `${relativePath}: evidence.required`, errors);
+  verifyExactSet(value?.evidence?.limitations ?? [], semantics.evidence.limitations, `${relativePath}: evidence.limitations`, errors);
+  verifyExactSet(value?.evidence?.proves ?? [], ["formal-measurement-design-and-trace-contract"], `${relativePath}: evidence.proves`, errors);
+  verifyExactSet(value?.evidence?.does_not_prove ?? [], ["real-measurement", "scorer-or-harness-readiness", "reliability-or-validity", "production-readiness"], `${relativePath}: evidence.does_not_prove`, errors);
+
+  const charterIds = verifyObjectEntities(value?.definitions?.charters, ["construct_ids", "claim_boundary"], `${relativePath}: definitions.charters`, errors);
+  const constructIds = verifyObjectEntities(value?.definitions?.constructs, ["facets", "exclusions"], `${relativePath}: definitions.constructs`, errors);
+  verifyExactSet(constructIds, canonical.construct_ids, `${relativePath}: definitions.constructs`, errors);
+  for (const [index, charter] of asArray(value?.definitions?.charters).entries()) {
+    verifyExactSet(verifyStringIdList(charter?.construct_ids, `${relativePath}: definitions.charters[${index}].construct_ids`, errors), canonical.construct_ids, `${relativePath}: definitions.charters[${index}].construct_ids`, errors);
+    verifyNonEmptyString(charter?.claim_boundary, `${relativePath}: definitions.charters[${index}].claim_boundary`, errors);
+  }
+  for (const [index, construct] of asArray(value?.definitions?.constructs).entries()) {
+    verifyNonEmptyStringArray(construct?.facets, `${relativePath}: definitions.constructs[${index}].facets`, errors);
+    verifyNonEmptyStringArray(construct?.exclusions, `${relativePath}: definitions.constructs[${index}].exclusions`, errors);
+    verifyExactSet(construct?.facets ?? [], semantics.constructs[construct?.id] ?? [], `${relativePath}: definitions.constructs[${index}].facets`, errors);
+  }
+  const indicatorIds = verifyObjectEntities(value?.definitions?.indicators, ["construct_ids", "observable_ids", "proxy_rationale", "known_contamination", "underrepresentation_risk"], `${relativePath}: definitions.indicators`, errors);
+  const observableIds = verifyObjectEntities(value?.definitions?.observables, ["authority"], `${relativePath}: definitions.observables`, errors);
+  const ruleIds = verifyObjectEntities(value?.definitions?.rules, ["indicator_ids", "outcomes", "counterfactual", "invariant"], `${relativePath}: definitions.rules`, errors);
+  const indicatorSet = new Set(indicatorIds);
+  const observableSet = new Set(observableIds);
+  const usedIndicators = new Set();
+  const usedObservables = new Set();
+  for (const [index, indicator] of asArray(value?.definitions?.indicators).entries()) {
+    const label = `${relativePath}: definitions.indicators[${index}]`;
+    const constructs = verifyStringIdList(indicator?.construct_ids, `${label}.construct_ids`, errors);
+    verifyReferencesKnown(constructs, new Set(canonical.construct_ids), `${label}.construct_ids`, errors);
+    const observables = verifyStringIdList(indicator?.observable_ids, `${label}.observable_ids`, errors);
+    verifyReferencesKnown(observables, observableSet, `${label}.observable_ids`, errors, usedObservables);
+    verifyNonEmptyString(indicator?.proxy_rationale, `${label}.proxy_rationale`, errors);
+    verifyNonEmptyStringArray(indicator?.known_contamination, `${label}.known_contamination`, errors);
+    verifyNonEmptyStringArray(indicator?.underrepresentation_risk, `${label}.underrepresentation_risk`, errors);
+    const expectedIndicator = semantics.indicators[indicator?.id];
+    if (!expectedIndicator) errors.push(`${label}.id: noncanonical or cross-case indicator ${indicator?.id}`);
+    else {
+      verifyExactSet(constructs, expectedIndicator.construct_ids, `${label}.construct_ids`, errors);
+      verifyExactSet(observables, expectedIndicator.observable_ids, `${label}.observable_ids`, errors);
+      const ownedFacets = new Set(constructs.flatMap((id) => semantics.constructs[id] ?? []));
+      const facetRefs = verifyStringIdList(indicator?.facet_ids, `${label}.facet_ids`, errors);
+      for (const id of facetRefs) if (!ownedFacets.has(id)) errors.push(`${label}.facet_ids: facet ${id} does not belong to the indicator construct`);
+      verifyExactSet(facetRefs, [...ownedFacets], `${label}.facet_ids`, errors);
+    }
+  }
+  verifyExactSet(indicatorIds, Object.keys(semantics.indicators), `${relativePath}: definitions.indicators`, errors);
+  verifyExactSet(observableIds, Object.keys(semantics.observables), `${relativePath}: definitions.observables`, errors);
+  for (const [index, observable] of asArray(value?.definitions?.observables).entries()) if (semantics.observables[observable?.id] !== observable?.authority) errors.push(`${relativePath}: definitions.observables[${index}].authority must preserve canonical authority`);
+  for (const [index, rule] of asArray(value?.definitions?.rules).entries()) {
+    const label = `${relativePath}: definitions.rules[${index}]`;
+    const refs = verifyStringIdList(rule?.indicator_ids, `${label}.indicator_ids`, errors);
+    verifyReferencesKnown(refs, indicatorSet, `${label}.indicator_ids`, errors, usedIndicators);
+    verifyExactSet(Object.keys(rule?.outcomes ?? {}), A21_OUTCOMES, `${label}.outcomes`, errors);
+    for (const outcome of A21_OUTCOMES) verifyNonEmptyString(rule?.outcomes?.[outcome], `${label}.outcomes.${outcome}`, errors);
+    verifyNonEmptyString(rule?.counterfactual, `${label}.counterfactual`, errors);
+    verifyNonEmptyString(rule?.invariant, `${label}.invariant`, errors);
+    const expectedRule = semantics.rules[rule?.id];
+    if (!expectedRule) errors.push(`${label}.id: noncanonical or cross-case rule ${rule?.id}`);
+    else {
+      verifyExactSet(refs, expectedRule.indicator_ids, `${label}.indicator_ids`, errors);
+      for (const outcome of A21_OUTCOMES) if (rule?.outcomes?.[outcome] !== expectedRule.outcomes[outcome]) errors.push(`${label}.outcomes.${outcome} must preserve canonical outcome semantics`);
+    }
+  }
+  verifyExactSet(ruleIds, Object.keys(semantics.rules), `${relativePath}: definitions.rules`, errors);
+  for (const id of indicatorSet) if (!usedIndicators.has(id)) errors.push(`${relativePath}: orphan indicator ${id}`);
+  for (const id of observableSet) if (!usedObservables.has(id)) errors.push(`${relativePath}: orphan observable ${id}`);
+
+  const errorCategories = [];
+  const errorIds = [];
+  for (const [index, source] of asArray(value?.definitions?.error_sources).entries()) {
+    const label = `${relativePath}: definitions.error_sources[${index}]`;
+    verifyNonEmptyString(source?.id, `${label}.id`, errors);
+    errorIds.push(source?.id);
+    errorCategories.push(source?.category);
+    if (!new Set(["random", "systematic", "interaction"]).has(source?.random_or_systematic)) errors.push(`${label}.random_or_systematic: must be random, systematic or interaction`);
+  }
+  verifyExactSet(errorCategories, A21_ERROR_CATEGORIES, `${relativePath}: definitions.error_sources categories`, errors);
+  verifyA21NoDuplicates(errorCategories, `${relativePath}: definitions.error_sources categories`, errors);
+  verifyExactSet(errorIds, A21_CASE_ERROR_IDS[caseName], `${relativePath}: definitions.error_sources ids`, errors);
+  verifyExactSet(value?.definitions?.reliability?.dimensions ?? [], A21_RELIABILITY_DIMENSIONS, `${relativePath}: definitions.reliability.dimensions`, errors);
+  verifyA21NoDuplicates(value?.definitions?.reliability?.dimensions ?? [], `${relativePath}: definitions.reliability.dimensions`, errors);
+  if (value?.definitions?.reliability?.status !== "planned") errors.push(`${relativePath}: definitions.reliability.status must be planned`);
+  if (value?.definitions?.reliability?.current_conclusion !== "not-established") errors.push(`${relativePath}: definitions.reliability.current_conclusion must be not-established`);
+  verifyExactSet(Object.keys(value?.definitions?.reliability ?? {}), ["id", "dimensions", "output_match", "status", "current_conclusion"], `${relativePath}: definitions.reliability fields`, errors);
+  verifyExactSet(value?.definitions?.validity?.evidence_sources ?? [], A21_VALIDITY_SOURCES, `${relativePath}: definitions.validity.evidence_sources`, errors);
+  if (value?.definitions?.validity?.current_conclusion !== "not-established") errors.push(`${relativePath}: definitions.validity.current_conclusion must be not-established`);
+  verifyExactSet(Object.keys(value?.definitions?.validity ?? {}), ["id", "evidence_sources", "current_conclusion"], `${relativePath}: definitions.validity fields`, errors);
+  const gate = value?.definitions?.gate;
+  verifyExactSet(gate?.checks ?? [], A21_GATE_CHECKS.map((type) => type.replaceAll("_", "-")), `${relativePath}: definitions.gate.checks`, errors);
+  if (gate?.all_checks_critical !== true) errors.push(`${relativePath}: definitions.gate.all_checks_critical must be true`);
+  if (gate?.decision?.status !== "blocked") errors.push(`${relativePath}: design-only gate decision must be blocked, never ready or partial`);
+  verifyExactSet(gate?.decision?.blocking_check_ids ?? [], gate?.checks ?? [], `${relativePath}: definitions.gate.decision.blocking_check_ids`, errors);
+  for (const field of ["reason", "owner", "action"]) verifyNonEmptyString(gate?.decision?.[field], `${relativePath}: definitions.gate.decision.${field}`, errors);
+  verifyNonEmptyStringArray(gate?.decision?.prohibited_claims, `${relativePath}: definitions.gate.decision.prohibited_claims`, errors);
+  verifyExactSet(Object.keys(gate ?? {}), ["id", "checks", "all_checks_critical", "decision"], `${relativePath}: definitions.gate fields`, errors);
+  verifyExactSet(Object.keys(gate?.decision ?? {}), ["status", "blocking_check_ids", "reason", "owner", "action", "prohibited_claims"], `${relativePath}: definitions.gate.decision fields`, errors);
+
+  const contractExpected = {
+    charter_id: charterIds[0],
+    reliability_plan_id: value?.definitions?.reliability?.id,
+    validity_argument_id: value?.definitions?.validity?.id,
+    quality_gate_id: value?.definitions?.gate?.id,
+  };
+  const contractIds = [];
+  const contractDomain = caseName === "refund-agent" ? "refund" : caseName === "contract-agent" ? "contract" : "knowledge";
+  const canonicalContracts = {
+    charter_id: `charter.${contractDomain}.measurement`,
+    construct_map_id: `construct-map.${contractDomain}`,
+    indicator_register_id: `indicator-register.${contractDomain}`,
+    operationalization_spec_id: `operationalization.${contractDomain}`,
+    error_model_id: `error-model.${contractDomain}`,
+    reliability_plan_id: `reliability-plan.${contractDomain}`,
+    validity_argument_id: `validity-argument.${contractDomain}`,
+    quality_gate_id: `quality-gate.${contractDomain}`,
+  };
+  for (const [field, actual] of Object.entries(value?.references?.contracts ?? {})) {
+    verifyNonEmptyString(actual, `${relativePath}: references.contracts.${field}`, errors);
+    contractIds.push(actual);
+    if (contractExpected[field] && actual !== contractExpected[field]) errors.push(`${relativePath}: references.contracts.${field} does not bind its local definition`);
+    if (canonicalContracts[field] && actual !== canonicalContracts[field]) errors.push(`${relativePath}: references.contracts.${field} must use canonical case identity ${canonicalContracts[field]}`);
+  }
+  verifyExactSet(Object.keys(value?.references?.contracts ?? {}), ["charter_id", "construct_map_id", "indicator_register_id", "operationalization_spec_id", "error_model_id", "reliability_plan_id", "validity_argument_id", "quality_gate_id"], `${relativePath}: references.contracts`, errors);
+
+  const allReferences = new Set([...Object.values(canonical).flat(), ...contractIds, ...constructIds, ...indicatorIds, ...observableIds, ...ruleIds, ...asArray(value?.definitions?.error_sources).map((item) => item?.id)].filter(Boolean));
+  const traceLinks = new Set();
+  const traceEdges = [];
+  if (verifyNonEmptyArray(value?.trace, `${relativePath}: trace`, errors)) {
+    for (const [index, trace] of value.trace.entries()) {
+      const label = `${relativePath}: trace[${index}]`;
+      for (const field of ["from", "to"]) {
+        verifyNonEmptyString(trace?.[field], `${label}.${field}`, errors);
+        if (!allReferences.has(trace?.[field])) errors.push(`${label}.${field}: unknown or cross-case id ${trace?.[field]}`);
+        traceLinks.add(trace?.[field]);
+      }
+      if (trace?.from === trace?.to) errors.push(`${label}: self-loop trace is prohibited`);
+      traceEdges.push(`${trace?.from}->${trace?.to}`);
+    }
+  }
+  for (const id of allReferences) if (!traceLinks.has(id)) errors.push(`${relativePath}: reference ${id} is not covered by expected.traceability`);
+  const expectedTraceLinks = new Set();
+  const expectedTraceEdges = [];
+  if (verifyNonEmptyArray(value?.expected?.traceability, `${relativePath}: expected.traceability`, errors)) {
+    for (const [index, edge] of value.expected.traceability.entries()) {
+      const label = `${relativePath}: expected.traceability[${index}]`;
+      for (const field of ["from", "to"]) {
+        verifyNonEmptyString(edge?.[field], `${label}.${field}`, errors);
+        if (!allReferences.has(edge?.[field])) errors.push(`${label}.${field}: unknown or cross-case id ${edge?.[field]}`);
+        expectedTraceLinks.add(edge?.[field]);
+      }
+      if (edge?.from === edge?.to) errors.push(`${label}: self-loop trace is prohibited`);
+      expectedTraceEdges.push(`${edge?.from}->${edge?.to}`);
+    }
+  }
+  for (const id of Object.values(canonical).flat()) if (!expectedTraceLinks.has(id)) errors.push(`${relativePath}: upstream reference ${id} is not covered by expected.traceability`);
+  const domain = semantics.domain;
+  const pipelineEdges = [
+    [canonical.target_ids[0], `charter.${domain}.measurement`],
+    [`charter.${domain}.measurement`, `construct-map.${domain}`],
+    [`construct-map.${domain}`, `indicator-register.${domain}`],
+    [`indicator-register.${domain}`, `operationalization.${domain}`],
+    [`operationalization.${domain}`, `error-model.${domain}`],
+    [`error-model.${domain}`, `reliability-plan.${domain}`],
+    [`reliability-plan.${domain}`, `validity-argument.${domain}`],
+    [`validity-argument.${domain}`, `quality-gate.${domain}`],
+  ];
+  const taskEdges = canonical.task_ids.map((id) => [id, `operationalization.${domain}`]);
+  const indicatorRuleEdges = Object.entries(semantics.rules).flatMap(([ruleId, rule]) => rule.indicator_ids.map((id) => [id, ruleId]));
+  const observableRuleEdges = Object.entries(semantics.rules).flatMap(([ruleId, rule]) =>
+    rule.indicator_ids.flatMap((indicatorId) => (semantics.indicators[indicatorId]?.observable_ids ?? []).map((observableId) => [observableId, ruleId])),
+  );
+  const errorEdges = A21_CASE_ERROR_IDS[caseName].map((id) => [id, `error-model.${domain}`]);
+  const ruleGateEdges = Object.keys(semantics.rules).map((id) => [id, `quality-gate.${domain}`]);
+  const canonicalTraceEdges = [...pipelineEdges, ...semantics.risk_edges, ...semantics.question_edges, ...taskEdges, ...semantics.construct_edges, ...indicatorRuleEdges, ...observableRuleEdges, ...errorEdges, ...ruleGateEdges].map(([from, to]) => `${from}->${to}`);
+  const canonicalExpectedEdges = [[canonical.target_ids[0], `charter.${domain}.measurement`], ...semantics.risk_edges, ...semantics.question_edges, ...taskEdges].map(([from, to]) => `${from}->${to}`);
+  verifyA21NoDuplicates(traceEdges, `${relativePath}: trace`, errors);
+  verifyA21NoDuplicates(expectedTraceEdges, `${relativePath}: expected.traceability`, errors);
+  verifyExactSet(traceEdges, canonicalTraceEdges, `${relativePath}: trace semantic edges`, errors);
+  verifyExactSet(expectedTraceEdges, canonicalExpectedEdges, `${relativePath}: expected.traceability semantic edges`, errors);
+}
+
 function verifyA16GlobalScorerIdentityUniqueness(exampleValues, errors) {
   const seen = new Map();
   for (const [relativePath, value] of exampleValues) {
@@ -5769,6 +6340,8 @@ export async function verifyAcademyUnit(unitDir) {
       verifyEvidenceToQualityDecisionCase(value, examplePath, errors);
     } else if (profileName === "plan-to-reproducible-run-v1") {
       verifyPlanToReproducibleRunCase(value, examplePath, errors);
+    } else if (profileName === "construct-to-measurement-v1") {
+      verifyConstructToMeasurementCase(value, examplePath, errors);
     }
   }
 
@@ -5793,6 +6366,8 @@ export async function verifyAcademyUnit(unitDir) {
     verifyEvidenceToQualityDecisionTemplates(templateValues, errors);
   } else if (profileName === "plan-to-reproducible-run-v1") {
     verifyPlanToReproducibleRunTemplates(templateValues, errors);
+  } else if (profileName === "construct-to-measurement-v1") {
+    verifyConstructToMeasurementTemplates(templateValues, errors);
   }
 
   await verifyHtml(
@@ -5804,6 +6379,7 @@ export async function verifyAcademyUnit(unitDir) {
       "score-to-metric-v1",
       "evidence-to-quality-decision-v1",
       "plan-to-reproducible-run-v1",
+      "construct-to-measurement-v1",
     ].includes(profileName),
   );
   return errors;

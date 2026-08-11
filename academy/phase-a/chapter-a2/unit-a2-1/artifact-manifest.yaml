@@ -1,0 +1,28 @@
+schema_version: 1
+unit: {id: A2.1, title: 从抽象质量到可测量构念, phase: A, chapter: A2}
+publication:
+  status: candidate
+  audience: [AI质量负责人, 评测工程师, 测量与风险治理负责人]
+  language: zh-CN
+  formats: [markdown, html, yaml]
+  content_policy: 仅包含校订后的公开课程、测量设计合同和合成教学案例，不包含对话、个人信息、中间草稿、真实测量、生产证据、发布授权或个人能力凭据
+contents:
+  lesson: README.md
+  html: index.html
+  templates:
+    - measurement-charter.yaml
+    - construct-map.yaml
+    - indicator-register.yaml
+    - operationalization-spec.yaml
+    - measurement-error-model.yaml
+    - reliability-study-plan.yaml
+    - validity-argument.yaml
+    - measurement-quality-gate.yaml
+  examples:
+    - examples/refund-agent/evaluation-case.yaml
+    - examples/contract-agent/evaluation-case.yaml
+    - examples/knowledge-assistant/evaluation-case.yaml
+verification:
+  command: npm run check
+  unit_contract: scripts/verify-academy-unit.mjs
+  profile: construct-to-measurement-v1

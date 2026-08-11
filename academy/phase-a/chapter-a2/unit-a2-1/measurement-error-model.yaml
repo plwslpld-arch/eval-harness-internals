@@ -1,0 +1,49 @@
+schema_version: 1
+kind: MeasurementErrorModel
+metadata:
+  id: measurement-error-model.a2-1.template
+  version: 1.0.0
+operationalization_spec_id: operationalization-spec.a2-1.template
+sources:
+  - id: error.target.variability
+    category: target
+    random_or_systematic: interaction
+    detection: controlled-repetitions-and-identity-reconciliation
+    impact: observed-score-varies-by-seed-context-or-hidden-target-drift
+    mitigation: freeze-identity-and-separate-natural-variation-from-drift
+    residual_claim_limit: no-generalization-beyond-observed-target-and-context
+  - id: error.harness.capture
+    category: harness
+    random_or_systematic: systematic
+    detection: state-reset-checks-trace-completeness-and-replay
+    impact: target-behavior-can-be-misattributed-from-contaminated-or-missing-state
+    mitigation: isolated-fixtures-integrity-checks-and-trial-attempt-separation
+    residual_claim_limit: incomplete-observations-remain-unscorable
+  - id: error.sampling.frame
+    category: sampling
+    random_or_systematic: interaction
+    detection: frame-to-population-gap-and-slice-audit
+    impact: estimate-may-not-represent-declared-population
+    mitigation: stratification-target-weights-and-uncertainty-reporting
+    residual_claim_limit: no-claim-about-uncovered-risk-slices
+  - id: error.reference.standard
+    category: reference
+    random_or_systematic: systematic
+    detection: provenance-version-independent-review-and-disagreement-analysis
+    impact: correct-target-behavior-can-be-scored-as-failure-or-reverse
+    mitigation: set-valued-references-unknown-state-and-adjudication
+    residual_claim_limit: unresolved-reference-conflicts-remain-uncertain-or-unscorable
+  - id: error.scorer.judgment
+    category: scorer
+    random_or_systematic: interaction
+    detection: anchors-repetition-perturbation-and-independent-comparison
+    impact: scores-vary-or-stably-track-an-irrelevant-feature
+    mitigation: analytic-rubric-authority-precedence-calibration-and-abstention
+    residual_claim_limit: interpretation-limited-to-validated-scorer-scope
+  - id: error.aggregation.denominator
+    category: aggregation
+    random_or_systematic: systematic
+    detection: denominator-lineage-dependency-and-missingness-audit
+    impact: pseudo-replication-selection-bias-or-critical-risk-compensation
+    mitigation: preserve-clusters-report-coverage-and-separate-critical-metrics
+    residual_claim_limit: no-population-claim-without-valid-analysis-contract

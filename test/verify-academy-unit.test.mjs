@@ -150,6 +150,11 @@ const A19_UNIT = path.resolve(
   "../academy/phase-a/chapter-a1/unit-a1-9",
 );
 
+const A21_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a2/unit-a2-1",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -3101,4 +3106,295 @@ test("A1.9 HTML cannot link to a missing local artifact", async () => {
     (await readFile(htmlPath, "utf8")).replace("run-spec.yaml", "missing-run-spec.yaml"),
   );
   assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-run-spec\.yaml/);
+});
+
+test("A2.1 construct-to-measurement profile requires all templates and cases", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-profile-");
+  await mutateYaml(root, "artifact-manifest.yaml", (value) => {
+    value.contents.templates = [];
+    value.contents.examples = [];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /requires measurement-charter\.yaml/);
+  assert.match(report, /requires measurement-quality-gate\.yaml/);
+  assert.match(report, /requires examples\/knowledge-assistant\/evaluation-case\.yaml/);
+});
+
+test("the complete A2.1 construct-to-measurement candidate is accepted", async () => {
+  assert.deepEqual(await verifyAcademyUnit(A21_UNIT), []);
+});
+
+test("A2.1 binds every template to the exact measurement graph", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-binding-");
+  await mutateYaml(root, "validity-argument.yaml", (value) => {
+    value.construct_map_id = "construct-map.borrowed";
+    value.reliability_study_plan_id = "reliability.borrowed";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /validity-argument\.yaml: construct_map_id: expected/);
+  assert.match(report, /validity-argument\.yaml: reliability_study_plan_id: expected/);
+});
+
+test("A2.1 rejects dangling facets indicators observables and rules", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-chain-");
+  await mutateYaml(root, "indicator-register.yaml", (value) => {
+    value.indicators[0].facet_ids = ["facet.unknown"];
+    value.indicators[0].observable_ids = ["observable.unknown"];
+  });
+  await mutateYaml(root, "operationalization-spec.yaml", (value) => {
+    value.rules[0].indicator_ids = ["indicator.unknown"];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /facet_ids: unknown id facet\.unknown/);
+  assert.match(report, /observable_ids: unknown id observable\.unknown/);
+  assert.match(report, /indicator_ids: unknown id indicator\.unknown/);
+});
+
+test("A2.1 rules require all five evidence outcomes", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-outcomes-");
+  await mutateYaml(root, "operationalization-spec.yaml", (value) => {
+    delete value.rules[0].outcomes.unscorable;
+  });
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /outcomes: missing related id unscorable/);
+});
+
+test("A2.1 rejects id-only boolean and untyped operationalization shells", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-types-");
+  await mutateYaml(root, "construct-map.yaml", (value) => {
+    value.constructs[0].facets = [{id: "facet.example.effectiveness"}];
+  });
+  await mutateYaml(root, "operationalization-spec.yaml", (value) => {
+    value.rules[0].counterfactuals = true;
+    value.rules[0].authority_precedence = false;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /facets\[0\]: missing required key definition/);
+  assert.match(report, /counterfactuals: must be a non-empty array/);
+  assert.match(report, /authority_precedence: must be a non-empty array/);
+});
+
+test("A2.1 proxy audit cannot shrink rationale contamination or underrepresentation", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-proxy-");
+  await mutateYaml(root, "indicator-register.yaml", (value) => {
+    value.indicators[0].proxy_rationale = true;
+    value.indicators[0].known_contamination = [];
+    value.indicators[0].underrepresentation_risk = [];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /proxy_rationale: must be a non-empty string/);
+  assert.match(report, /known_contamination: must be a non-empty array/);
+  assert.match(report, /underrepresentation_risk: must be a non-empty array/);
+});
+
+test("A2.1 error model contains exactly six typed sources", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-errors-");
+  await mutateYaml(root, "measurement-error-model.yaml", (value) => {
+    value.sources.pop();
+    value.sources[0].category = "harness";
+    value.sources[0].random_or_systematic = "random-and-systematic";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /source categories: missing related id target/);
+  assert.match(report, /source categories: missing related id aggregation/);
+  assert.match(report, /random_or_systematic: must be random, systematic or interaction/);
+});
+
+test("A2.1 reliability includes all dimensions and output-compatible statistics", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-reliability-");
+  await mutateYaml(root, "reliability-study-plan.yaml", (value) => {
+    delete value.dimensions.inter_rater;
+    value.statistics_by_output.binary = "rank-correlation";
+    value.observed_result = {agreement: 1};
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /dimensions: missing related id inter_rater/);
+  assert.match(report, /statistics_by_output\.binary must use canonical agreement semantics/);
+  assert.match(report, /planned study cannot report observed_result/);
+});
+
+test("A2.1 reliability cannot fabricate observed status or conclusion", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-fake-reliability-");
+  await mutateYaml(root, "reliability-study-plan.yaml", (value) => {
+    value.status = "observed";
+    value.current_conclusion = "established";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /status must be planned/);
+  assert.match(report, /current_conclusion must be not-established/);
+});
+
+test("A2.1 validity requires exactly five planned evidence sources", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-validity-");
+  await mutateYaml(root, "validity-argument.yaml", (value) => {
+    delete value.evidence_sources.consequences;
+    value.evidence_sources.content.observed_result = "accepted";
+    value.current_conclusion = "established";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /evidence_sources: missing related id consequences/);
+  assert.match(report, /planned validity evidence cannot report an observed result/);
+  assert.match(report, /current_conclusion must be not-established/);
+});
+
+test("A2.1 design-only gate cannot become ready or partial", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-ready-");
+  await mutateYaml(root, "measurement-quality-gate.yaml", (value) => {
+    value.decision.status = "ready";
+    value.decision.blocking_check_ids = [];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /design-only decision must be blocked, never ready or partial/);
+  assert.match(report, /blocking_check_ids: missing related id check\.construct-coverage/);
+});
+
+test("A2.1 gate checks remain critical and cannot use self evidence", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-gate-");
+  await mutateYaml(root, "measurement-quality-gate.yaml", (value) => {
+    value.checks[0].critical = false;
+    value.checks[0].requires = [value.metadata.id];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /critical must be true/);
+  assert.match(report, /gate self-evidence is prohibited/);
+});
+
+test("A2.1 cases preserve canonical upstream identities", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-case-upstream-");
+  await mutateYaml(root, "examples/refund-agent/evaluation-case.yaml", (value) => {
+    value.references.upstream.risk_ids[0] = "risk.contract.critical-omission";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /references\.upstream\.risk_ids: unrelated id risk\.contract\.critical-omission/);
+  assert.match(report, /references\.upstream\.risk_ids: missing related id risk\.refund\.unauthorized/);
+});
+
+test("A2.1 cases reject cross-case trace borrowing and trace orphans", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-case-trace-");
+  await mutateYaml(root, "examples/refund-agent/evaluation-case.yaml", (value) => {
+    value.trace[0].from = "target.contract-agent.candidate";
+    value.trace = value.trace.filter((edge) => edge.from !== "task.refund.execute" && edge.to !== "task.refund.execute");
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /unknown or cross-case id target\.contract-agent\.candidate/);
+  assert.match(report, /reference task\.refund\.execute is not covered by expected\.traceability/);
+});
+
+test("A2.1 cases require all six error categories and blocked measurement gates", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-case-gate-");
+  await mutateYaml(root, "examples/knowledge-assistant/evaluation-case.yaml", (value) => {
+    value.definitions.error_sources.pop();
+    value.definitions.gate.all_checks_critical = false;
+    value.definitions.gate.decision.status = "partial";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /definitions\.error_sources categories: missing related id aggregation/);
+  assert.match(report, /all_checks_critical must be true/);
+  assert.match(report, /design-only gate decision must be blocked, never ready or partial/);
+});
+
+test("A2.1 HTML cannot link to a missing local artifact", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-html-");
+  const htmlPath = path.join(root, "index.html");
+  await writeFile(htmlPath, (await readFile(htmlPath, "utf8")).replace("measurement-charter.yaml", "missing-charter.yaml"));
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-charter\.yaml/);
+});
+
+test("A2.1 statistic semantics reject keyword and ranking bypasses", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-stat-bypass-");
+  await mutateYaml(root, "reliability-study-plan.yaml", (value) => {
+    value.statistics_by_output.binary = "ranking-only-kappa-keyword-bypass";
+  });
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /statistics_by_output\.binary must use canonical agreement semantics/);
+});
+
+test("A2.1 cases preserve semantic evidence and prohibited interpretations", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-semantic-boundary-");
+  await mutateYaml(root, "examples/refund-agent/evaluation-case.yaml", (value) => {
+    value.expected.prohibited_interpretations = ["x"];
+    value.evidence.required = [value.references.contracts.quality_gate_id];
+    value.evidence.limitations = ["x"];
+    value.evidence.proves = ["x"];
+    value.evidence.does_not_prove = ["x"];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /expected\.prohibited_interpretations: missing related id/);
+  assert.match(report, /evidence\.required: unrelated id quality-gate\.refund/);
+  assert.match(report, /evidence\.limitations: missing related id/);
+  assert.match(report, /evidence\.proves: unrelated id x/);
+  assert.match(report, /evidence\.does_not_prove: unrelated id x/);
+});
+
+test("A2.1 canonical outcome semantics cannot swap passed and failed", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-outcome-swap-");
+  await mutateYaml(root, "examples/refund-agent/evaluation-case.yaml", (value) => {
+    const outcomes = value.definitions.rules[0].outcomes;
+    [outcomes.passed, outcomes.failed] = [outcomes.failed, outcomes.passed];
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /outcomes\.passed must preserve canonical outcome semantics/);
+  assert.match(report, /outcomes\.failed must preserve canonical outcome semantics/);
+});
+
+test("A2.1 case entities cannot be globally replaced by another case", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-global-borrow-");
+  await mutateYaml(root, "examples/refund-agent/evaluation-case.yaml", (value) => {
+    const replace = (input) => typeof input === "string" ? input.replaceAll("indicator.refund", "indicator.contract").replaceAll("observable.refund", "observable.contract").replaceAll("rule.refund", "rule.contract").replaceAll("error.refund", "error.contract") : Array.isArray(input) ? input.map(replace) : input && typeof input === "object" ? Object.fromEntries(Object.entries(input).map(([key, item]) => [key, replace(item)])) : input;
+    Object.assign(value, replace(value));
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /noncanonical or cross-case indicator/);
+  assert.match(report, /noncanonical or cross-case rule/);
+  assert.match(report, /definitions\.error_sources ids: unrelated id error\.contract/);
+});
+
+test("A2.1 facets remain canonical and attached to their owning construct", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-facet-owner-");
+  await mutateYaml(root, "examples/refund-agent/evaluation-case.yaml", (value) => {
+    value.definitions.constructs[0].facets = ["facet.arbitrary"];
+    value.definitions.indicators[0].facet_ids = value.definitions.constructs[1].facets;
+  });
+  await mutateYaml(root, "construct-map.yaml", (value) => {
+    value.constructs.push({id: "construct.example.second", definition: "second", facets: [{id: "facet.example.second", definition: "second"}], exclusions: ["none"], criticality: "high", decision_relevance: "test"});
+    value.constructs[0].facets.push({id: "facet.example.cross", definition: "cross"});
+    value.constructs[0].facet_ids = ["facet.example.cross"];
+    value.constructs[0].id = "construct.example.second";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /facets: unrelated id facet\.arbitrary/);
+  assert.match(report, /facet_ids: facet .* does not belong to the indicator construct|construct identities: duplicate id|construct_ids/);
+});
+
+test("A2.1 trace closure rejects self-loop and direction erasure", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-self-loop-");
+  await mutateYaml(root, "examples/contract-agent/evaluation-case.yaml", (value) => {
+    value.trace = value.trace.map((edge) => ({from: edge.from, to: edge.from}));
+    value.expected.traceability = value.expected.traceability.map((edge) => ({from: edge.from, to: edge.from}));
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /self-loop trace is prohibited/);
+  assert.match(report, /trace semantic edges: missing related id/);
+  assert.match(report, /expected\.traceability semantic edges: missing related id/);
+});
+
+test("A2.1 planned case containers reject contradictory readiness fields", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-contradiction-");
+  await mutateYaml(root, "examples/knowledge-assistant/evaluation-case.yaml", (value) => {
+    value.definitions.reliability.observed_result = {agreement: 1};
+    value.definitions.reliability.ready = true;
+    value.definitions.validity.observed_result = "established";
+    value.definitions.gate.decision.ready = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /definitions\.reliability fields: unrelated id observed_result/);
+  assert.match(report, /definitions\.reliability fields: unrelated id ready/);
+  assert.match(report, /definitions\.validity fields: unrelated id observed_result/);
+  assert.match(report, /definitions\.gate\.decision fields: unrelated id ready/);
+});
+
+test("A2.1 derives every observable to rule edge from indicator ownership", async () => {
+  const root = await copyUnit(A21_UNIT, "evalorium-a2-1-observable-rule-");
+  await mutateYaml(root, "examples/refund-agent/evaluation-case.yaml", (value) => {
+    value.trace = value.trace.filter((edge) => !(edge.from === "observable.refund.ledger" && edge.to === "rule.refund.idempotency"));
+  });
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /trace semantic edges: missing related id observable\.refund\.ledger->rule\.refund\.idempotency/);
 });
