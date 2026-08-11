@@ -1,0 +1,22 @@
+schema_version: 1
+kind: AdapterCapabilityContract
+metadata: {id: adapter-contract.enterprise.a19, version: 1.0.0}
+canonical_model:
+  objects: [study, run, task, sample, trial, attempt, trace, artifact, observation_bundle, score_event, metric_result, gate_decision]
+  missing_source_semantics_must_remain_explicit: true
+capability_values: [full, partial, unavailable]
+adapters:
+  - {id: inspect-ai, roles: [execution_backend, sandbox_backend, evidence_source], trial_identity: full, attempt_identity: partial, trace: full, sandbox: full, resume: partial, red_team: partial}
+  - {id: openai-evals-graders, roles: [managed_run_backend, grader_provider], trial_identity: partial, attempt_identity: unavailable, trace: partial, sandbox: unavailable, resume: partial, red_team: unavailable}
+  - {id: langsmith, roles: [trace_source, dataset_source, online_eval_source], trial_identity: partial, attempt_identity: unavailable, trace: full, sandbox: unavailable, resume: unavailable, red_team: unavailable}
+  - {id: mlflow, roles: [trace_backend, experiment_backend, scorer_backend], trial_identity: partial, attempt_identity: unavailable, trace: full, sandbox: unavailable, resume: partial, red_team: unavailable}
+  - {id: phoenix, roles: [otel_trace_backend, evaluator_backend], trial_identity: partial, attempt_identity: unavailable, trace: full, sandbox: unavailable, resume: unavailable, red_team: unavailable}
+  - {id: deepeval, roles: [developer_test_backend, metric_provider, ci_runner], trial_identity: full, attempt_identity: unavailable, trace: full, sandbox: unavailable, resume: unavailable, red_team: partial}
+  - {id: promptfoo, roles: [adversarial_case_generator, red_team_backend, ci_runner], trial_identity: partial, attempt_identity: unavailable, trace: partial, sandbox: unavailable, resume: unavailable, red_team: full}
+normalization:
+  external_pass_is_release_authorization: false
+  unavailable_capability_may_be_invented: false
+  raw_external_identity_preserved: true
+  normalized_evidence_requires_manifest: true
+evidence_boundary: {integrations_implemented: false, production_evidence: false, real_release_authorization: false, personal_capability_claim: false}
+

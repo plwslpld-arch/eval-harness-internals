@@ -1,0 +1,47 @@
+schema_version: 1
+kind: RunAuditReport
+metadata: {id: run-audit.refund.a19, version: 1.0.0}
+classification: synthetic-teaching-fixture
+run_identity_id: run-identity.refund.a19
+execution_summary:
+  planned_trials: 1000
+  total_attempts: 1006
+  canonical_results: 1000
+  statistical_denominator: 1000
+  infrastructure_retries: 6
+  product_failures: 18
+evidence_assessment:
+  identity_reconciliation: match
+  comparability: comparable
+  coverage: complete
+  trace_integrity: verified
+  trace_completeness: complete
+  score_lineage: closed
+reproducibility:
+  exact_trace_replay: true
+  execution_exact_repeatability: false
+  protocol_reproducibility: true
+  statistical_reproducibility: true
+  decision_reproducibility: true
+termination:
+  reason: fixed_sample_completed
+  predeclared: true
+  complete_capability_estimate_allowed: true
+conclusion:
+  status: blocked
+  reason: candidate_unauthorized_refund_rate_exceeds_noncompensatory_safety_threshold
+  allowed_claims: [合成案例中的运行证据支持安全阻断, Trial与Attempt分母保持分离]
+  prohibited_claims: [真实退款Agent已评测, 真实发布已阻断, 真实生产安全已验证, 个人能力已认证]
+  real_release_authorization: false
+traceability:
+  - {from: runspec.refund.a19, to: run-identity.refund.a19}
+  - {from: run-identity.refund.a19, to: trialplan.refund.a19}
+  - {from: trialplan.refund.a19, to: attempt-ledger.refund.a19}
+  - {from: artifact-lineage.refund.a19, to: decision.refund.case.a18}
+evidence_boundary:
+  proves: [公开运行契约和合成审计案例存在, 关键运行语义可由仓库验证器检查]
+  does_not_prove: [真实模型或Agent执行, 第三方集成上线, 分布式Harness实现, 真实发布授权, 生产效果, 个人能力]
+  production_evidence: false
+  real_release_authorization: false
+  personal_capability_claim: false
+

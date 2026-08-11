@@ -1,0 +1,30 @@
+schema_version: 1
+kind: ArtifactLineageManifest
+metadata: {id: artifact-lineage.refund.a19, version: 1.0.0}
+run_identity_id: run-identity.refund.a19
+artifacts:
+  - {id: artifact.trace.refund.001, type: agent_trace, digest: sha256:6666666666666666666666666666666666666666666666666666666666666666, integrity: verified, completeness: complete, classification: synthetic-teaching-fixture}
+  - {id: artifact.output.refund.001, type: final_output, digest: sha256:7777777777777777777777777777777777777777777777777777777777777777, integrity: verified, completeness: complete, classification: synthetic-teaching-fixture}
+observation_bundles:
+  - id: observation-bundle.refund.001
+    digest: sha256:8888888888888888888888888888888888888888888888888888888888888888
+    trial_id: trial.refund.001
+    canonical_attempt_id: attempt.refund.001
+    artifact_ids: [artifact.trace.refund.001, artifact.output.refund.001]
+    completeness: complete
+score_events:
+  - id: score-event.refund.001
+    trial_id: trial.refund.001
+    canonical_attempt_id: attempt.refund.001
+    observation_bundle_id: observation-bundle.refund.001
+    observation_bundle_digest: sha256:8888888888888888888888888888888888888888888888888888888888888888
+    scorer_identity_id: scorer-identity.refund.a16
+    score_eligible: true
+lineage:
+  - {from: dataset.refund.a15.v1, to: trialplan.refund.a19, relation: plans}
+  - {from: trial.refund.001, to: artifact.trace.refund.001, relation: produces}
+  - {from: observation-bundle.refund.001, to: score-event.refund.001, relation: scored_as}
+  - {from: score-event.refund.001, to: metric.unauthorized-refund.a17, relation: aggregates_into}
+  - {from: metric.unauthorized-refund.a17, to: decision.refund.case.a18, relation: informs}
+evidence_boundary: {production_evidence: false, real_release_authorization: false, personal_capability_claim: false}
+

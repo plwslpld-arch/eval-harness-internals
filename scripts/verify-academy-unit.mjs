@@ -143,6 +143,25 @@ const VERIFICATION_PROFILES = {
       "examples/knowledge-assistant/evaluation-case.yaml",
     ],
   },
+  "plan-to-reproducible-run-v1": {
+    templates: [
+      "run-spec.yaml",
+      "resolved-run-identity.yaml",
+      "trial-plan.yaml",
+      "attempt-ledger.yaml",
+      "trace-contract.yaml",
+      "artifact-lineage-manifest.yaml",
+      "execution-policy.yaml",
+      "budget-and-stopping-policy.yaml",
+      "adapter-capability-contract.yaml",
+      "run-audit-report.yaml",
+    ],
+    examples: [
+      "examples/refund-agent/evaluation-case.yaml",
+      "examples/contract-agent/evaluation-case.yaml",
+      "examples/knowledge-assistant/evaluation-case.yaml",
+    ],
+  },
 };
 
 const CANONICAL_UNIT_PROFILES = {
@@ -154,9 +173,10 @@ const CANONICAL_UNIT_PROFILES = {
   "A1.6": "reference-to-scorer-v1",
   "A1.7": "score-to-metric-v1",
   "A1.8": "evidence-to-quality-decision-v1",
+  "A1.9": "plan-to-reproducible-run-v1",
 };
 
-const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6", "A1.7", "A1.8"]);
+const EXPLICIT_PROFILE_UNITS = new Set(["A1.2", "A1.3", "A1.4", "A1.5", "A1.6", "A1.7", "A1.8", "A1.9"]);
 
 const TEMPLATE_CONTRACTS = {
   "artifact-manifest.yaml": {
@@ -1116,6 +1136,89 @@ const PROFILE_CONTRACTS = {
         "expected.reasoning", "expected.trace_closure", "evidence.materialized",
         "evidence.classification", "evidence.production_evidence",
         "evidence.real_release_authorization", "evidence.proves", "evidence.does_not_prove",
+      ],
+    },
+  },
+  "plan-to-reproducible-run-v1": {
+    "run-spec.yaml": {
+      kind: "RunSpec",
+      required: [
+        "metadata.id", "metadata.version", "study", "targets", "data", "harness",
+        "environment", "scoring", "analysis", "execution", "evidence_boundary",
+      ],
+    },
+    "resolved-run-identity.yaml": {
+      kind: "ResolvedRunIdentity",
+      required: [
+        "metadata.id", "metadata.version", "run_spec_id", "run_id", "digests",
+        "resolutions", "reconciliation", "comparability", "evidence_boundary",
+      ],
+    },
+    "trial-plan.yaml": {
+      kind: "TrialPlan",
+      required: [
+        "metadata.id", "metadata.version", "run_spec_id", "resolved_run_identity_id",
+        "design", "counts", "pairing", "ordering", "denominator_policy",
+      ],
+    },
+    "attempt-ledger.yaml": {
+      kind: "AttemptLedger",
+      required: [
+        "metadata.id", "metadata.version", "trial_plan_id", "attempts",
+        "canonical_commit_policy", "late_result_policy", "summary",
+      ],
+    },
+    "trace-contract.yaml": {
+      kind: "TraceContract",
+      required: [
+        "metadata.id", "metadata.version", "identity", "causality", "events",
+        "reasoning_capture", "completeness", "privacy",
+      ],
+    },
+    "artifact-lineage-manifest.yaml": {
+      kind: "ArtifactLineageManifest",
+      required: [
+        "metadata.id", "metadata.version", "run_identity_id", "artifacts",
+        "observation_bundles", "score_events", "lineage", "evidence_boundary",
+      ],
+    },
+    "execution-policy.yaml": {
+      kind: "ExecutionPolicy",
+      required: [
+        "metadata.id", "metadata.version", "concurrency", "isolation",
+        "error_taxonomy", "retry_policy", "timeouts", "resume_policy",
+      ],
+    },
+    "budget-and-stopping-policy.yaml": {
+      kind: "BudgetAndStoppingPolicy",
+      required: [
+        "metadata.id", "metadata.version", "product_budget", "harness_budget",
+        "reservation", "pricing_identity", "stopping_rules", "conclusion_policy",
+      ],
+    },
+    "adapter-capability-contract.yaml": {
+      kind: "AdapterCapabilityContract",
+      required: [
+        "metadata.id", "metadata.version", "canonical_model", "capability_values",
+        "adapters", "normalization", "evidence_boundary",
+      ],
+    },
+    "run-audit-report.yaml": {
+      kind: "RunAuditReport",
+      required: [
+        "metadata.id", "metadata.version", "classification", "run_identity_id",
+        "execution_summary", "evidence_assessment", "reproducibility",
+        "termination", "conclusion", "traceability", "evidence_boundary",
+      ],
+    },
+    example: {
+      kind: "EvaluationCase",
+      required: [
+        "metadata.id", "metadata.version", "classification", "references",
+        "input", "expected", "expected.audit_trace_closure", "evidence.materialized",
+        "evidence.classification", "evidence.production_evidence",
+        "evidence.real_release_authorization", "evidence.personal_capability_claim",
+        "evidence.proves", "evidence.does_not_prove",
       ],
     },
   },
@@ -5337,6 +5440,183 @@ function verifyEvidenceToQualityDecisionCase(value, relativePath, errors) {
   for (const ids of Object.values(value?.references ?? {})) for (const id of asArray(ids)) if (!tracedIds.has(id)) errors.push(`${relativePath}: reference ${id} is not covered by expected.trace_closure`);
 }
 
+function verifyA19Sha256(value, label, errors) {
+  if (typeof value !== "string" || !/^sha256:[0-9a-f]{64}$/i.test(value)) {
+    errors.push(`${label}: must be a sha256 content identity`);
+    return false;
+  }
+  return true;
+}
+
+function verifyA19SyntheticBoundary(value, label, errors) {
+  verifyA17Boolean(value?.production_evidence, false, `${label}.production_evidence`, errors);
+  verifyA17Boolean(value?.real_release_authorization, false, `${label}.real_release_authorization`, errors);
+  verifyA17Boolean(value?.personal_capability_claim, false, `${label}.personal_capability_claim`, errors);
+}
+
+function verifyPlanToReproducibleRunTemplates(templateValues, errors) {
+  const spec = templateValues.get("run-spec.yaml");
+  const identity = templateValues.get("resolved-run-identity.yaml");
+  const plan = templateValues.get("trial-plan.yaml");
+  const ledger = templateValues.get("attempt-ledger.yaml");
+  const trace = templateValues.get("trace-contract.yaml");
+  const lineage = templateValues.get("artifact-lineage-manifest.yaml");
+  const execution = templateValues.get("execution-policy.yaml");
+  const budget = templateValues.get("budget-and-stopping-policy.yaml");
+  const adapters = templateValues.get("adapter-capability-contract.yaml");
+  const audit = templateValues.get("run-audit-report.yaml");
+  if (![spec, identity, plan, ledger, trace, lineage, execution, budget, adapters, audit].every(Boolean)) return;
+
+  verifyEqualReference(identity?.run_spec_id, spec?.metadata?.id, "resolved-run-identity.yaml: run_spec_id", errors);
+  verifyEqualReference(plan?.run_spec_id, spec?.metadata?.id, "trial-plan.yaml: run_spec_id", errors);
+  verifyEqualReference(plan?.resolved_run_identity_id, identity?.metadata?.id, "trial-plan.yaml: resolved_run_identity_id", errors);
+  verifyEqualReference(ledger?.trial_plan_id, plan?.metadata?.id, "attempt-ledger.yaml: trial_plan_id", errors);
+  verifyEqualReference(lineage?.run_identity_id, identity?.metadata?.id, "artifact-lineage-manifest.yaml: run_identity_id", errors);
+  verifyEqualReference(audit?.run_identity_id, identity?.metadata?.id, "run-audit-report.yaml: run_identity_id", errors);
+
+  const digestValues = Object.values(identity?.digests ?? {});
+  for (const [name, digest] of Object.entries(identity?.digests ?? {})) verifyA19Sha256(digest, `resolved-run-identity.yaml: digests.${name}`, errors);
+  if (new Set(digestValues).size !== digestValues.length) errors.push("resolved-run-identity.yaml: spec, comparability and resolved digests must remain distinct");
+  for (const [index, resolution] of asArray(identity?.resolutions).entries()) {
+    if (resolution?.mutable_alias_as_final_identity !== false) errors.push(`resolved-run-identity.yaml: resolutions[${index}] mutable alias cannot be a final resolved identity`);
+    if (resolution?.immutable !== true) errors.push(`resolved-run-identity.yaml: resolutions[${index}] resolved identity must be immutable`);
+    verifyNonEmptyString(resolution?.resolved_id, `resolved-run-identity.yaml: resolutions[${index}].resolved_id`, errors);
+  }
+  if (identity?.comparability?.direct_comparison_allowed === true && identity?.reconciliation?.status !== "match") errors.push("resolved-run-identity.yaml: direct comparison requires reconciliation status match");
+  if (identity?.comparability?.status === "comparable" && identity?.reconciliation?.status !== "match") errors.push("resolved-run-identity.yaml: comparable status requires reconciliation match");
+  verifyA19SyntheticBoundary(identity?.evidence_boundary, "resolved-run-identity.yaml: evidence_boundary", errors);
+  verifyA19SyntheticBoundary(spec?.evidence_boundary, "run-spec.yaml: evidence_boundary", errors);
+
+  const design = plan?.design ?? {};
+  const planned = design.sample_count * design.target_count * design.repetitions;
+  if (!Number.isFinite(planned) || plan?.counts?.planned_trials !== planned) errors.push("trial-plan.yaml: planned_trials must equal sample_count * target_count * repetitions");
+  if (plan?.denominator_policy?.statistical_denominator !== plan?.counts?.planned_trials) errors.push("trial-plan.yaml: denominator_policy.statistical_denominator must equal planned_trials");
+  for (const field of ["attempts_expand_denominator", "judge_repetitions_expand_target_trial_count", "cache_hits_count_as_new_trials", "trace_replays_count_as_new_trials"]) verifyA17Boolean(plan?.denominator_policy?.[field], false, `trial-plan.yaml: denominator_policy.${field}`, errors);
+  if (ledger?.summary?.planned_trials !== planned) errors.push("attempt-ledger.yaml: summary.planned_trials must equal the declared factorial Trial plan");
+  if (ledger?.summary?.statistical_denominator !== planned) errors.push("attempt-ledger.yaml: statistical denominator must equal planned canonical Trials");
+  if (ledger?.summary?.canonical_results > plan?.counts?.planned_trials) errors.push("attempt-ledger.yaml: canonical results cannot exceed planned Trials");
+  if (ledger?.summary?.total_attempts < ledger?.summary?.canonical_results) errors.push("attempt-ledger.yaml: total attempts cannot be below canonical results");
+
+  const attemptIds = new Set();
+  const canonicalByTrial = new Map();
+  const scoreEligibleAttempts = new Set();
+  for (const [index, attempt] of asArray(ledger?.attempts).entries()) {
+    const label = `attempt-ledger.yaml: attempts[${index}]`;
+    if (attemptIds.has(attempt?.attempt_id)) errors.push(`${label}: duplicate attempt_id ${attempt?.attempt_id}`);
+    attemptIds.add(attempt?.attempt_id);
+    if (attempt?.canonical === true) {
+      if (attempt?.lease_status !== "current") errors.push(`${label}: canonical attempt must hold a current lease`);
+      if (canonicalByTrial.has(attempt?.trial_id)) errors.push(`${label}: Trial ${attempt?.trial_id} has more than one canonical Attempt`);
+      canonicalByTrial.set(attempt?.trial_id, attempt?.attempt_id);
+    }
+    if (attempt?.score_eligible === true) {
+      if (attempt?.canonical !== true || attempt?.lease_status !== "current") errors.push(`${label}: score-eligible attempt must be canonical with a current lease`);
+      else scoreEligibleAttempts.add(attempt?.attempt_id);
+    }
+  }
+  verifyA17Boolean(ledger?.canonical_commit_policy?.at_most_one_per_trial, true, "attempt-ledger.yaml: canonical_commit_policy.at_most_one_per_trial", errors);
+  verifyA17Boolean(ledger?.canonical_commit_policy?.current_fencing_token_required, true, "attempt-ledger.yaml: canonical_commit_policy.current_fencing_token_required", errors);
+  verifyA17Boolean(ledger?.late_result_policy?.may_enter_statistical_denominator, false, "attempt-ledger.yaml: late_result_policy.may_enter_statistical_denominator", errors);
+
+  if (execution?.error_taxonomy?.target_failure?.harness_retry_allowed !== false) errors.push("execution-policy.yaml: target failure harness_retry_allowed must be false");
+  if (execution?.error_taxonomy?.target_failure?.counts_as_product_failure !== true) errors.push("execution-policy.yaml: target failure counts_as_product_failure must be true");
+  verifyA17Boolean(execution?.error_taxonomy?.scorer_failure?.target_rerun_allowed, false, "execution-policy.yaml: scorer_failure.target_rerun_allowed", errors);
+  for (const prohibited of asArray(execution?.retry_policy?.prohibited_failure_codes)) {
+    if (asArray(execution?.retry_policy?.allowed_failure_codes).includes(prohibited)) errors.push(`execution-policy.yaml: allowed_failure_codes cannot include ${prohibited}`);
+  }
+  verifyA17Boolean(execution?.concurrency?.completion_order_may_control_aggregation, false, "execution-policy.yaml: concurrency.completion_order_may_control_aggregation", errors);
+  for (const field of ["verify_run_identity", "verify_artifact_digests", "reuse_canonical_results", "close_expired_attempts", "preserve_pairing_and_repetition_identity", "semantic_change_requires_new_run_id"]) verifyA17Boolean(execution?.resume_policy?.[field], true, `execution-policy.yaml: resume_policy.${field}`, errors);
+
+  const eventIds = new Set(asArray(trace?.events).map((event) => event?.event_id));
+  const sequenceNumbers = new Set();
+  for (const [index, event] of asArray(trace?.events).entries()) {
+    if (sequenceNumbers.has(event?.sequence_number)) errors.push(`trace-contract.yaml: events[${index}] sequence numbers must be unique`);
+    sequenceNumbers.add(event?.sequence_number);
+    if (event?.parent_event_id !== null && !eventIds.has(event?.parent_event_id)) errors.push(`trace-contract.yaml: events[${index}] unknown parent event ${event?.parent_event_id}`);
+  }
+  if (trace?.reasoning_capture?.hidden_chain_of_thought !== "prohibited") errors.push("trace-contract.yaml: hidden_chain_of_thought must be prohibited");
+  if (trace?.causality?.timestamp_alone_may_define_causality !== false) errors.push("trace-contract.yaml: timestamp alone cannot define causality");
+  if (trace?.completeness?.canonical_scoring_requires !== "complete") errors.push("trace-contract.yaml: canonical scoring requires a complete Trace");
+  if (trace?.privacy?.secret_capture !== "prohibited") errors.push("trace-contract.yaml: secret_capture must be prohibited");
+
+  const artifactIds = new Set();
+  for (const [index, artifact] of asArray(lineage?.artifacts).entries()) {
+    artifactIds.add(artifact?.id);
+    verifyA19Sha256(artifact?.digest, `artifact-lineage-manifest.yaml: artifacts[${index}].digest`, errors);
+  }
+  const bundleById = new Map();
+  for (const [index, bundle] of asArray(lineage?.observation_bundles).entries()) {
+    bundleById.set(bundle?.id, bundle);
+    verifyA19Sha256(bundle?.digest, `artifact-lineage-manifest.yaml: observation_bundles[${index}].digest`, errors);
+    for (const artifactId of asArray(bundle?.artifact_ids)) if (!artifactIds.has(artifactId)) errors.push(`artifact-lineage-manifest.yaml: observation bundle references unknown artifact ${artifactId}`);
+    if (bundle?.completeness !== "complete") errors.push("artifact-lineage-manifest.yaml: canonical observation bundle must be complete");
+  }
+  for (const [index, score] of asArray(lineage?.score_events).entries()) {
+    const bundle = bundleById.get(score?.observation_bundle_id);
+    if (!bundle || score?.observation_bundle_digest !== bundle?.digest) errors.push(`artifact-lineage-manifest.yaml: score_events[${index}] score event observation bundle digest does not resolve`);
+    if (!scoreEligibleAttempts.has(score?.canonical_attempt_id)) errors.push(`artifact-lineage-manifest.yaml: score_events[${index}] score event must bind a score-eligible canonical Attempt`);
+    if (bundle && score?.trial_id !== bundle?.trial_id) errors.push(`artifact-lineage-manifest.yaml: score_events[${index}] trial_id must equal observation bundle trial_id`);
+  }
+  verifyA19SyntheticBoundary(lineage?.evidence_boundary, "artifact-lineage-manifest.yaml: evidence_boundary", errors);
+
+  if (budget?.product_budget?.owner !== "target_system") errors.push("budget-and-stopping-policy.yaml: product_budget.owner must be target_system");
+  if (budget?.product_budget?.exhaustion_counts_as_product_failure !== true) errors.push("budget-and-stopping-policy.yaml: product budget exhaustion must count as product failure");
+  if (budget?.harness_budget?.owner !== "evaluation_harness") errors.push("budget-and-stopping-policy.yaml: harness_budget.owner must be evaluation_harness");
+  if (budget?.harness_budget?.exhaustion_counts_as_product_failure !== false) errors.push("budget-and-stopping-policy.yaml: Harness budget exhaustion cannot count as product failure");
+  if (budget?.harness_budget?.exhaustion_counts_as_missing_evidence !== true) errors.push("budget-and-stopping-policy.yaml: Harness budget exhaustion must count as missing evidence");
+  if (budget?.stopping_rules?.optional_stopping_allowed !== false) errors.push("budget-and-stopping-policy.yaml: optional_stopping_allowed must be false");
+  if (budget?.conclusion_policy?.safety_stop_may_support_complete_capability_estimate !== false) errors.push("budget-and-stopping-policy.yaml: safety stop cannot support a complete capability estimate");
+
+  const allowedCapabilities = new Set(asArray(adapters?.capability_values));
+  const expectedAttemptIdentity = new Map([
+    ["inspect-ai", "partial"], ["openai-evals-graders", "unavailable"],
+    ["langsmith", "unavailable"], ["mlflow", "unavailable"],
+    ["phoenix", "unavailable"], ["deepeval", "unavailable"], ["promptfoo", "unavailable"],
+  ]);
+  for (const [index, adapter] of asArray(adapters?.adapters).entries()) {
+    for (const field of ["trial_identity", "attempt_identity", "trace", "sandbox", "resume", "red_team"]) if (!allowedCapabilities.has(adapter?.[field])) errors.push(`adapter-capability-contract.yaml: adapters[${index}].${field} has an unknown capability value`);
+    const expected = expectedAttemptIdentity.get(adapter?.id);
+    if (expected && adapter?.attempt_identity !== expected) errors.push(`adapter-capability-contract.yaml: adapter ${adapter?.id} attempt_identity must be ${expected}`);
+  }
+  if (adapters?.normalization?.unavailable_capability_may_be_invented !== false) errors.push("adapter-capability-contract.yaml: unavailable_capability_may_be_invented must be false");
+  if (adapters?.normalization?.external_pass_is_release_authorization !== false) errors.push("adapter-capability-contract.yaml: external pass cannot be release authorization");
+  verifyA19SyntheticBoundary(adapters?.evidence_boundary, "adapter-capability-contract.yaml: evidence_boundary", errors);
+
+  for (const [field, expected] of [["planned_trials", plan?.counts?.planned_trials], ["total_attempts", ledger?.summary?.total_attempts], ["canonical_results", ledger?.summary?.canonical_results], ["statistical_denominator", ledger?.summary?.statistical_denominator]]) {
+    if (audit?.execution_summary?.[field] !== expected) errors.push(`run-audit-report.yaml: execution_summary.${field} must equal canonical execution records`);
+  }
+  if (audit?.classification !== "synthetic-teaching-fixture") errors.push("run-audit-report.yaml: classification must be synthetic-teaching-fixture");
+  if (audit?.conclusion?.real_release_authorization !== false) errors.push("run-audit-report.yaml: synthetic audit cannot authorize release");
+  verifyA19SyntheticBoundary(audit?.evidence_boundary, "run-audit-report.yaml: evidence_boundary", errors);
+}
+
+function verifyPlanToReproducibleRunCase(value, relativePath, errors) {
+  if (!value) return;
+  if (value?.classification !== "synthetic-teaching-fixture" || value?.evidence?.classification !== "synthetic-teaching-fixture") errors.push(`${relativePath}: classification must be synthetic-teaching-fixture`);
+  verifyA19SyntheticBoundary(value?.evidence, `${relativePath}: evidence`, errors);
+  const referenceIds = new Set();
+  for (const [field, ids] of Object.entries(value?.references ?? {})) for (const id of verifyStringIdList(ids, `${relativePath}: references.${field}`, errors)) referenceIds.add(id);
+  const tracedIds = new Set();
+  for (const [index, trace] of asArray(value?.expected?.audit_trace_closure).entries()) {
+    verifyNonEmptyString(trace?.id, `${relativePath}: expected.audit_trace_closure[${index}].id`, errors);
+    const links = verifyStringIdList(trace?.links, `${relativePath}: expected.audit_trace_closure[${index}].links`, errors);
+    verifyReferencesKnown(links, referenceIds, `${relativePath}: expected.audit_trace_closure[${index}].links`, errors, tracedIds);
+  }
+  for (const id of referenceIds) if (!tracedIds.has(id)) errors.push(`${relativePath}: reference ${id} is not covered by expected.audit_trace_closure`);
+
+  if (relativePath.includes("refund-agent")) {
+    if (value?.input?.run?.planned_trials !== 1000 || value?.input?.run?.total_attempts !== 1006 || value?.input?.run?.statistical_denominator !== 1000) errors.push(`${relativePath}: refund case must preserve 1000 Trials, 1006 Attempts and denominator 1000`);
+    if (value?.expected?.decision !== "blocked") errors.push(`${relativePath}: refund critical safety regression must be blocked`);
+  } else if (relativePath.includes("contract-agent")) {
+    if (value?.input?.run?.mismatched_trials !== 20 || value?.input?.run?.reconciliation_status !== "mismatch" || value?.input?.run?.direct_comparison_allowed !== false) errors.push(`${relativePath}: contract mismatch must prohibit direct comparison for all 20 affected Trials`);
+    if (value?.expected?.evidence_validity !== "invalid" || value?.expected?.decision !== "inconclusive") errors.push(`${relativePath}: contract mismatch must produce invalid evidence and an inconclusive decision`);
+  } else if (relativePath.includes("knowledge-assistant")) {
+    const actions = new Set(asArray(value?.expected?.response_actions));
+    for (const required of ["pause_rollout", "rollback_retrieval_index", "preserve_evidence", "create_protected_regression"]) if (!actions.has(required)) errors.push(`${relativePath}: response_actions missing ${required}`);
+    if (value?.input?.production_monitoring?.synthetic !== true) errors.push(`${relativePath}: production monitoring fixture must remain synthetic`);
+  }
+}
+
 function verifyA16GlobalScorerIdentityUniqueness(exampleValues, errors) {
   const seen = new Map();
   for (const [relativePath, value] of exampleValues) {
@@ -5487,6 +5767,8 @@ export async function verifyAcademyUnit(unitDir) {
       verifyScoreToMetricCase(value, examplePath, errors);
     } else if (profileName === "evidence-to-quality-decision-v1") {
       verifyEvidenceToQualityDecisionCase(value, examplePath, errors);
+    } else if (profileName === "plan-to-reproducible-run-v1") {
+      verifyPlanToReproducibleRunCase(value, examplePath, errors);
     }
   }
 
@@ -5509,12 +5791,20 @@ export async function verifyAcademyUnit(unitDir) {
     verifyScoreToMetricTemplates(templateValues, errors);
   } else if (profileName === "evidence-to-quality-decision-v1") {
     verifyEvidenceToQualityDecisionTemplates(templateValues, errors);
+  } else if (profileName === "plan-to-reproducible-run-v1") {
+    verifyPlanToReproducibleRunTemplates(templateValues, errors);
   }
 
   await verifyHtml(
     resolvedUnitDir,
     errors,
-    ["task-scenario-to-evaluation-data-v1", "reference-to-scorer-v1", "score-to-metric-v1", "evidence-to-quality-decision-v1"].includes(profileName),
+    [
+      "task-scenario-to-evaluation-data-v1",
+      "reference-to-scorer-v1",
+      "score-to-metric-v1",
+      "evidence-to-quality-decision-v1",
+      "plan-to-reproducible-run-v1",
+    ].includes(profileName),
   );
   return errors;
 }

@@ -145,6 +145,11 @@ const A18_UNIT = path.resolve(
   "../academy/phase-a/chapter-a1/unit-a1-8",
 );
 
+const A19_UNIT = path.resolve(
+  import.meta.dirname,
+  "../academy/phase-a/chapter-a1/unit-a1-9",
+);
+
 async function write(root, relativePath, content) {
   const destination = path.join(root, relativePath);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -2941,4 +2946,159 @@ test("A1.8 HTML cannot link to a missing local artifact", async () => {
     (await readFile(htmlPath, "utf8")).replace("quality-baseline.yaml", "missing-baseline.yaml"),
   );
   assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-baseline\.yaml/);
+});
+
+test("an A1.9 plan-to-reproducible-run profile requires every contract and domain case", async () => {
+  const root = await createValidUnit();
+  await write(
+    root,
+    "artifact-manifest.yaml",
+    `schema_version: 1
+unit: {id: A1.9, title: 从评测计划到可复现运行, phase: A, chapter: A1}
+publication: {status: candidate, language: zh-CN, formats: [markdown, html, yaml]}
+contents: {lesson: README.md, html: index.html, templates: [], examples: []}
+verification: {profile: plan-to-reproducible-run-v1}
+`,
+  );
+
+  const report = (await verifyAcademyUnit(root)).join("\n");
+
+  assert.match(report, /requires run-spec\.yaml/);
+  assert.match(report, /requires run-audit-report\.yaml/);
+  assert.match(report, /requires examples\/knowledge-assistant\/evaluation-case\.yaml/);
+});
+
+test("A1.9 keeps Trial counts independent from retry Attempts", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-denominator-");
+  await mutateYaml(root, "trial-plan.yaml", (value) => {
+    value.counts.planned_trials = 1006;
+  });
+  await mutateYaml(root, "attempt-ledger.yaml", (value) => {
+    value.summary.statistical_denominator = value.summary.total_attempts;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /planned_trials must equal sample_count \* target_count \* repetitions/);
+  assert.match(report, /statistical denominator must equal planned canonical Trials/);
+});
+
+test("A1.9 rejects Harness retry of target failures", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-target-retry-");
+  await mutateYaml(root, "execution-policy.yaml", (value) => {
+    value.error_taxonomy.target_failure.harness_retry_allowed = true;
+    value.retry_policy.allowed_failure_codes.push("AGENT_STEP_LIMIT");
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /target failure harness_retry_allowed must be false/);
+  assert.match(report, /allowed_failure_codes cannot include AGENT_STEP_LIMIT/);
+});
+
+test("A1.9 requires immutable resolved identity before direct comparison", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-identity-");
+  await mutateYaml(root, "resolved-run-identity.yaml", (value) => {
+    value.resolutions[0].mutable_alias_as_final_identity = true;
+    value.resolutions[0].immutable = false;
+    value.reconciliation.status = "mismatch";
+    value.comparability.direct_comparison_allowed = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /mutable alias cannot be a final resolved identity/);
+  assert.match(report, /resolved identity must be immutable/);
+  assert.match(report, /direct comparison requires reconciliation status match/);
+});
+
+test("A1.9 permits only one current canonical Attempt per Trial", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-canonical-");
+  await mutateYaml(root, "attempt-ledger.yaml", (value) => {
+    value.attempts[1].canonical = true;
+    value.attempts[1].score_eligible = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /canonical attempt must hold a current lease/);
+  assert.match(report, /score-eligible attempt must be canonical with a current lease/);
+});
+
+test("A1.9 binds every Score Event to canonical evidence", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-score-lineage-");
+  await mutateYaml(root, "artifact-lineage-manifest.yaml", (value) => {
+    value.score_events[0].observation_bundle_digest = `sha256:${"f".repeat(64)}`;
+    value.score_events[0].canonical_attempt_id = "attempt.refund.002a";
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /score event observation bundle digest does not resolve/);
+  assert.match(report, /score event must bind a score-eligible canonical Attempt/);
+});
+
+test("A1.9 preserves Trace causality and prohibits hidden chain-of-thought capture", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-trace-");
+  await mutateYaml(root, "trace-contract.yaml", (value) => {
+    value.reasoning_capture.hidden_chain_of_thought = "required";
+    value.causality.timestamp_alone_may_define_causality = true;
+    value.events[2].parent_event_id = "evt.unknown";
+    value.events[2].sequence_number = value.events[1].sequence_number;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /hidden_chain_of_thought must be prohibited/);
+  assert.match(report, /timestamp alone cannot define causality/);
+  assert.match(report, /unknown parent event evt\.unknown/);
+  assert.match(report, /sequence numbers must be unique/);
+});
+
+test("A1.9 separates product and Harness budgets and forbids optional stopping", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-budget-");
+  await mutateYaml(root, "budget-and-stopping-policy.yaml", (value) => {
+    value.product_budget.owner = "evaluation_harness";
+    value.harness_budget.exhaustion_counts_as_product_failure = true;
+    value.stopping_rules.optional_stopping_allowed = true;
+    value.conclusion_policy.safety_stop_may_support_complete_capability_estimate = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /product_budget\.owner must be target_system/);
+  assert.match(report, /Harness budget exhaustion cannot count as product failure/);
+  assert.match(report, /optional_stopping_allowed must be false/);
+  assert.match(report, /safety stop cannot support a complete capability estimate/);
+});
+
+test("A1.9 adapter contracts cannot invent unavailable source capabilities", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-adapter-");
+  await mutateYaml(root, "adapter-capability-contract.yaml", (value) => {
+    value.adapters.find((adapter) => adapter.id === "langsmith").attempt_identity = "full";
+    value.normalization.unavailable_capability_may_be_invented = true;
+    value.normalization.external_pass_is_release_authorization = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /adapter langsmith attempt_identity must be unavailable/);
+  assert.match(report, /unavailable_capability_may_be_invented must be false/);
+  assert.match(report, /external pass cannot be release authorization/);
+});
+
+test("A1.9 cases preserve audit closure and synthetic evidence boundaries", async () => {
+  const relativePath = "examples/knowledge-assistant/evaluation-case.yaml";
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-case-");
+  await mutateYaml(root, relativePath, (value) => {
+    value.expected.audit_trace_closure[0].links = value.expected.audit_trace_closure[0].links.filter(
+      (id) => id !== value.references.upstream_gate_decision_ids[0],
+    );
+    value.evidence.production_evidence = true;
+    value.evidence.real_release_authorization = true;
+    value.evidence.personal_capability_claim = true;
+  });
+  const report = (await verifyAcademyUnit(root)).join("\n");
+  assert.match(report, /reference decision\.knowledge\.case\.a18 is not covered by expected\.audit_trace_closure/);
+  assert.match(report, /evidence\.production_evidence must be false/);
+  assert.match(report, /evidence\.real_release_authorization must be false/);
+  assert.match(report, /evidence\.personal_capability_claim must be false/);
+});
+
+test("the complete A1.9 plan-to-reproducible-run candidate is accepted", async () => {
+  assert.deepEqual(await verifyAcademyUnit(A19_UNIT), []);
+});
+
+test("A1.9 HTML cannot link to a missing local artifact", async () => {
+  const root = await copyUnit(A19_UNIT, "evalorium-a1-9-html-");
+  const htmlPath = path.join(root, "index.html");
+  await writeFile(
+    htmlPath,
+    (await readFile(htmlPath, "utf8")).replace("run-spec.yaml", "missing-run-spec.yaml"),
+  );
+  assert.match((await verifyAcademyUnit(root)).join("\n"), /index\.html: broken local href missing-run-spec\.yaml/);
 });

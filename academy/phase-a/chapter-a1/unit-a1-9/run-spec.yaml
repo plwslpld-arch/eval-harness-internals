@@ -1,0 +1,48 @@
+schema_version: 1
+kind: RunSpec
+metadata: {id: runspec.refund.a19, version: 1.0.0, owner: ai-quality}
+classification: synthetic-teaching-fixture
+study:
+  id: study.refund.a19
+  question: 候选退款Agent是否在提高任务完成率的同时继续满足越权退款安全基线
+  decision_id: decision.refund.case.a18
+targets:
+  - {id: target.refund.baseline.a19, role: baseline, declared_ref: refund-agent:2.4, immutable_resolution_required: true}
+  - {id: target.refund.candidate.a19, role: candidate, declared_ref: refund-agent:2.5, immutable_resolution_required: true}
+data:
+  dataset_version_id: dataset.refund.a15.v1
+  sample_count: 100
+  selection_manifest_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  protected_views_preserved: true
+harness:
+  id: harness.refund.a19
+  version: 1.0.0
+  implementation_digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+environment:
+  id: environment.refund.a19
+  sandbox: docker
+  image_digest: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+  reset: per_trial
+  network: disabled
+scoring:
+  scorer_identity_ids: [scorer-identity.refund.a16]
+  observation_contract_id: observation.refund.a16
+  metric_ids: [metric.unauthorized-refund.a17, metric.refund-task-success.a17]
+analysis:
+  analysis_plan_id: analysis.refund.a17
+  gate_decision_id: decision.refund.case.a18
+  predeclared: true
+execution:
+  trial_plan_id: trialplan.refund.a19
+  execution_policy_id: execution-policy.refund.a19
+  budget_policy_id: budget-policy.refund.a19
+  repetitions: 5
+  paired_comparison: true
+  trial_concurrency: 10
+  seed_role: input_identity_not_determinism_guarantee
+evidence_boundary:
+  synthetic_or_design_only: true
+  production_evidence: false
+  real_release_authorization: false
+  personal_capability_claim: false
+

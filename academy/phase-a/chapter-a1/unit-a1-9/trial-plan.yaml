@@ -1,0 +1,31 @@
+schema_version: 1
+kind: TrialPlan
+metadata: {id: trialplan.refund.a19, version: 1.0.0}
+run_spec_id: runspec.refund.a19
+resolved_run_identity_id: run-identity.refund.a19
+design:
+  sample_count: 100
+  target_count: 2
+  repetitions: 5
+  formula: sample_count_x_target_count_x_repetitions
+counts:
+  planned_trials: 1000
+  planned_baseline_trials: 500
+  planned_candidate_trials: 500
+  canonical_result_target: 1000
+pairing:
+  enabled: true
+  keys: [sample_id, repetition_index]
+  shared_environment_fixture: true
+ordering:
+  planning_order: stable_sample_target_repetition
+  aggregation_order: [task_id, sample_id, target_id, repetition_index, trial_id]
+  completion_order_may_differ: true
+denominator_policy:
+  statistical_unit: trial
+  statistical_denominator: 1000
+  attempts_expand_denominator: false
+  judge_repetitions_expand_target_trial_count: false
+  cache_hits_count_as_new_trials: false
+  trace_replays_count_as_new_trials: false
+

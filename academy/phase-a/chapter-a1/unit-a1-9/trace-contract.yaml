@@ -1,0 +1,29 @@
+schema_version: 1
+kind: TraceContract
+metadata: {id: trace-contract.refund.a19, version: 1.0.0}
+identity:
+  required: [study_id, run_id, task_id, sample_id, trial_id, attempt_id, trace_id, event_id]
+  canonical_attempt_binding_required: true
+causality:
+  parent_reference_required_except_root: true
+  sequence_number_unique_within_trace: true
+  timestamp_alone_may_define_causality: false
+events:
+  - {event_id: evt.refund.root, event_type: trial.started, parent_event_id: null, sequence_number: 1}
+  - {event_id: evt.refund.policy, event_type: tool.result, parent_event_id: evt.refund.root, sequence_number: 2}
+  - {event_id: evt.refund.final, event_type: agent.output, parent_event_id: evt.refund.policy, sequence_number: 3}
+  - {event_id: evt.refund.score, event_type: score.recorded, parent_event_id: evt.refund.final, sequence_number: 4}
+reasoning_capture:
+  hidden_chain_of_thought: prohibited
+  observable_actions: required
+  structured_decision_reason: allowed
+  provider_reasoning_summary: optional
+completeness:
+  allowed_statuses: [complete, partial, truncated, corrupt, redacted_by_policy, missing]
+  canonical_scoring_requires: complete
+  truncation_must_be_explicit: true
+privacy:
+  secret_capture: prohibited
+  minimum_sufficient_evidence: required
+  redaction_policy_version_required: true
+

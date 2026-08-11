@@ -1,0 +1,30 @@
+schema_version: 1
+kind: ResolvedRunIdentity
+metadata: {id: run-identity.refund.a19, version: 1.0.0}
+run_spec_id: runspec.refund.a19
+run_id: run.refund.20260811.001
+digests:
+  spec: sha256:1111111111111111111111111111111111111111111111111111111111111111
+  comparability: sha256:2222222222222222222222222222222222222222222222222222222222222222
+  resolved: sha256:3333333333333333333333333333333333333333333333333333333333333333
+resolutions:
+  - {role: baseline_target, declared_ref: refund-agent:2.4, resolved_id: refund-agent@sha256:4444444444444444444444444444444444444444444444444444444444444444, immutable: true, mutable_alias_as_final_identity: false}
+  - {role: candidate_target, declared_ref: refund-agent:2.5, resolved_id: refund-agent@sha256:5555555555555555555555555555555555555555555555555555555555555555, immutable: true, mutable_alias_as_final_identity: false}
+  - {role: dataset, declared_ref: dataset.refund.a15.v1, resolved_id: dataset.refund.a15.v1@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, immutable: true, mutable_alias_as_final_identity: false}
+  - {role: environment, declared_ref: environment.refund.a19, resolved_id: environment.refund.a19@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc, immutable: true, mutable_alias_as_final_identity: false}
+  - {role: scorer, declared_ref: scorer-identity.refund.a16, resolved_id: scorer-identity.refund.a16@1.0.0, immutable: true, mutable_alias_as_final_identity: false}
+reconciliation:
+  status: match
+  planned_observed_checks:
+    - {field: baseline_target, status: match}
+    - {field: candidate_target, status: match}
+    - {field: dataset, status: match}
+    - {field: environment, status: match}
+    - {field: scorer, status: match}
+  unresolved_fields: []
+comparability:
+  status: comparable
+  direct_comparison_allowed: true
+  reason: 候选与基线共享样本、配对键、环境、Scorer和分析计划
+evidence_boundary: {production_evidence: false, real_release_authorization: false, personal_capability_claim: false}
+

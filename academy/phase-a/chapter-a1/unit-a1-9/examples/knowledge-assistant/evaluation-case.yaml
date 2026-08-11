@@ -1,0 +1,57 @@
+schema_version: 1
+kind: EvaluationCase
+metadata: {id: case.knowledge.a19, version: 1.0.0, name: 企业知识助手生产退化运行审计}
+classification: synthetic-teaching-fixture
+references:
+  upstream_gate_decision_ids: [decision.knowledge.case.a18]
+  run_spec_ids: [runspec.refund.a19]
+  run_identity_ids: [run-identity.refund.a19]
+  trial_plan_ids: [trialplan.refund.a19]
+  attempt_ledger_ids: [attempt-ledger.refund.a19]
+  trace_contract_ids: [trace-contract.refund.a19]
+  lineage_manifest_ids: [artifact-lineage.refund.a19]
+  execution_policy_ids: [execution-policy.refund.a19]
+  budget_policy_ids: [budget-policy.refund.a19]
+  adapter_contract_ids: [adapter-contract.enterprise.a19]
+  run_audit_report_ids: [run-audit.refund.a19]
+input:
+  study_question: 候选知识助手是否提高完整性和引用质量且不扩大幻觉和权限风险
+  offline_run:
+    planned_trials: 1800
+    total_attempts: 1814
+    canonical_results: 1800
+    reconciliation_status: match
+    synthetic_disposition: conditional_release
+  production_monitoring:
+    synthetic: true
+    total_traces: 100000
+    evaluated_traces: 2000
+    baseline_citation_validity: 0.981
+    observed_citation_validity: 0.917
+    baseline_hallucination_rate: 0.028
+    observed_hallucination_rate: 0.089
+  root_cause:
+    target_model_digest_changed: false
+    prompt_digest_changed: false
+    retrieval_index_digest_changed: true
+    missing_documents: 137
+    secondary_agent_failure: answered_without_sufficient_evidence
+expected:
+  evidence_validity: synthetic_monitoring_signal_valid_for_case
+  decision: pause_rollout
+  response_actions: [pause_rollout, rollback_retrieval_index, preserve_evidence, disable_answer_without_evidence, create_protected_regression]
+  target_model_rollback_required: false
+  audit_trace_closure:
+    - id: trace.knowledge.plan-to-run
+      links: [decision.knowledge.case.a18, runspec.refund.a19, run-identity.refund.a19, trialplan.refund.a19, attempt-ledger.refund.a19]
+    - id: trace.knowledge.evidence-to-response
+      links: [trace-contract.refund.a19, artifact-lineage.refund.a19, execution-policy.refund.a19, budget-policy.refund.a19, adapter-contract.enterprise.a19, run-audit.refund.a19]
+evidence:
+  materialized: false
+  classification: synthetic-teaching-fixture
+  production_evidence: false
+  real_release_authorization: false
+  personal_capability_claim: false
+  proves: [合成生产信号可沿血缘定位检索索引退化, 响应动作应针对真实变化源]
+  does_not_prove: [真实生产监控已运行, 真实事故发生, 真实灰度已暂停, 个人能力]
+
