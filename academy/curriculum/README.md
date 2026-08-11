@@ -1,6 +1,6 @@
 # Curriculum
 
-<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.2 current_status=not_started last_completed=A2.1 last_status=artifact_validated -->
 
 完整课程将覆盖 8 个阶段、29 个核心章节、不少于 138 个知识单元、8 个阶段 Capstone 和 1 个企业级综合 Capstone。
 
@@ -35,6 +35,11 @@ A1.8 将评测证据转化为质量决定；A1.9 进一步把计划转化为身�
 5. 分离产品预算与 Harness 预算，预声明费用、超时、安全停止、资源停止和证据结论边界。
 6. 以明确能力声明接入 Inspect AI、OpenAI Evals、LangSmith、MLflow、Phoenix、DeepEval 与 Promptfoo，不伪造第三方缺失语义。
 
-### Chapter A2 · 正式标题与范围待定义
+### Chapter A2 · 测量理论、效度与可靠性
 
-- A2.1（尚未开始；先定义章节与单元边界，学习完成前不创建正式成果或占位正文）
+- [A2.1｜从抽象质量到可测量构念](../phase-a/chapter-a2/unit-a2-1/README.md)（测量设计及构念、代理、误差、可靠性/效度计划与追踪合同已验证）
+- A2.2（尚未开始；先定义正式标题、边界和学习范围，学习完成前不创建正式成果或占位正文）
+
+#### A2.1 已验证范围
+
+A2.1 把抽象质量声明转换为受边界约束的 Construct、Facet、Observable、Indicator 与有限 Claim，显式处理 Construct Underrepresentation、Construct-Irrelevant Variance、Goodhart 风险、六类 Measurement Error、四类 Reliability 研究计划、五类 Validity Evidence 和五种测量结果状态。正式成果包含 8 类模板与退款 Agent、合同审查 Agent、企业知识助手 3 个合成案例；Node 24 本地 `npm ci && npm run check` 共 188 项测试通过，候选提交 [`9e5f8c7`](https://github.com/plwslpld-arch/evalorium/commit/9e5f8c722b83560517709eb90ca383719f28d580) 对应的[远端 run 31492987925](https://github.com/plwslpld-arch/evalorium/actions/runs/31492987925) `completed/success`。该验证只证明公开测量设计及构念、代理、误差、可靠性/效度计划与追踪合同，不证明真实测量已经发生，不证明可靠性或效度已经成立，也不证明生产就绪、发布授权或个人能力。

@@ -1,15 +1,15 @@
 # 项目与学习进度
 
-<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.2 current_status=not_started last_completed=A2.1 last_status=artifact_validated -->
 
 ## 当前状态
 
 - 阶段：A
-- 章节：A2（正式标题与范围待定义）
-- 当前知识单元：A2.1（正式标题与范围待定义）
+- 章节：A2《测量理论、效度与可靠性》
+- 当前知识单元：A2.2（正式标题与范围待定义）
 - 当前状态：尚未开始
-- 公开成果合同已验证知识单元：9
-- 最近完成：A1.9《从评测计划到可复现运行》
+- 公开成果合同已验证知识单元：10
+- 最近完成：A2.1《从抽象质量到可测量构念》
 
 ## A1.1 公开成果结构合同已验证
 
@@ -128,7 +128,18 @@
 - 远端验证：[Documentation Quality run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040)，head SHA 精确匹配候选提交，状态为 `completed/success`
 - 限制：验证只证明公开运行合同存在且关键语义可由仓库校验器执行，不证明真实分布式 Harness、第三方适配器、生产运行、发布授权或个人能力
 
-## A2.1 下一步
+## A2.1 测量设计、构念、代理、误差、可靠性/效度计划与追踪合同已验证
 
-1. 先定义 A2 章节与 A2.1 单元的正式标题、边界和学习范围。
-2. A2.1 学习完成前不创建正式单元成果或占位正文。
+- [正式 Markdown 课程](../academy/phase-a/chapter-a2/unit-a2-1/README.md) 与 [独立 HTML 阅读版](../academy/phase-a/chapter-a2/unit-a2-1/index.html)
+- Measurement Charter、Construct Map、Indicator Register、Operationalization Spec、Measurement Error Model、Reliability Study Plan、Validity Argument、Measurement Quality Gate 共 8 类模板
+- 退款 Agent、合同审查 Agent、企业知识助手 3 个 `construct-to-measurement` 完整合成案例
+- Canonical profile 检查 Construct/Facet/Observable/Indicator/Claim 追踪、代理代表不足与无关方差、Goodhart 风险、六类误差、可靠性计划、五类效度证据、五态结果、质量门和缩水绕过
+- Node 24 本地 `npm ci && npm run check` 共 188 项自动化测试通过，品牌检查和仓库验证通过
+- 候选内容提交：[`9e5f8c7`](https://github.com/plwslpld-arch/evalorium/commit/9e5f8c722b83560517709eb90ca383719f28d580)
+- 远端验证：[Documentation Quality run 31492987925](https://github.com/plwslpld-arch/evalorium/actions/runs/31492987925)，head SHA 精确匹配候选提交，状态为 `completed/success`
+- 限制：验证只证明公开测量设计及构念、代理、误差、可靠性/效度计划与追踪合同，不证明真实测量已经发生，不证明可靠性或效度已经成立，也不证明生产就绪、发布授权或个人能力
+
+## A2.2 下一步
+
+1. 先定义 A2.2 单元的正式标题、边界和学习范围。
+2. A2.2 学习完成前不创建正式单元成果或占位正文。

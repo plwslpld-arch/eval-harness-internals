@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.2 current_status=not_started last_completed=A2.1 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ Agent Environment Harness 是 Evalorium 内部的深度核心能力。它负责�
 | 领域 | 状态 | 证据 |
 |---|---|---|
 | 仓库与品牌基础 | 已实现 | 版本化资产和本地验证 |
-| Academy 课程 | 学习中 | A1.1–A1.8 与 [A1.9](academy/phase-a/chapter-a1/unit-a1-9/README.md) 公开成果合同已验证；A1.9 包含 3 个合成案例、10 类契约、163 项本地测试，候选提交 [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631) 对应的[远端验证](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) 成功。A1 章节已完成，A2.1 尚未开始。这只验证公开运行身份、Trial/Attempt、Trace、血缘、恢复、预算、适配器和审计合同，不证明真实分布式 Harness、生产集成、发布授权、生产效果或个人能力。 |
+| Academy 课程 | 学习中 | Chapter A1 与 [A2.1《从抽象质量到可测量构念》](academy/phase-a/chapter-a2/unit-a2-1/README.md)公开成果合同已验证；Chapter A2 为《测量理论、效度与可靠性》。A2.1 包含 8 类模板、3 个合成案例、188 项本地测试，候选提交 [`9e5f8c7`](https://github.com/plwslpld-arch/evalorium/commit/9e5f8c722b83560517709eb90ca383719f28d580) 对应的[远端验证](https://github.com/plwslpld-arch/evalorium/actions/runs/31492987925)成功。这只证明公开测量设计及构念、代理、误差、可靠性/效度计划与追踪合同，不证明真实测量、可靠性或效度已经成立、生产就绪、发布授权或个人能力。A2.2 尚未开始且没有占位内容。 |
 | Platform 运行时 | 计划中 | 只有设计和路线图 |
 | 生产采用 | 未声明 | 需要真实组织的外部证据 |
 

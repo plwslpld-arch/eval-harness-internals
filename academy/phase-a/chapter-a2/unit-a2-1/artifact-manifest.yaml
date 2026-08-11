@@ -1,7 +1,7 @@
 schema_version: 1
 unit: {id: A2.1, title: 从抽象质量到可测量构念, phase: A, chapter: A2}
 publication:
-  status: candidate
+  status: validated
   audience: [AI质量负责人, 评测工程师, 测量与风险治理负责人]
   language: zh-CN
   formats: [markdown, html, yaml]

@@ -1,4 +1,4 @@
-<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.2 current_status=not_started last_completed=A2.1 last_status=artifact_validated -->
 
 <p align="center">
   <picture>
@@ -94,7 +94,7 @@ evaluations and production incidents
 | Area | State | Evidence |
 |---|---|---|
 | Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | A1.1–A1.8 and [A1.9](academy/phase-a/chapter-a1/unit-a1-9/README.md) public artifact contracts validated; A1.9 includes three synthetic cases, ten contracts, 163 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) for [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631). Chapter A1 is complete and A2.1 is not started. This validates only public run-identity, Trial/Attempt, Trace, lineage, recovery, budget, adapter, and audit contracts—not a live distributed Harness, production integration, release authorization, production outcome, or personal competency. |
+| Academy curriculum | Learning | Chapter A1 and [A2.1 — 从抽象质量到可测量构念](academy/phase-a/chapter-a2/unit-a2-1/README.md) public artifact contracts validated. Chapter A2 is 《测量理论、效度与可靠性》; A2.1 includes eight templates, three synthetic cases, 188 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31492987925) for [`9e5f8c7`](https://github.com/plwslpld-arch/evalorium/commit/9e5f8c722b83560517709eb90ca383719f28d580). This proves only the public measurement-design, construct, proxy, error, reliability/validity planning, and trace contract—not real measurement, observed reliability or validity, production readiness, release authorization, or personal competency. A2.2 is not started and has no placeholder. |
 | Platform runtime | Planned | Design and roadmap only |
 | Production adoption | Not claimed | Requires external organizational evidence |
 

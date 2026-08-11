@@ -1,6 +1,6 @@
 # Project Maturity Model
 
-<!-- evalorium-progress current=A2.1 current_status=not_started last_completed=A1.9 last_status=artifact_validated -->
+<!-- evalorium-progress current=A2.2 current_status=not_started last_completed=A2.1 last_status=artifact_validated -->
 
 Evalorium separates intent from evidence. Every capability uses one of five states.
 
@@ -17,7 +17,7 @@ Evalorium separates intent from evidence. Every capability uses one of five stat
 | Area | State | Evidence | Limitation |
 |---|---|---|---|
 | Repository quality foundation | `implemented` | Versioned validator, tests, brand renderer, and GitHub Actions quality gate | The gate validates repository contracts; it is not evidence of a production AI runtime |
-| Academy | `learning` | A1.1–A1.8 and [A1.9](../academy/phase-a/chapter-a1/unit-a1-9/README.md) public artifact contracts validated; A1.9 has three synthetic cases, ten contracts, 163 local tests, and exact-candidate [remote run 31451972040](https://github.com/plwslpld-arch/evalorium/actions/runs/31451972040) for [`5e19133`](https://github.com/plwslpld-arch/evalorium/commit/5e191339200528e82ae01c54cc099dbbf6d85631). Chapter A1 is complete; A2.1 is not started | The gate proves only public run-identity, Trial/Attempt, Trace, lineage, recovery, budget, adapter, and audit contracts. It does not prove a live distributed Harness, production integration, release authorization, production outcome, or personal competency; no A2.1 placeholder exists |
+| Academy | `learning` | Chapter A1 and [A2.1 — 从抽象质量到可测量构念](../academy/phase-a/chapter-a2/unit-a2-1/README.md) public artifact contracts validated. Chapter A2 is 《测量理论、效度与可靠性》; A2.1 has eight templates, three synthetic cases, 188 local tests, and exact-candidate [remote run 31492987925](https://github.com/plwslpld-arch/evalorium/actions/runs/31492987925) for [`9e5f8c7`](https://github.com/plwslpld-arch/evalorium/commit/9e5f8c722b83560517709eb90ca383719f28d580) | The gate proves only the public measurement-design, construct, proxy, error, reliability/validity planning, and trace contract. It does not prove real measurement, observed reliability or validity, production readiness, release authorization, or personal competency; A2.2 is not started and has no placeholder |
 | Platform | `planned` | Vision, scope, architecture, and roadmap | No runtime implementation exists |
 | Agent Environment Harness | `planned` | Defined target boundary | No executable environment harness exists |
 | Production adoption | not claimed | None | Requires external organizational evidence |
