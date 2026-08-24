@@ -25,6 +25,10 @@
 - [`eval-harness-ref` 源码](../src/eval_harness_reference/cli.py)
 - [Reference Harness 自动化测试](../tests/test_shipping_e2e.py)
 
+## 上游源码课程
+
+1. [lm-evaluation-harness：Task 怎样变成批量模型请求](harnesses/lm-evaluation-harness/README.md)
+
 ## 怎样读一篇源码课
 
 每篇核心课程都区分“上游源码事实”“机制解释”“教学简化”“外部契约”和“不可核对”。先看锁定版本与入口，再沿调用链逐站回答：谁调用、输入是什么、状态在哪里改变、返回什么、失败怎样传播、哪组测试锁住行为。最后运行本仓库的确定性实验，验证你理解的是机制而不是 API 记忆。

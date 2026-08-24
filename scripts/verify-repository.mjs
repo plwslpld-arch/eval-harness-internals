@@ -10,6 +10,7 @@ const IGNORED_DIRECTORIES = new Set([
   ".brand-build",
   ".git",
   ".superpowers",
+  "checkouts",
   "node_modules",
 ]);
 
