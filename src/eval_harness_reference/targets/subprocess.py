@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from collections.abc import Sequence
 
@@ -23,12 +24,15 @@ class SubprocessTarget:
 
     def run(self, trial: Trial) -> TargetResult:
         try:
+            child_env = os.environ.copy()
+            child_env["PYTHONIOENCODING"] = "utf-8"
             completed = subprocess.run(
                 self._argv,
                 input=json.dumps(trial.sample.input, ensure_ascii=False),
                 capture_output=True,
                 check=False,
                 encoding="utf-8",
+                env=child_env,
                 shell=False,
                 timeout=self._timeout_seconds,
             )

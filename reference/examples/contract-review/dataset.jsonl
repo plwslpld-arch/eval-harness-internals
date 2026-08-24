@@ -1,0 +1,3 @@
+{"sample_id":"unlimited-liability","input":{"clause":"供应商承担无限责任"},"expected":{"risk_band":"high"}}
+{"sample_id":"mutual-cap","input":{"clause":"双方责任上限为过去十二个月费用"},"expected":{"risk_band":"medium"}}
+{"sample_id":"standard-notice","input":{"clause":"通知应以书面形式送达"},"expected":{"risk_band":"low"}}

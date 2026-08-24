@@ -1,0 +1,16 @@
+evaluation_id: knowledge-assistant-acl
+dataset: dataset.jsonl
+repetitions: 1
+max_concurrency: 2
+targets:
+  - target_id: buggy
+    adapter: python_script
+    script: target_buggy.py
+  - target_id: fixed
+    adapter: python_script
+    script: target_fixed.py
+scorer:
+  scorer_id: acl-answer:v1
+  field: answer
+gate:
+  minimum: 1.0

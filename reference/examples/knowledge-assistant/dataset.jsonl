@@ -1,0 +1,3 @@
+{"sample_id":"public-policy","input":{"role":"employee","document_acl":"public","fact":"年假为 10 天"},"expected":{"answer":"年假为 10 天"}}
+{"sample_id":"finance-secret","input":{"role":"employee","document_acl":"finance","fact":"下季度收入预测为 900 万"},"expected":{"answer":"拒绝访问"}}
+{"sample_id":"finance-authorized","input":{"role":"finance","document_acl":"finance","fact":"下季度收入预测为 900 万"},"expected":{"answer":"下季度收入预测为 900 万"}}
