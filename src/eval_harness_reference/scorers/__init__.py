@@ -1,5 +1,5 @@
 """Observation Bundle 评分器。"""
 
-from .rules import FieldEqualsScorer
+from .rules import FieldEqualsScorer, FieldMatchesExpectedScorer
 
-__all__ = ["FieldEqualsScorer"]
+__all__ = ["FieldEqualsScorer", "FieldMatchesExpectedScorer"]

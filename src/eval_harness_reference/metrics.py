@@ -8,6 +8,8 @@ from .models import MetricEstimate, ScoreRecord, ScoreStatus
 def aggregate_pass_rate(
     scores: list[ScoreRecord],
     planned_trial_ids: list[str],
+    *,
+    metric_id: str = "pass-rate",
 ) -> MetricEstimate:
     if not planned_trial_ids:
         raise ValueError("planned_trial_ids 不能为空")
@@ -22,7 +24,7 @@ def aggregate_pass_rate(
     numerator = sum(score.status is ScoreStatus.PASSED for score in scores)
     denominator = len(planned_trial_ids)
     return MetricEstimate(
-        metric_id="pass-rate",
+        metric_id=metric_id,
         numerator=numerator,
         denominator=denominator,
         value=numerator / denominator,

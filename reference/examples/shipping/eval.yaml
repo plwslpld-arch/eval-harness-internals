@@ -1,0 +1,15 @@
+evaluation_id: shipping-boundary
+dataset: dataset.jsonl
+repetitions: 1
+targets:
+  - target_id: buggy
+    adapter: python_script
+    script: target_buggy.py
+  - target_id: fixed
+    adapter: python_script
+    script: target_fixed.py
+scorer:
+  scorer_id: shipping-fee:v1
+  field: fee
+gate:
+  minimum: 1.0
