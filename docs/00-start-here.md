@@ -1,6 +1,6 @@
 # 从这里开始：第一次把 Eval 跑成完整证据链
 
-[返回目录](README.md) · [进入第一章](foundations/01-agent-vs-eval-harness.md)
+[返回目录](contents.md) · [进入第一章](foundations/01-agent-vs-eval-harness.md)
 
 ## 这套教材回答什么
 
@@ -60,4 +60,3 @@ uv run eval-harness-ref inspect output/shipping
 ## 接下来怎么走
 
 如果你是第一次系统学习，从[Agent Harness 与 Eval Harness](foundations/01-agent-vs-eval-harness.md)开始按顺序读七篇基础课。已经做过评测工程的读者可以去[学习路线](learning-paths.md)选择源码、Agent 环境或 Eval-to-RL 路径。
-

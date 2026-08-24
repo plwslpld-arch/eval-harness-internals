@@ -50,7 +50,7 @@ Dev 集用于选择 checkpoint 后，不应报告为独立 release 证据。最�
 
 ## 如何核对
 
-从 [基础篇 Eval-to-RL](../foundations/07-eval-to-rl-and-release-eval.md) 核对责任划分，再用 [`models.py`](../../src/eval_harness_reference/models.py) 检查 RewardAdapter 应引用的 lineage 字段。运行退款案例并查看 Score 状态是否足以转换。
+从 [基础篇 Eval-to-RL](../foundations/07-eval-to-rl-and-release-eval.md) 核对责任划分，再用 [`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 检查 RewardAdapter 应引用的 lineage 字段。运行退款案例并查看 Score 状态是否足以转换。
 
 ## 本篇不能证明什么
 

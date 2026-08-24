@@ -1,6 +1,6 @@
 # Verifier、Reward 与 Result：成功数字怎样回连执行证据
 
-[上一节](02-environment-agent-lifecycle.md) · [下一节](../../README.md)
+[上一节](02-environment-agent-lifecycle.md) · [下一节](../../contents.md)
 
 ## 本篇要解决什么问题
 
@@ -63,4 +63,4 @@ Regrade 至少保存 source trial id 与 artifact digest、新旧 verifier commi
 
 隐藏 tests、数值 reward 和 pass@k 不能证明测试无漏洞、reward 与真实价值一致、Agent 没有利用环境，或差异具有统计显著性。发布结论必须再结合任务治理、错误率、不确定性与关键风险 Gate。
 
-[上一节](02-environment-agent-lifecycle.md) · [下一节](../../README.md)
+[上一节](02-environment-agent-lifecycle.md) · [下一节](../../contents.md)

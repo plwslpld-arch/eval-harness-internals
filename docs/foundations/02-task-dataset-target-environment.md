@@ -35,7 +35,7 @@
 4. Environment Factory 创建干净初态，限制网络和凭据，声明重置方式。
 5. EvaluationSpec 冻结 Target 列表与重复次数；Planner 执行笛卡尔积，生成不可随结果缩减的 Trial Plan。
 
-Reference Harness 的 [`EvaluationSpec`](../../src/eval_harness_reference/models.py)、[`plan_trials`](../../src/eval_harness_reference/planner.py) 和 shipping 配置展示了最小实现。复杂 Agent 环境会在后续工程篇增加环境工厂，而不会改变这四个对象的语义。
+Reference Harness 的 [`EvaluationSpec`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py)、[`plan_trials`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/planner.py) 和 shipping 配置展示了最小实现。复杂 Agent 环境会在后续工程篇增加环境工厂，而不会改变这四个对象的语义。
 
 ## 关键数据结构
 
@@ -82,7 +82,7 @@ lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-h
 
 ## 如何核对
 
-运行 `python -m pytest tests/test_planner.py -q`，确认 Target × Sample × Repetition 的数量和顺序稳定。再比较 [`sources/sources.lock.yml`](../../sources/sources.lock.yml) 与正文永久链接，理解“上游源码身份”同样需要 commit，而不是浮动 `main`。上游 Harbor 的 [`environments/base.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/environments/base.py) 可用于核对 Agent 环境为什么值得独立抽象。
+运行 `python -m pytest tests/test_planner.py -q`，确认 Target × Sample × Repetition 的数量和顺序稳定。再比较 [`sources/sources.lock.yml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/sources/sources.lock.yml) 与正文永久链接，理解“上游源码身份”同样需要 commit，而不是浮动 `main`。上游 Harbor 的 [`environments/base.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/environments/base.py) 可用于核对 Agent 环境为什么值得独立抽象。
 
 ## 与其他 Harness 的关系
 

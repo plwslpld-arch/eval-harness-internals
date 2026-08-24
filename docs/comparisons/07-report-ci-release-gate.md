@@ -51,7 +51,7 @@ uv run eval-harness-ref inspect output/report-demo
 
 ## 如何核对
 
-阅读 [`reporting.py`](../../src/eval_harness_reference/reporting.py)、[`cli.py`](../../src/eval_harness_reference/cli.py) 和报告测试，再回看 Promptfoo/DeepEval/OpenAI Evals 的报告链。
+阅读 [`reporting.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/reporting.py)、[`cli.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/cli.py) 和报告测试，再回看 Promptfoo/DeepEval/OpenAI Evals 的报告链。
 
 ## 本篇不能证明什么
 

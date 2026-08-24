@@ -37,7 +37,7 @@ Target Adapter 是明确接口：它接收 Trial 与运行约束，返回被测�
 4. Eval Harness 把 canonical Attempt 的事件和 Artifact 组成 Observation Bundle。
 5. 独立 Scorer 消费 Bundle，Metric 对预声明 Trial 集合聚合，Gate 再依据冻结阈值作决定。
 
-这条边界可以在 Reference Harness 的 [`run_evaluation`](../../src/eval_harness_reference/pipeline.py) 与 [`SubprocessTarget`](../../src/eval_harness_reference/targets/subprocess.py) 之间直接看到。
+这条边界可以在 Reference Harness 的 [`run_evaluation`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/pipeline.py) 与 [`SubprocessTarget`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/targets/subprocess.py) 之间直接看到。
 
 ## 关键数据结构
 
@@ -84,7 +84,7 @@ eval-harness-ref inspect output/shipping
 
 ## 如何核对
 
-先阅读 [`runner.py`](../../src/eval_harness_reference/runner.py) 中产品失败与基础设施异常的分支，再阅读 [`pipeline.py`](../../src/eval_harness_reference/pipeline.py) 中 Bundle、Score、Metric 和 Gate 的生成顺序。上游部分可从锁定的 Inspect AI 入口继续追到 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py)，核对“公共 Eval 入口”和“Task 执行”确实是不同责任站点。
+先阅读 [`runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/runner.py) 中产品失败与基础设施异常的分支，再阅读 [`pipeline.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/pipeline.py) 中 Bundle、Score、Metric 和 Gate 的生成顺序。上游部分可从锁定的 Inspect AI 入口继续追到 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py)，核对“公共 Eval 入口”和“Task 执行”确实是不同责任站点。
 
 ## 与其他 Harness 的关系
 

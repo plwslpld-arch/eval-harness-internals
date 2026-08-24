@@ -1,6 +1,6 @@
 # 03｜Recorder 与 Metric 边界：事件很多，推断仍要另建合同
 
-[上一节](02-completion-sample-run.md) · [下一节](../../README.md)
+[上一节](02-completion-sample-run.md) · [下一节](../../contents.md)
 
 ## 本篇要解决什么问题
 
@@ -53,4 +53,4 @@ Event 到 TraceEvent 为 partial，因为父子/sequence 未必存在；sampling
 
 JSONL 可读和 fallback 成功不能证明证据完整、事件未被改写或 Metric 统计有效。Recorder 提供观察存储；质量结论仍需要身份、血缘、分母、不确定性和 Gate Policy。
 
-[上一节](02-completion-sample-run.md) · [下一节](../../README.md)
+[上一节](02-completion-sample-run.md) · [下一节](../../contents.md)

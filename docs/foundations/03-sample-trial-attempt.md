@@ -36,7 +36,7 @@
 5. 所有恢复机会耗尽后，Trial 为 `blocked`，没有 canonical Attempt，也不能伪造 Observation Bundle。
 6. 产品失败由 Adapter 作为正常返回的一种结果类型传回。它仍产生 canonical Attempt，随后由 Scorer 判断失败。
 
-这条状态机直接实现在 [`run_trial`](../../src/eval_harness_reference/runner.py)；[`tests/test_runner.py`](../../tests/test_runner.py) 分别锁住基础设施恢复、产品失败不重试和 canonical 唯一性。
+这条状态机直接实现在 [`run_trial`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/runner.py)；[`tests/test_runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_runner.py) 分别锁住基础设施恢复、产品失败不重试和 canonical 唯一性。
 
 ## 关键数据结构
 
@@ -86,7 +86,7 @@ Harbor 的锁定 [`trial.py`](https://github.com/harbor-framework/harbor/blob/74
 
 ## 如何核对
 
-阅读 [`models.py`](../../src/eval_harness_reference/models.py) 的分层状态枚举，再运行 `eval-harness-ref inspect` 查看计划 Trial 数和 Observation Bundle 数。检查 Metric 的 denominator 来自 Trial 清单而不是 Bundle 数。上游 SWE-bench 的 [`infra_failure.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/infra_failure.py) 提供了环境型评测显式处理基础设施失败的另一处源码证据。
+阅读 [`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 的分层状态枚举，再运行 `eval-harness-ref inspect` 查看计划 Trial 数和 Observation Bundle 数。检查 Metric 的 denominator 来自 Trial 清单而不是 Bundle 数。上游 SWE-bench 的 [`infra_failure.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/infra_failure.py) 提供了环境型评测显式处理基础设施失败的另一处源码证据。
 
 ## 与其他 Harness 的关系
 

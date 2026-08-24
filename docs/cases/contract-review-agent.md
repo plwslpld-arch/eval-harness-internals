@@ -48,7 +48,7 @@ Buggy 漏掉无限责任并 failed，Fixed 三条 passed。多值 reference 不�
 
 ## 如何核对
 
-阅读 [`contract-review/eval.yaml`](../../reference/examples/contract-review/eval.yaml)、Dataset 和脚本，运行确定性测试；再查看 [Judge 工程篇](../engineering/04-llm-as-judge.md) 核对真实扩展所需校准。
+阅读 [`contract-review/eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/contract-review/eval.yaml)、Dataset 和脚本，运行确定性测试；再查看 [Judge 工程篇](../engineering/04-llm-as-judge.md) 核对真实扩展所需校准。
 
 ## 本篇不能证明什么
 

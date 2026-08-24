@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全问题
+    url: https://github.com/plwslpld-arch/eval-harness-internals/security/policy
+    about: 请不要公开披露凭据或漏洞细节。
+

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">平台适配器边界</title>
+  <desc id="desc">展示内部 Eval Harness 合同通过入站和出站适配器连接多个外部平台，发布门禁保持独立。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f7f9fc}.core{fill:#0f2748;stroke:#0f2748;stroke-width:2}.adapter{fill:#e8f4ff;stroke:#1677b8;stroke-width:2}.platform{fill:#fff;stroke:#536b89;stroke-width:2}.gate{fill:#eaf8f0;stroke:#16845b;stroke-width:2}.t{font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif;fill:#10233f;font-size:21px;font-weight:700}.w{font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif;fill:#fff;font-size:20px;font-weight:700}.s{font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif;fill:#3d536f;font-size:16px}.sw{font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif;fill:#d8e8ff;font-size:15px}.a{stroke:#4d6888;stroke-width:3;fill:none;marker-end:url(#arrow)}.d{stroke-dasharray:8 7}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4d6888"/></marker>
+  </defs>
+  <rect class="bg" width="1200" height="620" rx="28"/>
+  <text class="t" x="60" y="58">平台连接的是数据与证据，不接管内部评测语义</text>
+  <rect class="platform" x="55" y="115" width="210" height="75" rx="16"/><text class="t" x="160" y="160" text-anchor="middle">LangSmith</text>
+  <rect class="platform" x="55" y="220" width="210" height="75" rx="16"/><text class="t" x="160" y="265" text-anchor="middle">Phoenix</text>
+  <rect class="platform" x="55" y="325" width="210" height="75" rx="16"/><text class="t" x="160" y="370" text-anchor="middle">MLflow</text>
+  <rect class="platform" x="55" y="430" width="210" height="75" rx="16"/><text class="t" x="160" y="475" text-anchor="middle">Braintrust</text>
+  <rect class="adapter" x="350" y="135" width="205" height="155" rx="18"/>
+  <text class="t" x="452" y="178" text-anchor="middle">入站适配器</text>
+  <text class="s" x="452" y="212" text-anchor="middle">Dataset / Trace / Span</text>
+  <text class="s" x="452" y="240" text-anchor="middle">身份映射与缺失声明</text>
+  <text class="s" x="452" y="268" text-anchor="middle">Capability Contract</text>
+  <rect class="adapter" x="350" y="350" width="205" height="155" rx="18"/>
+  <text class="t" x="452" y="393" text-anchor="middle">出站适配器</text>
+  <text class="s" x="452" y="427" text-anchor="middle">Score / Metric / Artifact</text>
+  <text class="s" x="452" y="455" text-anchor="middle">幂等写入与导出回执</text>
+  <text class="s" x="452" y="483" text-anchor="middle">Capability Contract</text>
+  <rect class="core" x="650" y="130" width="300" height="375" rx="24"/>
+  <text class="w" x="800" y="178" text-anchor="middle">内部 Eval Harness 合同</text>
+  <text class="sw" x="800" y="225" text-anchor="middle">Dataset → Sample</text>
+  <text class="sw" x="800" y="265" text-anchor="middle">Trial → Attempt</text>
+  <text class="sw" x="800" y="305" text-anchor="middle">Trace → Observation</text>
+  <text class="sw" x="800" y="345" text-anchor="middle">Score → Metric</text>
+  <text class="sw" x="800" y="395" text-anchor="middle">不可变身份 · 内容摘要</text>
+  <text class="sw" x="800" y="430" text-anchor="middle">状态语义 · 证据血缘</text>
+  <text class="sw" x="800" y="465" text-anchor="middle">真实统计分母</text>
+  <rect class="gate" x="1015" y="230" width="145" height="175" rx="18"/>
+  <text class="t" x="1088" y="276" text-anchor="middle">独立门禁</text>
+  <text class="s" x="1088" y="315" text-anchor="middle">规则计算</text>
+  <text class="s" x="1088" y="345" text-anchor="middle">缺失策略</text>
+  <text class="s" x="1088" y="375" text-anchor="middle">发布边界</text>
+  <path class="a" d="M265 152H335"/>
+  <path class="a" d="M265 258H335"/>
+  <path class="a" d="M265 362H320Q335 362 350 390"/>
+  <path class="a" d="M265 467H335"/>
+  <path class="a" d="M555 212H635"/>
+  <path class="a" d="M650 430H570"/>
+  <path class="a" d="M950 317H1000"/>
+  <path class="a d" d="M1088 405V540H650"/>
+  <text class="s" x="600" y="570" text-anchor="middle">平台通过或显示结果，不自动等于生产发布授权</text>
+</svg>
+

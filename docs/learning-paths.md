@@ -1,6 +1,6 @@
 # 学习路线
 
-[返回目录](README.md) · [回到最后一篇基础课](foundations/07-eval-to-rl-and-release-eval.md)
+[返回目录](contents.md) · [回到最后一篇基础课](foundations/07-eval-to-rl-and-release-eval.md)
 
 ## 路线 A：第一次系统学习 Eval Harness
 
@@ -29,4 +29,3 @@
 ## 推荐实践节奏
 
 每一阶段都交付一个可核对产物：第一阶段是完整运行目录，第二阶段是带永久链接的调用链笔记，第三阶段是一个新增 Target Adapter 或 Scorer，第四阶段是带计划分母与独立 Gate 的对比报告。产物能运行和回放，比“读完多少页”更能暴露理解缺口。
-

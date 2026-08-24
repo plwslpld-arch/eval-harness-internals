@@ -51,7 +51,7 @@ uv run pytest tests/test_runtime_extensions.py -k concurrency -q
 
 ## 如何核对
 
-对照 Promptfoo、DeepEval 和 Harbor 的执行课程，再查看 [`runner.py`](../../src/eval_harness_reference/runner.py) 的 `run_trial_batch` 与并发测试。
+对照 Promptfoo、DeepEval 和 Harbor 的执行课程，再查看 [`runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/runner.py) 的 `run_trial_batch` 与并发测试。
 
 ## 本篇不能证明什么
 

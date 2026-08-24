@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192" role="img" aria-labelledby="title desc">
+  <title id="title">Eval Harness 源码内核标志</title>
+  <desc id="desc">三个实验样本连接到证据节点，穿过判定门后形成绿色决定。</desc>
+  <rect x="8" y="8" width="176" height="176" rx="42" fill="#13213d"/>
+  <g fill="none" stroke="#90a4c8" stroke-width="4" stroke-linecap="round">
+    <path d="M46 50L91 70L132 70"/><path d="M46 96H91L132 96"/><path d="M46 142L91 122L132 122"/>
+  </g>
+  <circle cx="42" cy="50" r="10" fill="#ffb454"/><circle cx="42" cy="96" r="10" fill="#35c2d6"/><circle cx="42" cy="142" r="10" fill="#4a6cf7"/>
+  <g fill="#f4f7ff" stroke="#4a6cf7" stroke-width="3"><path d="M91 58L103 70L91 82L79 70Z"/><path d="M91 84L103 96L91 108L79 96Z"/><path d="M91 110L103 122L91 134L79 122Z"/></g>
+  <path d="M142 46H128V146H142" fill="none" stroke="#f4f7ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M160 79L177 96L160 113L143 96Z" fill="#56d39b"/>
+</svg>

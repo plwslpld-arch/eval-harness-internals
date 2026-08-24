@@ -42,7 +42,7 @@ minimum=0.6 会让 2/3 的总体 Metric 达标，但不能覆盖关键金额边�
 
 ## 如何核对
 
-阅读 [`gates.py`](../../src/eval_harness_reference/gates.py) 与 [`test_gates.py`](../../tests/test_gates.py)，确认所有状态分支有测试。核对 regate.json 没有重写 report.json。
+阅读 [`gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/gates.py) 与 [`test_gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_gates.py)，确认所有状态分支有测试。核对 regate.json 没有重写 report.json。
 
 ## 本篇不能证明什么
 

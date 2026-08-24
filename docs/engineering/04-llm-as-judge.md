@@ -51,7 +51,7 @@ uv run pytest tests/test_runtime_extensions.py -k judge -q
 
 ## 如何核对
 
-阅读 [`scorers/judge.py`](../../src/eval_harness_reference/scorers/judge.py) 的 Protocol、JudgeResult 与 lineage 适配，核对 [`test_runtime_extensions.py`](../../tests/test_runtime_extensions.py) 的离线 Stub。再对比 [`scorers/rules.py`](../../src/eval_harness_reference/scorers/rules.py)，理解确定性规则与 Judge 的失败面不同。
+阅读 [`scorers/judge.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/judge.py) 的 Protocol、JudgeResult 与 lineage 适配，核对 [`test_runtime_extensions.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_runtime_extensions.py) 的离线 Stub。再对比 [`scorers/rules.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/rules.py)，理解确定性规则与 Judge 的失败面不同。
 
 ## 本篇不能证明什么
 

@@ -49,7 +49,7 @@ Buggy 为 2/3、Gate failed；Fixed 为 3/3、Gate passed。配对差值为 `[0,
 
 ## 如何核对
 
-阅读 [`eval.yaml`](../../reference/examples/shipping/eval.yaml)、[`dataset.jsonl`](../../reference/examples/shipping/dataset.jsonl) 和两个 Target；运行 [`test_shipping_e2e.py`](../../tests/test_shipping_e2e.py)：
+阅读 [`eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/shipping/eval.yaml)、[`dataset.jsonl`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/shipping/dataset.jsonl) 和两个 Target；运行 [`test_shipping_e2e.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_shipping_e2e.py)：
 
 ```bash
 uv run pytest tests/test_shipping_e2e.py -q

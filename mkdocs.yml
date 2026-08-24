@@ -1,0 +1,141 @@
+site_name: Eval Harness 源码内核
+site_description: 面向开发者的中文 Eval Harness 源码教材与可运行参考实现
+site_url: https://plwslpld-arch.github.io/eval-harness-internals/
+repo_url: https://github.com/plwslpld-arch/eval-harness-internals
+repo_name: plwslpld-arch/eval-harness-internals
+edit_uri: ""
+copyright: 原创文档采用 CC BY 4.0；原创代码采用 MIT
+
+theme:
+  name: material
+  language: zh
+  logo: assets/brand/favicon.svg
+  favicon: assets/brand/favicon.svg
+  font: false
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: 切换到深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: 切换到浅色模式
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.tooltips
+    - search.highlight
+    - search.suggest
+
+plugins:
+  - search:
+      lang: [zh, en]
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - 首页: index.md
+  - 开始学习:
+      - 学习入口: 00-start-here.md
+      - 完整目录: contents.md
+      - 学习路线: learning-paths.md
+  - 基础篇:
+      - Agent Harness 与 Eval Harness: foundations/01-agent-vs-eval-harness.md
+      - Task、Dataset、Target 与 Environment: foundations/02-task-dataset-target-environment.md
+      - Sample、Trial 与 Attempt: foundations/03-sample-trial-attempt.md
+      - Trace、Artifact 与 Observation: foundations/04-trace-artifact-observation.md
+      - Scorer、Judge、Score 与 Metric: foundations/05-scorer-judge-score-metric.md
+      - 不确定性、比较与 Gate: foundations/06-uncertainty-comparison-gate.md
+      - Eval-to-RL 与独立发布评测: foundations/07-eval-to-rl-and-release-eval.md
+  - 源码课程:
+      - lm-evaluation-harness:
+          - 导读: harnesses/lm-evaluation-harness/README.md
+          - 入口与 Task 加载: harnesses/lm-evaluation-harness/01-entry-task-loading.md
+          - Request 与执行: harnesses/lm-evaluation-harness/02-request-execution.md
+          - 评分、聚合与测试: harnesses/lm-evaluation-harness/03-scoring-aggregation-tests.md
+      - Inspect AI:
+          - 导读: harnesses/inspect-ai/README.md
+          - Eval、Task 与 Solver: harnesses/inspect-ai/01-eval-task-solver.md
+          - Sandbox 与 Sample Run: harnesses/inspect-ai/02-sandbox-sample-run.md
+          - Scorer、Log 与 Retry: harnesses/inspect-ai/03-scorer-log-retry.md
+      - OpenAI Evals:
+          - 导读: harnesses/openai-evals/README.md
+          - Registry 与 EvalSpec: harnesses/openai-evals/01-registry-eval-spec.md
+          - Completion 与 Sample Run: harnesses/openai-evals/02-completion-sample-run.md
+          - Recorder、Metric 与边界: harnesses/openai-evals/03-recorder-metrics-boundaries.md
+      - Promptfoo:
+          - 导读: harnesses/promptfoo/README.md
+          - 配置、Provider 与 Prompt: harnesses/promptfoo/01-config-provider-prompt.md
+          - TestCase 与 Runtime: harnesses/promptfoo/02-test-case-runtime.md
+          - Assertion、Result 与 CI: harnesses/promptfoo/03-assertion-results-ci.md
+      - DeepEval:
+          - 导读: harnesses/deepeval/README.md
+          - Dataset、Golden 与 TestCase: harnesses/deepeval/01-dataset-golden-test-case.md
+          - Metric 执行: harnesses/deepeval/02-metric-execution.md
+          - 异步、缓存与错误: harnesses/deepeval/03-async-cache-errors.md
+      - Harbor 与 Terminal-Bench 1:
+          - 导读: harnesses/harbor-terminal-bench/README.md
+          - Job、Dataset 与 Trial: harnesses/harbor-terminal-bench/01-job-dataset-trial.md
+          - Environment 与 Agent 生命周期: harnesses/harbor-terminal-bench/02-environment-agent-lifecycle.md
+          - Verifier、Reward 与 Result: harnesses/harbor-terminal-bench/03-verifier-reward-results.md
+  - 工程篇:
+      - 最小 Eval Loop: engineering/01-minimal-eval-loop.md
+      - Run Identity 与可复现性: engineering/02-run-identity-and-reproducibility.md
+      - Retry 与 Recovery: engineering/03-retries-and-recovery.md
+      - LLM-as-a-Judge: engineering/04-llm-as-judge.md
+      - 统计比较: engineering/05-statistical-comparison.md
+      - Agent Environment: engineering/06-agent-environments.md
+      - Quality Gate: engineering/07-quality-gates.md
+      - Eval-to-RL: engineering/08-eval-to-rl.md
+  - 横向比较:
+      - Task、Dataset 与 Target: comparisons/01-task-dataset-target.md
+      - Runner、并发、缓存与 Retry: comparisons/02-runner-concurrency-cache-retry.md
+      - Trace、Artifact 与血缘: comparisons/03-trace-artifact-lineage.md
+      - Scorer、Judge 与 Outcome: comparisons/04-scorer-judge-outcomes.md
+      - Metric、统计单位与不确定性: comparisons/05-metric-statistics-uncertainty.md
+      - Agent Environment 与 Final State: comparisons/06-agent-environment-final-state.md
+      - Report、CI 与 Release Gate: comparisons/07-report-ci-release-gate.md
+      - 平台适配器边界: comparisons/08-platform-adapters.md
+  - 案例:
+      - 运费边界: cases/shipping-boundary.md
+      - 退款 Agent: cases/refund-agent.md
+      - 企业知识助手: cases/knowledge-assistant.md
+      - 合同审查 Agent: cases/contract-review-agent.md
+      - SWE-bench 补丁评测机制: cases/swe-bench-mechanism.md
+  - 实验:
+      - 运行一份确定性 Eval: labs/01-run-one-deterministic-eval.md
+      - 新增 Target Adapter: labs/02-add-a-target-adapter.md
+      - 编写 Scorer: labs/03-write-a-scorer.md
+      - 重复运行并比较: labs/04-repeat-and-compare.md
+      - 导入 Agent Trace: labs/05-evaluate-an-agent-trace.md
+      - 构建 Release Gate: labs/06-build-a-release-gate.md
+  - 附录:
+      - 术语表: appendices/glossary.md
+      - 验证与证据边界: appendices/verification.md
+      - 来源与许可证: appendices/source-and-license-boundaries.md
+      - 品牌说明: BRAND.md

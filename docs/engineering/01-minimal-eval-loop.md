@@ -55,7 +55,7 @@ uv run eval-harness-ref gate output/shipping
 
 ## 如何核对
 
-从 [`cli.py`](../../src/eval_harness_reference/cli.py) 的 `run` 进入 [`pipeline.py`](../../src/eval_harness_reference/pipeline.py)，依次追 `_load_samples`、`plan_trials`、`run_trial_batch`、`build_observation_bundle`、scorer、metric、gate 和 `write_report`。测试入口是 [`test_shipping_e2e.py`](../../tests/test_shipping_e2e.py) 与 [`test_cli.py`](../../tests/test_cli.py)。
+从 [`cli.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/cli.py) 的 `run` 进入 [`pipeline.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/pipeline.py)，依次追 `_load_samples`、`plan_trials`、`run_trial_batch`、`build_observation_bundle`、scorer、metric、gate 和 `write_report`。测试入口是 [`test_shipping_e2e.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_shipping_e2e.py) 与 [`test_cli.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_cli.py)。
 
 ## 本篇不能证明什么
 

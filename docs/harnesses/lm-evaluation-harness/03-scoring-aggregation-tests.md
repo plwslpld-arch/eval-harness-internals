@@ -1,6 +1,6 @@
 # 03｜评分、聚合与测试：从 `process_results` 到 Group 结果
 
-[上一节](02-request-execution.md) · [下一节](../../README.md)
+[上一节](02-request-execution.md) · [下一节](../../contents.md)
 
 ## 本篇要解决什么问题
 
@@ -66,4 +66,4 @@ T1=0.5，T2=0.75。按样本数加权为 `(2×0.5 + 4×0.75)/6 = 2/3`；Task 等
 
 聚合测试通过不能证明 benchmark 的采样有效、stderr 覆盖真实不确定性，也不能把任务排行榜当发布 Gate。它证明的是锁定实现中逐样本值如何变成 Task/Group 输出；独立性、外部有效性和非补偿风险政策仍需外层设计。
 
-[上一节](02-request-execution.md) · [下一节](../../README.md)
+[上一节](02-request-execution.md) · [下一节](../../contents.md)

@@ -35,7 +35,7 @@ shipping 的 Scorer 读取 Observation 中的 `fee` 和样本期望值：相等�
 4. Aggregator 以计划 Trial ID 为分母，验证 Score 没有引用计划外 Trial，也没有重复 score_id。
 5. Metric 保存 numerator、denominator、value 和参与的 score_ids，供比较与 Gate 使用。
 
-本仓库的 [`FieldMatchesExpectedScorer`](../../src/eval_harness_reference/scorers/rules.py) 与 [`aggregate_pass_rate`](../../src/eval_harness_reference/metrics.py) 是最小可运行实现。
+本仓库的 [`FieldMatchesExpectedScorer`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/rules.py) 与 [`aggregate_pass_rate`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/metrics.py) 是最小可运行实现。
 
 ## 关键数据结构
 

@@ -1,6 +1,6 @@
 # 03｜Scorer、EvalLog 与 Retry：怎样保留可重评分的运行事实
 
-[上一节](02-sandbox-sample-run.md) · [下一节](../../README.md)
+[上一节](02-sandbox-sample-run.md) · [下一节](../../contents.md)
 
 ## 本篇要解决什么问题
 
@@ -54,4 +54,4 @@ Sample retry 应保留第一次 error_retries，并让新状态的 Score进入�
 
 日志字段齐全不能证明 Scorer 校准、Judge 无偏或 Task retry 在外部服务变化后仍可比较。它只提供恢复与评分的可见结构；独立发布 Gate 仍需固定身份、分母和缺失政策。
 
-[上一节](02-sandbox-sample-run.md) · [下一节](../../README.md)
+[上一节](02-sandbox-sample-run.md) · [下一节](../../contents.md)

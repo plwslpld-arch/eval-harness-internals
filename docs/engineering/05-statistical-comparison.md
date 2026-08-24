@@ -53,7 +53,7 @@ uv run pytest tests/test_metrics.py tests/test_cli.py -k "bootstrap or compare" 
 
 ## 如何核对
 
-阅读 [`comparison.py`](../../src/eval_harness_reference/comparison.py) 和 [`pipeline.py`](../../src/eval_harness_reference/pipeline.py) 的 `compare_targets`，再看 [`test_metrics.py`](../../tests/test_metrics.py) 与 CLI compare 测试。把每个映射 key 与 Evidence Trial 手工对齐。
+阅读 [`comparison.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/comparison.py) 和 [`pipeline.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/pipeline.py) 的 `compare_targets`，再看 [`test_metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_metrics.py) 与 CLI compare 测试。把每个映射 key 与 Evidence Trial 手工对齐。
 
 ## 本篇不能证明什么
 

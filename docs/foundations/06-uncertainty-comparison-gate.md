@@ -35,7 +35,7 @@ shipping 有三个样本。buggy 通过 2/3，fixed 通过 3/3，点估计差为
 4. Gate 先检查证据可用性与关键非补偿条件，再读取 Metric 或 Comparison。
 5. GateDecision 保存 metric_ids、状态与原因；Reporter 不得把它扩大为真实生产发布授权。
 
-Reference Harness 的 [`paired_bootstrap`](../../src/eval_harness_reference/comparison.py) 和 [`evaluate_gate`](../../src/eval_harness_reference/gates.py) 分别承担统计与政策层。
+Reference Harness 的 [`paired_bootstrap`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/comparison.py) 和 [`evaluate_gate`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/gates.py) 分别承担统计与政策层。
 
 ## 关键数据结构
 
@@ -76,7 +76,7 @@ lm-evaluation-harness 的 [`evaluator.py`](https://github.com/EleutherAI/lm-eval
 
 ## 如何核对
 
-查看 [`tests/test_metrics.py`](../../tests/test_metrics.py) 是否锁住计划分母，查看 [`tests/test_gates.py`](../../tests/test_gates.py) 是否阻止无效证据通过。手工从 `report.json` 取 Score 重算 numerator/denominator，并确认 Gate 原因中的阈值与配置一致。
+查看 [`tests/test_metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_metrics.py) 是否锁住计划分母，查看 [`tests/test_gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_gates.py) 是否阻止无效证据通过。手工从 `report.json` 取 Score 重算 numerator/denominator，并确认 Gate 原因中的阈值与配置一致。
 
 ## 与其他 Harness 的关系
 

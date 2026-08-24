@@ -39,7 +39,7 @@ high → passed/1；low → failed/0；缺字段 → unscorable/None。allowed �
 
 ## 如何核对
 
-阅读 [`scorers/rules.py`](../../src/eval_harness_reference/scorers/rules.py) 和 [`test_scoring.py`](../../tests/test_scoring.py)，手工确认每个 Score 字段能回到 Bundle。
+阅读 [`scorers/rules.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/rules.py) 和 [`test_scoring.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_scoring.py)，手工确认每个 Score 字段能回到 Bundle。
 
 ## 本篇不能证明什么
 

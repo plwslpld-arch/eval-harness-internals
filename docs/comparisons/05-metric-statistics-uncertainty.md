@@ -49,7 +49,7 @@ uv run pytest tests/test_metrics.py -q
 
 ## 如何核对
 
-阅读 [`metrics.py`](../../src/eval_harness_reference/metrics.py)、[`comparison.py`](../../src/eval_harness_reference/comparison.py)，再对照 Terminal-Bench pass@k 与 lm-eval aggregation 课程。
+阅读 [`metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/metrics.py)、[`comparison.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/comparison.py)，再对照 Terminal-Bench pass@k 与 lm-eval aggregation 课程。
 
 ## 本篇不能证明什么
 

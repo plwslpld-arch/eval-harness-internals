@@ -1,4 +1,4 @@
-name: Documentation Quality
+name: 文档与参考实现质量
 
 on:
   pull_request:
@@ -8,39 +8,64 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
+      - name: 检出仓库
+        uses: actions/checkout@v6
 
-      - name: Set up Python
+      - name: 配置 Python 3.12
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      - name: Install uv
+      - name: 安装 uv
         run: python -m pip install uv==0.12.5
 
-      - name: Install Python dependencies
+      - name: 安装锁定依赖
         run: uv sync --frozen
 
-      - name: Run Reference Harness tests
+      - name: 运行完整测试
         run: uv run pytest -q
 
-      - name: Build Reference Harness package
+      - name: 核对仓库发布质量
+        run: uv run python scripts/repository_quality.py
+
+      - name: 核对锁定源码来源
+        run: uv run python scripts/sources.py verify
+
+      - name: 构建 Reference Harness 包
         run: uv build
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+      - name: 严格构建中文站点
+        run: uv run mkdocs build --strict
+
+      - name: 配置 GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+
+      - name: 上传 GitHub Pages 站点
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
         with:
-          node-version: "24"
-          cache: npm
+          path: site
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run legacy repository quality gate during migration
-        run: npm run check
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 发布 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -49,7 +49,7 @@ Buggy 在大额未审批样本失败，Gate failed；Fixed 三条通过，Gate p
 
 ## 如何核对
 
-阅读 [`refund-agent/eval.yaml`](../../reference/examples/refund-agent/eval.yaml)、Dataset 与两个 Target，运行案例测试。将每条 Score 回连 input/expected 与 target output，确认 Fixed 不读取 Scorer 内部信息。
+阅读 [`refund-agent/eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/refund-agent/eval.yaml)、Dataset 与两个 Target，运行案例测试。将每条 Score 回连 input/expected 与 target output，确认 Fixed 不读取 Scorer 内部信息。
 
 ## 本篇不能证明什么
 

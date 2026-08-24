@@ -35,7 +35,7 @@ Trace 不等于隐藏思维链。Eval Harness 应记录外部可观察的模型�
 4. Scorer 读取 Bundle，ScoreRecord 保存 Bundle digest、canonical_attempt_id 和 scorer_id。
 5. Metric 保存参与聚合的 score_ids，Gate 保存 metric_ids。报告因此可以从决定逐层反查。
 
-Reference Harness 分别在 [`tracing.py`](../../src/eval_harness_reference/tracing.py)、[`artifacts.py`](../../src/eval_harness_reference/artifacts.py) 和 [`reporting.py`](../../src/eval_harness_reference/reporting.py) 实现这三段。
+Reference Harness 分别在 [`tracing.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/tracing.py)、[`artifacts.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/artifacts.py) 和 [`reporting.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/reporting.py) 实现这三段。
 
 ## 关键数据结构
 

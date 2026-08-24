@@ -51,7 +51,7 @@ uv run pytest tests/test_runtime_extensions.py -k trace -q
 
 ## 如何核对
 
-阅读 [`targets/trace_import.py`](../../src/eval_harness_reference/targets/trace_import.py) 与对应测试；再对照 [Harbor 环境课程](../harnesses/harbor-terminal-bench/02-environment-agent-lifecycle.md) 的锁定源码，核对生产级 Environment 还需要哪些能力。
+阅读 [`targets/trace_import.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/targets/trace_import.py) 与对应测试；再对照 [Harbor 环境课程](../harnesses/harbor-terminal-bench/02-environment-agent-lifecycle.md) 的锁定源码，核对生产级 Environment 还需要哪些能力。
 
 ## 本篇不能证明什么
 

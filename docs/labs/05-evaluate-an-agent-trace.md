@@ -40,7 +40,7 @@ uv run pytest tests/test_runtime_extensions.py -k trace -q
 
 ## 如何核对
 
-阅读 [`targets/trace_import.py`](../../src/eval_harness_reference/targets/trace_import.py) 和相应测试；检查错误是在 Target Adapter 而不是 Scorer 中暴露。
+阅读 [`targets/trace_import.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/targets/trace_import.py) 和相应测试；检查错误是在 Target Adapter 而不是 Scorer 中暴露。
 
 ## 本篇不能证明什么
 

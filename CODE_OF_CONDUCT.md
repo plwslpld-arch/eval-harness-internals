@@ -1,31 +1,31 @@
-# Code of Conduct
+# 社区行为准则
 
-## Our pledge
+## 我们的承诺
 
-We pledge to make participation in Evalorium a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socioeconomic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
+我们致力于为所有参与者提供开放、友善、包容且无骚扰的协作环境，不因年龄、身体状况、残障、族裔、性别认同与表达、经验、教育、社会经济地位、国籍、外貌、种族、宗教或性取向而区别对待。
 
-We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
+## 期待的行为
 
-## Our standards
+- 尊重不同观点与经历；
+- 提供具体、可执行且面向问题的反馈；
+- 承认错误并主动修正；
+- 对源码结论、数据和许可证保持诚实；
+- 关注社区与读者的长期利益。
 
-Positive behavior includes demonstrating empathy, respecting differing opinions and experiences, giving and accepting constructive feedback, taking responsibility for mistakes, and focusing on what is best for the community.
+## 不可接受的行为
 
-Unacceptable behavior includes sexualized language or attention, trolling, insults, personal or political attacks, public or private harassment, publishing another person’s private information without permission, and conduct that would reasonably be considered inappropriate in a professional setting.
+- 骚扰、歧视、侮辱、挑衅或人身攻击；
+- 未经允许公开他人的私人信息；
+- 性暗示言论或不受欢迎的关注；
+- 故意提交凭据、个人数据、恶意载荷或误导性证据；
+- 其他在专业协作环境中不合适的行为。
 
-## Enforcement responsibilities
+## 适用范围与执行
 
-Project maintainers are responsible for clarifying and enforcing acceptable behavior. They may remove, edit, or reject contributions and interactions that are inconsistent with this Code of Conduct and will communicate moderation reasons when appropriate.
+本准则适用于仓库、Issue、Pull Request、讨论区，以及参与者代表本项目公开活动的场景。维护者可以删除、编辑或拒绝违反准则的内容，并根据影响、意图和重复程度采取私下提醒、警告、临时限制或永久限制。
 
-## Scope
+请通过 [`plwslpld-arch` GitHub 主页](https://github.com/plwslpld-arch)公开的联系方式私下报告不当行为。报告会在尊重隐私与安全的前提下审查。
 
-This Code applies in project spaces and when an individual officially represents the project in public spaces.
+## 归属
 
-## Reporting and enforcement
-
-Report abusive, harassing, or otherwise unacceptable behavior privately through the contact methods published on the [`plwslpld-arch` GitHub profile](https://github.com/plwslpld-arch). Reports will be reviewed promptly and fairly, with respect for the reporter’s privacy and safety.
-
-Enforcement may range from a private correction or warning to a temporary or permanent ban, depending on impact, intent, and pattern of behavior.
-
-## Attribution
-
-This Code of Conduct is adapted from the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).
+本准则参考 [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html) 编写。

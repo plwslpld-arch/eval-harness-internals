@@ -21,7 +21,14 @@ eval-harness-ref = "eval_harness_reference.cli:app"
 
 [dependency-groups]
 dev = [
+  "beautifulsoup4>=4.13,<5",
+  "markdown>=3.8,<4",
+  "mkdocs-material>=9.6,<10",
+  "pillow>=11,<13",
+  "pypdf>=6,<7",
   "pytest>=8.4,<9",
+  "reportlab>=4.4,<5",
+  "svglib>=1.5,<2",
 ]
 
 [tool.hatch.build.targets.wheel]

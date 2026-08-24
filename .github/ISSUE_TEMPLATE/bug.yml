@@ -1,0 +1,37 @@
+name: 问题报告
+description: 报告教材、Reference Harness、站点或构建中的可复现问题
+title: "[问题] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: 感谢你帮助改进项目。安全问题请按 SECURITY.md 私密报告。
+  - type: input
+    id: location
+    attributes:
+      label: 位置
+      description: 文档路径、命令、模块或页面地址
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: 实际现象
+      description: 请说明你看到的结果。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+      description: 请说明你认为正确的行为或解释。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 最小复现
+      description: 可复现步骤、输入和必要环境；请删除凭据与敏感数据。
+    validations:
+      required: true
+

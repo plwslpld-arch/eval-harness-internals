@@ -39,7 +39,7 @@ dict → completed；list → product_failure 或明确 contract error；业务�
 
 ## 如何核对
 
-阅读 [`targets/base.py`](../../src/eval_harness_reference/targets/base.py)、[`targets/subprocess.py`](../../src/eval_harness_reference/targets/subprocess.py) 与测试。确认 Subprocess 使用 `shell=False`、UTF-8 和 timeout。
+阅读 [`targets/base.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/targets/base.py)、[`targets/subprocess.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/targets/subprocess.py) 与测试。确认 Subprocess 使用 `shell=False`、UTF-8 和 timeout。
 
 ## 本篇不能证明什么
 

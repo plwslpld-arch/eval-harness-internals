@@ -9,10 +9,12 @@
 从仓库根目录运行：
 
 ```bash
-uv sync
+uv sync --frozen
 uv run pytest -q
+uv run python scripts/repository_quality.py
+uv run python scripts/sources.py verify
+uv run mkdocs build --strict
 uv build
-python scripts/sources.py verify
 ```
 
 核心案例：

@@ -51,7 +51,7 @@ uv run pytest tests/test_gates.py -q
 
 ## 如何核对
 
-阅读 [`gates.py`](../../src/eval_harness_reference/gates.py)、[`models.py`](../../src/eval_harness_reference/models.py) 的 Gate 状态和 [`test_gates.py`](../../tests/test_gates.py)。再打开报告，验证 gate.metric_ids 能回到对应 Metric 与 Score。
+阅读 [`gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/gates.py)、[`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 的 Gate 状态和 [`test_gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_gates.py)。再打开报告，验证 gate.metric_ids 能回到对应 Metric 与 Score。
 
 ## 本篇不能证明什么
 

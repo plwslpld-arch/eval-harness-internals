@@ -52,7 +52,7 @@ uv run eval-harness-ref run reference/examples/shipping/eval.yaml --output outpu
 
 ## 如何核对
 
-阅读 [`identity.py`](../../src/eval_harness_reference/identity.py)、[`planner.py`](../../src/eval_harness_reference/planner.py)、[`artifacts.py`](../../src/eval_harness_reference/artifacts.py) 与 [`models.py`](../../src/eval_harness_reference/models.py) 的路径验证。再查看 [`test_identity.py`](../../tests/test_identity.py) 和 Artifact 安全测试。
+阅读 [`identity.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/identity.py)、[`planner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/planner.py)、[`artifacts.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/artifacts.py) 与 [`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 的路径验证。再查看 [`test_identity.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_identity.py) 和 Artifact 安全测试。
 
 ## 本篇不能证明什么
 

@@ -1,0 +1,25 @@
+name: 内容改进建议
+description: 建议补充或改进源码解释、案例、图示与学习路径
+title: "[内容] "
+labels: ["documentation"]
+body:
+  - type: input
+    id: reader_problem
+    attributes:
+      label: 读者遇到的问题
+      description: 哪一处难以理解、缺少上下文或无法核对？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 希望补充哪些概念、调用链、实验、答案或图示？
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 来源或证据
+      description: 若涉及源码事实，请提供上游仓库、提交或文档链接。
+

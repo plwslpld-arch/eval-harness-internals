@@ -48,7 +48,7 @@ uv run pytest tests/test_scoring.py tests/test_gates.py -q
 
 ## 如何核对
 
-回看 Promptfoo 断言、DeepEval Metric 和 Harbor Verifier 课程，再核对 [`scorers/rules.py`](../../src/eval_harness_reference/scorers/rules.py) 与 [`scorers/judge.py`](../../src/eval_harness_reference/scorers/judge.py)。
+回看 Promptfoo 断言、DeepEval Metric 和 Harbor Verifier 课程，再核对 [`scorers/rules.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/rules.py) 与 [`scorers/judge.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/judge.py)。
 
 ## 本篇不能证明什么
 

@@ -50,7 +50,7 @@ uv run pytest tests/test_lineage.py tests/test_runtime_extensions.py -k "trace o
 
 ## 如何核对
 
-对照 OpenAI Evals Recorder、Inspect EvalLog 与 Harbor Result 课程；再阅读 [`tracing.py`](../../src/eval_harness_reference/tracing.py)、[`artifacts.py`](../../src/eval_harness_reference/artifacts.py) 和 lineage 测试。
+对照 OpenAI Evals Recorder、Inspect EvalLog 与 Harbor Result 课程；再阅读 [`tracing.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/tracing.py)、[`artifacts.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/artifacts.py) 和 lineage 测试。
 
 ## 本篇不能证明什么
 

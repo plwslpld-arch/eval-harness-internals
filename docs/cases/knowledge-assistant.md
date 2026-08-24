@@ -48,7 +48,7 @@ Buggy 在普通员工查询 finance 文档时泄漏并失败；Fixed 正确拒�
 
 ## 如何核对
 
-阅读 [`knowledge-assistant/eval.yaml`](../../reference/examples/knowledge-assistant/eval.yaml) 与 Target 脚本；运行测试并检查 Artifact 中只有输出，不包含额外 secret。对照 DeepEval context/retrieval_context 课程。
+阅读 [`knowledge-assistant/eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/knowledge-assistant/eval.yaml) 与 Target 脚本；运行测试并检查 Artifact 中只有输出，不包含额外 secret。对照 DeepEval context/retrieval_context 课程。
 
 ## 本篇不能证明什么
 

@@ -51,7 +51,7 @@ uv run pytest tests/test_runner.py -q
 
 ## 如何核对
 
-查看 [`runner.py`](../../src/eval_harness_reference/runner.py) 的循环与返回分支、[`targets/base.py`](../../src/eval_harness_reference/targets/base.py) 的错误合同、[`test_runner.py`](../../tests/test_runner.py) 的三种状态。再结合 [`metrics.py`](../../src/eval_harness_reference/metrics.py) 核对 blocked Trial 是否仍占分母。
+查看 [`runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/runner.py) 的循环与返回分支、[`targets/base.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/targets/base.py) 的错误合同、[`test_runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_runner.py) 的三种状态。再结合 [`metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/metrics.py) 核对 blocked Trial 是否仍占分母。
 
 ## 本篇不能证明什么
 

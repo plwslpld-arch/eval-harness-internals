@@ -19,16 +19,14 @@ __pycache__/
 .venv/
 venv/
 
-# JavaScript
-node_modules/
-.brand-build/
-.superpowers/
-npm-debug.log*
-.next/
+# Generated outputs
 dist/
 build/
 coverage/
 site/
+output/
+node_modules/
+tmp/
 sources/checkouts/
 
 # IDE and OS
@@ -39,6 +37,7 @@ Thumbs.db
 
 # Temporary files
 .worktrees/
+.superpowers/
 .tmp/
 *.tmp
 *.swp
