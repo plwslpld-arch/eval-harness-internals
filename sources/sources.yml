@@ -1,0 +1,158 @@
+version: 1
+sources:
+  - id: lm-evaluation-harness
+    course: lm-evaluation-harness
+    repo: EleutherAI/lm-evaluation-harness
+    url: https://github.com/EleutherAI/lm-evaluation-harness
+    branch: main
+    license: MIT
+    license_file: LICENSE.md
+    redistribution: link-only
+    scope:
+      - path: lm_eval/evaluator.py
+        purpose: 评测入口与主调用链
+      - path: lm_eval/api/task.py
+        purpose: Task 接口与样本请求构造
+      - path: lm_eval/api/model.py
+        purpose: Model Adapter 接口
+      - path: lm_eval/api/instance.py
+        purpose: 请求实例数据结构
+      - path: lm_eval/evaluator_utils.py
+        purpose: 结果整理与任务输出
+
+  - id: inspect-ai
+    course: inspect-ai
+    repo: UKGovernmentBEIS/inspect_ai
+    url: https://github.com/UKGovernmentBEIS/inspect_ai
+    branch: main
+    license: MIT
+    license_file: LICENSE
+    redistribution: link-only
+    scope:
+      - path: src/inspect_ai/_eval/eval.py
+        purpose: Eval 公共入口
+      - path: src/inspect_ai/_eval/run.py
+        purpose: 运行调度
+      - path: src/inspect_ai/_eval/task/run.py
+        purpose: 单个 Task 执行链
+      - path: src/inspect_ai/scorer/_scorer.py
+        purpose: Scorer 抽象与注册
+      - path: src/inspect_ai/log/_log.py
+        purpose: Eval Log 数据模型
+
+  - id: openai-evals
+    course: openai-evals
+    repo: openai/evals
+    url: https://github.com/openai/evals
+    branch: main
+    license: MIT
+    license_file: LICENSE.md
+    redistribution: link-only
+    scope:
+      - path: evals/cli/oaieval.py
+        purpose: 命令行入口与 Eval Spec 装配
+      - path: evals/registry.py
+        purpose: Registry 加载与对象解析
+      - path: evals/eval.py
+        purpose: Eval 与样本执行抽象
+      - path: evals/api.py
+        purpose: Completion Function 与 API 边界
+      - path: evals/record.py
+        purpose: 运行事件与记录器
+
+  - id: promptfoo
+    course: promptfoo
+    repo: promptfoo/promptfoo
+    url: https://github.com/promptfoo/promptfoo
+    branch: main
+    license: MIT
+    license_file: LICENSE
+    redistribution: link-only
+    scope:
+      - path: src/evaluator.ts
+        purpose: 声明式评测主循环
+      - path: src/evaluator/runtime.ts
+        purpose: 单测试运行时
+      - path: src/providers/index.ts
+        purpose: Provider 解析与适配
+      - path: src/assertions/index.ts
+        purpose: Assertion 分派
+      - path: src/types/index.ts
+        purpose: 配置与结果核心类型
+
+  - id: deepeval
+    course: deepeval
+    repo: confident-ai/deepeval
+    url: https://github.com/confident-ai/deepeval
+    branch: main
+    license: Apache-2.0
+    license_file: LICENSE.md
+    redistribution: link-only
+    scope:
+      - path: deepeval/evaluate/evaluate.py
+        purpose: evaluate 入口与执行配置
+      - path: deepeval/evaluate/execute/loop.py
+        purpose: 测试用例执行循环
+      - path: deepeval/metrics/base_metric.py
+        purpose: Metric 基类与 Judge 接口
+      - path: deepeval/dataset/dataset.py
+        purpose: Dataset 与 Golden 管理
+      - path: deepeval/test_case/llm_test_case.py
+        purpose: LLM Test Case 数据结构
+
+  - id: harbor
+    course: harbor-terminal-bench
+    repo: harbor-framework/harbor
+    url: https://github.com/harbor-framework/harbor
+    branch: main
+    license: Apache-2.0
+    license_file: LICENSE
+    redistribution: link-only
+    scope:
+      - path: src/harbor/job.py
+        purpose: Job 规划与 Trial 调度
+      - path: src/harbor/trial/trial.py
+        purpose: Agent Trial 生命周期
+      - path: src/harbor/environments/base.py
+        purpose: 环境适配边界
+      - path: src/harbor/verifier/verifier.py
+        purpose: 终态验证与结果生成
+      - path: src/harbor/models/trial/result.py
+        purpose: Trial 结果数据结构
+
+  - id: terminal-bench-1
+    course: harbor-terminal-bench
+    repo: harbor-framework/terminal-bench-1
+    url: https://github.com/harbor-framework/terminal-bench-1
+    branch: main
+    license: Apache-2.0
+    license_file: LICENSE
+    redistribution: link-only
+    scope:
+      - path: terminal_bench/harness/harness.py
+        purpose: 旧版 Terminal-Bench 执行主链
+      - path: terminal_bench/harness/models.py
+        purpose: Harness 配置与结果模型
+      - path: terminal_bench/dataset/dataset.py
+        purpose: 任务 Dataset 加载
+      - path: terminal_bench/agents/base_agent.py
+        purpose: Agent 适配接口
+
+  - id: swe-bench
+    course: mechanism-case
+    repo: SWE-bench/SWE-bench
+    url: https://github.com/SWE-bench/SWE-bench
+    branch: main
+    license: MIT
+    license_file: LICENSE
+    redistribution: link-only
+    scope:
+      - path: swebench/harness/run_evaluation.py
+        purpose: 实例执行与容器编排
+      - path: swebench/harness/grading.py
+        purpose: 补丁测试与判定语义
+      - path: swebench/harness/docker_utils.py
+        purpose: 隔离环境管理
+      - path: swebench/harness/reporting.py
+        purpose: 结果汇总与报告
+

@@ -1,0 +1,88 @@
+version: 1
+sources:
+- id: lm-evaluation-harness
+  repo: EleutherAI/lm-evaluation-harness
+  commit: ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66
+  license: MIT
+  license_file: LICENSE.md
+  scope_paths:
+  - lm_eval/evaluator.py
+  - lm_eval/api/task.py
+  - lm_eval/api/model.py
+  - lm_eval/api/instance.py
+  - lm_eval/evaluator_utils.py
+- id: inspect-ai
+  repo: UKGovernmentBEIS/inspect_ai
+  commit: ebf4815ee260afcc8c34ad9d66e6f8d98a89e905
+  license: MIT
+  license_file: LICENSE
+  scope_paths:
+  - src/inspect_ai/_eval/eval.py
+  - src/inspect_ai/_eval/run.py
+  - src/inspect_ai/_eval/task/run.py
+  - src/inspect_ai/scorer/_scorer.py
+  - src/inspect_ai/log/_log.py
+- id: openai-evals
+  repo: openai/evals
+  commit: 8eac7a7de5215c907fbddc30efdaf316913eccdd
+  license: MIT
+  license_file: LICENSE.md
+  scope_paths:
+  - evals/cli/oaieval.py
+  - evals/registry.py
+  - evals/eval.py
+  - evals/api.py
+  - evals/record.py
+- id: promptfoo
+  repo: promptfoo/promptfoo
+  commit: ce89186a22c59543f4f71a55d42442ff3f0e3654
+  license: MIT
+  license_file: LICENSE
+  scope_paths:
+  - src/evaluator.ts
+  - src/evaluator/runtime.ts
+  - src/providers/index.ts
+  - src/assertions/index.ts
+  - src/types/index.ts
+- id: deepeval
+  repo: confident-ai/deepeval
+  commit: a2e0d4cfd3118352d321c1c84bdeba17d4a201bc
+  license: Apache-2.0
+  license_file: LICENSE.md
+  scope_paths:
+  - deepeval/evaluate/evaluate.py
+  - deepeval/evaluate/execute/loop.py
+  - deepeval/metrics/base_metric.py
+  - deepeval/dataset/dataset.py
+  - deepeval/test_case/llm_test_case.py
+- id: harbor
+  repo: harbor-framework/harbor
+  commit: 74f0176384cff88b99306770473b4875760c5a21
+  license: Apache-2.0
+  license_file: LICENSE
+  scope_paths:
+  - src/harbor/job.py
+  - src/harbor/trial/trial.py
+  - src/harbor/environments/base.py
+  - src/harbor/verifier/verifier.py
+  - src/harbor/models/trial/result.py
+- id: terminal-bench-1
+  repo: harbor-framework/terminal-bench-1
+  commit: d28711d0da2675d0bb1d56de45ae5df6082438a3
+  license: Apache-2.0
+  license_file: LICENSE
+  scope_paths:
+  - terminal_bench/harness/harness.py
+  - terminal_bench/harness/models.py
+  - terminal_bench/dataset/dataset.py
+  - terminal_bench/agents/base_agent.py
+- id: swe-bench
+  repo: SWE-bench/SWE-bench
+  commit: 7a21e05772954cc81471ae19d56f436cecf43c54
+  license: MIT
+  license_file: LICENSE
+  scope_paths:
+  - swebench/harness/run_evaluation.py
+  - swebench/harness/grading.py
+  - swebench/harness/docker_utils.py
+  - swebench/harness/reporting.py

@@ -30,4 +30,5 @@ packages = ["src/eval_harness_reference"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+pythonpath = ["."]
 addopts = "-ra"
