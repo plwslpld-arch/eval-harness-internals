@@ -28,7 +28,7 @@ dev = [
   "pypdf>=6,<7",
   "pytest>=8.4,<9",
   "reportlab>=4.4,<5",
-  "svglib>=1.5,<2",
+  "svglib==1.5.1",
 ]
 
 [tool.hatch.build.targets.wheel]
