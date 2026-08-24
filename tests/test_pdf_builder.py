@@ -29,6 +29,13 @@ def test_windows_font_candidates_follow_system_root(
     )
 
 
+def test_linux_font_candidates_include_embeddable_true_type_cjk_font() -> None:
+    assert (
+        Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
+        Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
+    ) in build_pdf.font_candidates()
+
+
 def test_printed_toc_contains_chapter_titles_only() -> None:
     assert build_pdf.include_in_printed_toc(0) is True
     assert build_pdf.include_in_printed_toc(1) is False

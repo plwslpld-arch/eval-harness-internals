@@ -33,7 +33,7 @@ jobs:
       - name: 安装中文字体
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends fonts-noto-cjk
+          sudo apt-get install --yes --no-install-recommends fonts-wqy-zenhei
 
       - name: 安装锁定依赖
         run: uv sync --frozen

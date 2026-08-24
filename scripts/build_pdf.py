@@ -18,7 +18,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.platypus import (
     BaseDocTemplate,
     Flowable,
@@ -51,6 +51,10 @@ def font_candidates() -> list[tuple[Path, Path]]:
     return [
         (system_root / "Fonts" / "msyh.ttc", system_root / "Fonts" / "msyhbd.ttc"),
         (
+            Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
+            Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
+        ),
+        (
             Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
             Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"),
         ),
@@ -61,9 +65,16 @@ def register_fonts() -> tuple[str, str, str]:
     candidates = font_candidates()
     for regular, bold in candidates:
         if regular.is_file() and bold.is_file():
-            pdfmetrics.registerFont(TTFont("BookCN", str(regular), subfontIndex=0))
-            pdfmetrics.registerFont(TTFont("BookCN-Bold", str(bold), subfontIndex=0))
-            pdfmetrics.registerFont(TTFont("BookMono", str(regular), subfontIndex=0))
+            try:
+                pdfmetrics.registerFont(TTFont("BookCN", str(regular), subfontIndex=0))
+                pdfmetrics.registerFont(
+                    TTFont("BookCN-Bold", str(bold), subfontIndex=0)
+                )
+                pdfmetrics.registerFont(
+                    TTFont("BookMono", str(regular), subfontIndex=0)
+                )
+            except TTFError:
+                continue
             pdfmetrics.registerFontFamily(
                 "BookCN",
                 normal="BookCN",
