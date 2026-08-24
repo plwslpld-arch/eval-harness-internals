@@ -15,6 +15,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
 .venv/
 venv/
 
@@ -27,6 +28,7 @@ npm-debug.log*
 dist/
 build/
 coverage/
+site/
 
 # IDE and OS
 .idea/
@@ -36,6 +38,7 @@ Thumbs.db
 
 # Temporary files
 .worktrees/
+.tmp/
 *.tmp
 *.swp
 *.bak
