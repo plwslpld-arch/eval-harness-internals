@@ -1,6 +1,6 @@
 # DeepEval 执行策略：异步、缓存与错误不能改变统计单位
 
-[上一节](02-metric-execution.md) · [下一节](../../README.md)
+[上一节](02-metric-execution.md) · [下一节](../harbor-terminal-bench/README.md)
 
 ## 本篇要解决什么问题
 
@@ -63,4 +63,4 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 信号量、缓存和错误记录不能证明线程安全、缓存键完整、远程服务稳定或统计无偏。是否允许 ignore_errors 通过 CI 是组织政策，不能由库默认值替代。
 
-[上一节](02-metric-execution.md) · [下一节](../../README.md)
+[上一节](02-metric-execution.md) · [下一节](../harbor-terminal-bench/README.md)

@@ -38,6 +38,12 @@ COURSES = {
         "02-metric-execution.md",
         "03-async-cache-errors.md",
     ],
+    "harbor-terminal-bench": [
+        "README.md",
+        "01-job-dataset-trial.md",
+        "02-environment-agent-lifecycle.md",
+        "03-verifier-reward-results.md",
+    ],
 }
 HEADINGS = [
     "## 本篇要解决什么问题",
@@ -71,23 +77,32 @@ def test_harness_courses_link_only_to_locked_source_paths() -> None:
     )
     locked = {source["id"]: source for source in lock["sources"]}
     source_ids = {
-        "lm-evaluation-harness": "lm-evaluation-harness",
-        "inspect-ai": "inspect-ai",
-        "openai-evals": "openai-evals",
-        "promptfoo": "promptfoo",
-        "deepeval": "deepeval",
+        "lm-evaluation-harness": ["lm-evaluation-harness"],
+        "inspect-ai": ["inspect-ai"],
+        "openai-evals": ["openai-evals"],
+        "promptfoo": ["promptfoo"],
+        "deepeval": ["deepeval"],
+        "harbor-terminal-bench": ["harbor", "terminal-bench-1"],
     }
     for course, files in COURSES.items():
-        source = locked[source_ids[course]]
-        allowed = set(source["scope_paths"])
-        pattern = re.compile(
-            rf"https://github\.com/{re.escape(source['repo'])}/blob/"
-            rf"{source['commit']}/([^\s)#]+)"
-        )
+        sources = [locked[source_id] for source_id in source_ids[course]]
         for filename in files:
             text = (
                 REPO_ROOT / "docs" / "harnesses" / course / filename
             ).read_text(encoding="utf-8")
-            paths = pattern.findall(text)
-            assert paths, (course, filename)
-            assert set(paths) <= allowed, (course, filename, set(paths) - allowed)
+            matches = 0
+            for source in sources:
+                pattern = re.compile(
+                    rf"https://github\.com/{re.escape(source['repo'])}/blob/"
+                    rf"{source['commit']}/([^\s)#]+)"
+                )
+                paths = pattern.findall(text)
+                if paths:
+                    matches += len(paths)
+                    allowed = set(source["scope_paths"])
+                    assert set(paths) <= allowed, (
+                        course,
+                        filename,
+                        set(paths) - allowed,
+                    )
+            assert matches, (course, filename)
