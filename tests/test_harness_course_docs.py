@@ -26,6 +26,12 @@ COURSES = {
         "02-completion-sample-run.md",
         "03-recorder-metrics-boundaries.md",
     ],
+    "promptfoo": [
+        "README.md",
+        "01-config-provider-prompt.md",
+        "02-test-case-runtime.md",
+        "03-assertion-results-ci.md",
+    ],
 }
 HEADINGS = [
     "## 本篇要解决什么问题",
@@ -62,6 +68,7 @@ def test_harness_courses_link_only_to_locked_source_paths() -> None:
         "lm-evaluation-harness": "lm-evaluation-harness",
         "inspect-ai": "inspect-ai",
         "openai-evals": "openai-evals",
+        "promptfoo": "promptfoo",
     }
     for course, files in COURSES.items():
         source = locked[source_ids[course]]
