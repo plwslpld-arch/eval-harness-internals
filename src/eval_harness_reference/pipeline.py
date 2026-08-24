@@ -18,10 +18,13 @@ from .metrics import aggregate_pass_rate
 from .models import (
     EvaluationSpec,
     GateDecision,
+    MetricEstimate,
+    ObservationBundle,
     Sample,
     ScoreRecord,
     TargetSpec,
     TraceEvent,
+    Trial,
 )
 from .planner import plan_trials
 from .reporting import EvaluationReport, ReportPaths, write_report
@@ -66,6 +69,23 @@ class PipelineResult:
     paths: ReportPaths
 
 
+class RunEvidence(BaseModel):
+    """足以在不重跑 Target 的前提下复核评分和门禁。"""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    config: PipelineConfig
+    trials: list[Trial]
+    bundles: list[ObservationBundle]
+
+
+class ScoreReplay(BaseModel):
+    """从冻结 Observation Bundle 重新计算的评分与指标。"""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    scores: list[ScoreRecord]
+    metrics: list[MetricEstimate]
+
+
 def _load_config(path: Path) -> PipelineConfig:
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     return PipelineConfig.model_validate(payload)
@@ -83,6 +103,79 @@ def _load_samples(path: Path) -> list[Sample]:
     if not samples:
         raise ValueError("Dataset 不能为空")
     return samples
+
+
+def _write_model(path: Path, model: BaseModel) -> None:
+    path.write_text(
+        json.dumps(model.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def load_evidence(run_dir: Path) -> RunEvidence:
+    return RunEvidence.model_validate_json(
+        (run_dir / "evidence.json").read_text(encoding="utf-8")
+    )
+
+
+def load_report(run_dir: Path) -> EvaluationReport:
+    return EvaluationReport.model_validate_json(
+        (run_dir / "report.json").read_text(encoding="utf-8")
+    )
+
+
+def recompute_scores(evidence: RunEvidence) -> list[ScoreRecord]:
+    scorer = FieldMatchesExpectedScorer(
+        evidence.config.scorer.scorer_id,
+        field=evidence.config.scorer.field,
+    )
+    return [scorer.score(bundle) for bundle in evidence.bundles]
+
+
+def recompute_metrics(
+    evidence: RunEvidence, scores: list[ScoreRecord]
+) -> list[MetricEstimate]:
+    metrics: list[MetricEstimate] = []
+    for target in sorted(evidence.config.targets, key=lambda item: item.target_id):
+        target_trials = [
+            trial.trial_id for trial in evidence.trials if trial.target_id == target.target_id
+        ]
+        trial_id_set = set(target_trials)
+        target_scores = [score for score in scores if score.trial_id in trial_id_set]
+        metrics.append(
+            aggregate_pass_rate(
+                target_scores,
+                target_trials,
+                metric_id=f"{target.target_id}:pass-rate",
+            )
+        )
+    return metrics
+
+
+def recompute_gates(
+    evidence: RunEvidence,
+    scores: list[ScoreRecord],
+    metrics: list[MetricEstimate],
+) -> list[GateDecision]:
+    gates: list[GateDecision] = []
+    for target in sorted(evidence.config.targets, key=lambda item: item.target_id):
+        target_trial_ids = {
+            trial.trial_id for trial in evidence.trials if trial.target_id == target.target_id
+        }
+        target_scores = [score for score in scores if score.trial_id in target_trial_ids]
+        metric_id = f"{target.target_id}:pass-rate"
+        gates.append(
+            evaluate_gate(
+                ThresholdPolicy(
+                    gate_id=f"{target.target_id}-release",
+                    metric_id=metric_id,
+                    minimum=evidence.config.gate.minimum,
+                ),
+                metrics,
+                target_scores,
+            )
+        )
+    return gates
 
 
 def run_evaluation(config_path: Path, *, output_dir: Path) -> PipelineResult:
@@ -107,6 +200,7 @@ def run_evaluation(config_path: Path, *, output_dir: Path) -> PipelineResult:
     artifact_store = ArtifactStore(output_dir / "artifacts")
     trace_dir = output_dir / "traces"
     trial_results: list[TrialResult] = []
+    bundles: list[ObservationBundle] = []
     scores: list[ScoreRecord] = []
 
     for trial in trials:
@@ -140,27 +234,12 @@ def run_evaluation(config_path: Path, *, output_dir: Path) -> PipelineResult:
             (json.dumps(result.output, ensure_ascii=False, sort_keys=True) + "\n").encode(),
         )
         bundle = build_observation_bundle(result, events=events, artifacts=[artifact])
+        bundles.append(bundle)
         scores.append(scorer.score(bundle))
 
-    metrics = []
-    gates: list[GateDecision] = []
-    for target in sorted(config.targets, key=lambda item: item.target_id):
-        target_trials = [trial.trial_id for trial in trials if trial.target_id == target.target_id]
-        target_scores = [score for score in scores if score.trial_id in set(target_trials)]
-        metric_id = f"{target.target_id}:pass-rate"
-        metric = aggregate_pass_rate(target_scores, target_trials, metric_id=metric_id)
-        metrics.append(metric)
-        gates.append(
-            evaluate_gate(
-                ThresholdPolicy(
-                    gate_id=f"{target.target_id}-release",
-                    metric_id=metric_id,
-                    minimum=config.gate.minimum,
-                ),
-                [metric],
-                target_scores,
-            )
-        )
+    evidence = RunEvidence(config=config, trials=trials, bundles=bundles)
+    metrics = recompute_metrics(evidence, scores)
+    gates = recompute_gates(evidence, scores, metrics)
 
     report = EvaluationReport(
         evaluation_id=config.evaluation_id,
@@ -170,6 +249,7 @@ def run_evaluation(config_path: Path, *, output_dir: Path) -> PipelineResult:
         gates=gates,
     )
     output_dir.mkdir(parents=True, exist_ok=True)
+    _write_model(output_dir / "evidence.json", evidence)
     (output_dir / "run.json").write_text(
         json.dumps(
             [result.model_dump(mode="json") for result in trial_results],
