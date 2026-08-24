@@ -34,4 +34,3 @@ body:
       description: 可复现步骤、输入和必要环境；请删除凭据与敏感数据。
     validations:
       required: true
-

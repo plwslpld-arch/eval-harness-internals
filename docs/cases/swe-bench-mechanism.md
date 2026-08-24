@@ -241,4 +241,3 @@ rules:
 - [统计比较](../engineering/05-statistical-comparison.md)
 - [Quality Gate](../engineering/07-quality-gates.md)
 - [验证与证据边界](../appendices/verification.md)
-

@@ -22,4 +22,3 @@ body:
     attributes:
       label: 来源或证据
       description: 若涉及源码事实，请提供上游仓库、提交或文档链接。
-

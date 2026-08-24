@@ -44,4 +44,3 @@ def test_svg_safety_rejects_active_or_external_content(
 
 def test_current_repository_satisfies_publication_contract() -> None:
     assert collect_repository_violations(REPO_ROOT) == []
-
