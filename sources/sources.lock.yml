@@ -85,4 +85,5 @@ sources:
   - swebench/harness/run_evaluation.py
   - swebench/harness/grading.py
   - swebench/harness/docker_utils.py
+  - swebench/harness/infra_failure.py
   - swebench/harness/reporting.py

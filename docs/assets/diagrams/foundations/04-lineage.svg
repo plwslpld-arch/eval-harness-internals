@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="590" viewBox="0 0 1200 590" role="img" aria-labelledby="title desc">
+  <title id="title">评测证据血缘</title><desc id="desc">TraceEvent 与 Artifact 形成 Observation Bundle，Score、Metric 和 Gate 逐层保留引用。</desc>
+  <defs><style>text{font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;fill:#14213d}.h{font-size:29px;font-weight:700}.t{font-size:20px}.s{font-size:16px}.n{stroke-width:3}</style><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#50617a"/></marker></defs>
+  <rect width="1200" height="590" rx="28" fill="#f8fafc"/><text x="600" y="52" text-anchor="middle" class="h">结论必须能沿引用反向走回原始观察</text>
+  <rect x="50" y="125" width="165" height="90" rx="16" fill="#e8f2ff" stroke="#2675d8" class="n"/><text x="133" y="164" text-anchor="middle" class="t">TraceEvent</text><text x="133" y="193" text-anchor="middle" class="s">有序事件</text>
+  <rect x="50" y="305" width="165" height="90" rx="16" fill="#e8f2ff" stroke="#2675d8" class="n"/><text x="133" y="344" text-anchor="middle" class="t">Artifact</text><text x="133" y="373" text-anchor="middle" class="s">内容摘要文件</text>
+  <rect x="300" y="215" width="210" height="100" rx="18" fill="#e9faf4" stroke="#16966f" class="n"/><text x="405" y="255" text-anchor="middle" class="t">Observation</text><text x="405" y="285" text-anchor="middle" class="t">Bundle</text>
+  <rect x="590" y="215" width="165" height="100" rx="18" fill="#fff2e4" stroke="#ee7b2d" class="n"/><text x="673" y="255" text-anchor="middle" class="t">ScoreRecord</text><text x="673" y="285" text-anchor="middle" class="s">评分事实</text>
+  <rect x="835" y="215" width="165" height="100" rx="18" fill="#f1eafe" stroke="#7b53c6" class="n"/><text x="918" y="255" text-anchor="middle" class="t">Metric</text><text x="918" y="285" text-anchor="middle" class="s">样本集合估计</text>
+  <rect x="835" y="405" width="165" height="100" rx="18" fill="#14213d" stroke="#14213d" class="n"/><text x="918" y="448" text-anchor="middle" class="t" style="fill:#fff">Gate</text><text x="918" y="478" text-anchor="middle" class="s" style="fill:#fff">质量决定</text>
+  <path d="M215 170H260V245H295M215 350H260V285H295M510 265H585M755 265H830M918 318V400" fill="none" stroke="#50617a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="600" y="555" text-anchor="middle" class="t">缺少摘要、canonical Attempt 或 Scorer 身份时，后续层只能阻断或无法判断</text>
+</svg>

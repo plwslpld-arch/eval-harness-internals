@@ -153,6 +153,7 @@ sources:
         purpose: 补丁测试与判定语义
       - path: swebench/harness/docker_utils.py
         purpose: 隔离环境管理
+      - path: swebench/harness/infra_failure.py
+        purpose: 基础设施失败分类
       - path: swebench/harness/reporting.py
         purpose: 结果汇总与报告
-

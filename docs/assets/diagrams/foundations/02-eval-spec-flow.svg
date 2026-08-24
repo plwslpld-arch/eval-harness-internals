@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">从评测问题到可执行 Trial</title><desc id="desc">Task、Dataset、Target 和 Environment 共同形成评测规格，再由 Planner 物化为 Trial。</desc>
+  <defs><style>text{font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;fill:#14213d}.h{font-size:30px;font-weight:700}.t{font-size:21px}.s{font-size:17px}.b{stroke-width:3}</style><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#52617b"/></marker></defs>
+  <rect width="1200" height="600" rx="28" fill="#f8fafc"/><text x="600" y="55" text-anchor="middle" class="h">四个对象回答四个不同问题</text>
+  <rect x="55" y="105" width="235" height="125" rx="18" fill="#e8f2ff" stroke="#2675d8" class="b"/><text x="173" y="150" text-anchor="middle" class="h">Task</text><text x="173" y="190" text-anchor="middle" class="t">要测什么行为？</text>
+  <rect x="335" y="105" width="235" height="125" rx="18" fill="#e9faf4" stroke="#16966f" class="b"/><text x="453" y="150" text-anchor="middle" class="h">Dataset</text><text x="453" y="190" text-anchor="middle" class="t">用哪些样本测？</text>
+  <rect x="615" y="105" width="235" height="125" rx="18" fill="#fff2e4" stroke="#ee7b2d" class="b"/><text x="733" y="150" text-anchor="middle" class="h">Target</text><text x="733" y="190" text-anchor="middle" class="t">测哪个系统版本？</text>
+  <rect x="895" y="105" width="250" height="125" rx="18" fill="#f1eafe" stroke="#7b53c6" class="b"/><text x="1020" y="150" text-anchor="middle" class="h">Environment</text><text x="1020" y="190" text-anchor="middle" class="t">在哪个状态运行？</text>
+  <path d="M172 232V300H600M452 232V300M732 232V300M1020 232V300H600" fill="none" stroke="#52617b" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="420" y="305" width="360" height="95" rx="20" fill="#fff" stroke="#14213d" class="b"/><text x="600" y="345" text-anchor="middle" class="h">EvaluationSpec</text><text x="600" y="378" text-anchor="middle" class="s">冻结身份、范围、重复次数和评分策略</text>
+  <line x1="600" y1="402" x2="600" y2="450" stroke="#52617b" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="105" y="455" width="990" height="90" rx="20" fill="#eef2f7" stroke="#52617b" class="b"/><text x="600" y="492" text-anchor="middle" class="h">Planner：Sample × Target × Repetition → Trial Plan</text><text x="600" y="528" text-anchor="middle" class="s">计划先于执行生成，失败后不能通过删分母改写问题</text>
+</svg>

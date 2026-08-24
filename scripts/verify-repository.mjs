@@ -72,7 +72,6 @@ const CREDENTIAL_PATTERNS = [
 ];
 
 const PROGRESS_MIRROR_PATHS = [
-  "README.md",
   "README.zh-CN.md",
   "START_HERE.md",
   "academy/README.md",

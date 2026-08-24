@@ -1,135 +1,82 @@
-<!-- evalorium-progress current=A2.2 current_status=not_started last_completed=A2.1 last_status=artifact_validated -->
+# Eval Harness 源码内核
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/evalorium-logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/evalorium-logo.svg">
-    <img src="docs/assets/brand/evalorium-logo.svg" alt="Evalorium" width="420">
-  </picture>
-</p>
+> 从一个样本到一次发布决定，读懂评测系统如何运行。
 
-<p align="center"><strong>Evidence before release.</strong></p>
+这是一套面向开发者的中文 Eval Harness 源码教材，也包含一个可以离线运行的最小 Reference Harness。它不只告诉你“如何调用评测 API”，而是沿真实源码和确定性实验解释：任务怎样被物化为 Trial，运行证据怎样进入 Scorer，分数怎样形成统计估计，以及 Gate 凭什么通过、失败、阻断或无法判断。
 
-<p align="center">
-  Open-source enterprise AI quality engineering for models, RAG systems, agents, and multi-agent systems.
-</p>
+[开始学习](docs/00-start-here.md) · [完整目录](docs/README.md) · [选择学习路线](docs/learning-paths.md) · [第三方来源](THIRD_PARTY.md)
 
-<p align="center">
-  English · <a href="README.zh-CN.md">简体中文</a>
-</p>
+## 先用五分钟分清两个 Harness
 
-<p align="center">
-  <a href="https://github.com/plwslpld-arch/evalorium/actions/workflows/docs-quality.yml"><img src="https://github.com/plwslpld-arch/evalorium/actions/workflows/docs-quality.yml/badge.svg" alt="Documentation Quality"></a>
-</p>
+| 问题 | Agent Harness 源码内核 | 本仓库：Eval Harness 源码内核 |
+| --- | --- | --- |
+| 核心决定 | 一次 Agent 任务下一步怎样执行 | 一组实验能支持什么质量结论 |
+| 主要对象 | 上下文、Agent Loop、工具、权限、Session | Task、Dataset、Trial、Attempt、Scorer、Metric、Gate |
+| Trace 角色 | 生产模型、工具与状态事件 | 验证、打包并消费为评分证据 |
+| 重试关注 | Agent 自身策略与会话恢复 | 基础设施恢复不能改变统计分母 |
+| 最终输出 | 回答、补丁、工具副作用、环境终态 | Score、比较、不确定性、Gate 与报告 |
 
-> **Current status — Academy foundation.** The learning and evidence system is under construction. The Platform described below is a target architecture, not a claim that production software is already available.
-
-## What Evalorium is
-
-Evalorium is an open-source quality engineering platform that turns AI requirements and risks into reproducible evaluations, release gates, production monitoring, governance evidence, and improvement data.
-
-Most evaluation tools answer a narrow question: *how did a model score on this dataset?* Evalorium is designed around the broader enterprise decision: *is there enough reliable evidence to release this AI system, keep it in production, and improve it safely?*
-
-## Principles
-
-- **Evidence before release** — quality claims must be traceable to tests, measurements, and limitations.
-- **Uncertainty-aware** — estimates include sampling, model, judge, and execution uncertainty.
-- **System-level** — evaluate the complete model, retrieval, tools, memory, environment, and policy boundary.
-- **Risk-driven** — capability, reliability, safety, bias, security, cost, and operational risks share one decision model.
-- **Reproducible** — tasks, environments, versions, traces, and gates are replayable and auditable.
-- **No maturity without proof** — planned, implemented, validated, and production-proven are different states.
-
-## Two connected tracks
-
-| Track | Purpose | Current state |
-|---|---|---|
-| **Academy** | Publish validated learning artifacts and support separate competency evidence | Learning |
-| **Platform** | Implement the methods as an enterprise evaluation and quality control plane | Planned |
-
-Public Academy artifacts follow a strict unit gate:
+两者通过 Target Adapter 连接。Claude、Codex、Gemini、DeepSeek Harness、pi、OpenCode 或任意 RAG 服务都可以作为被测 Target；本仓库不重复讲它们内部的 Agent Loop，而是研究怎样冻结身份、创建等价 Trial、采集证据并公平比较。
 
 ```text
-study → explain with cases → curate publishable artifacts → verify → commit → next unit
+被测系统：上下文 → Agent Loop → 工具与环境 → Trace / Diff / 终态
+                                           │
+                                     Target Adapter
+                                           ▼
+评测系统：EvalSpec → Trial → Attempt → Observation → Score → Metric → Gate
 ```
 
-Curriculum maps may be planned in advance. A unit is published only when its formal course, engineering templates, examples, HTML, and validation contract are committed and verified. Artifact delivery does not claim personal mastery; competency claims require separate evidence at the claimed level.
+## 你会在这里学到什么
 
-## Target capability map
+- 一套共同语言：Task、Dataset、Target、Environment、Sample、Trial、Attempt、Trace、Artifact、Observation、Scorer、Metric 和 Gate；
+- 六条源码课程：lm-evaluation-harness、Inspect AI、OpenAI Evals、Promptfoo、DeepEval、Harbor 与 Terminal-Bench；
+- 一个可运行参考实现：Python 3.12、确定性 Target、本地子进程、证据血缘、规则评分、统计聚合、门禁与离线报告；
+- 一组横向比较：同名对象如何对应、哪些能力只是部分支持、哪些根本不可等价；
+- 一条完整改进链：`Evaluator → RewardAdapter → DPO/GRPO/RFT → independent release eval`。
 
-| Capability | Responsibility |
-|---|---|
-| Standards | Quality models, risk taxonomy, baselines, and release policy |
-| Eval Core | Tasks, datasets, runners, solvers, scorers, judges, and reports |
-| Measurement | Sampling, uncertainty, confidence intervals, effect sizes, and significance |
-| LLM-as-Judge | Calibration, bias detection, reliability, and human comparison |
-| Human Evaluation | Annotation design, sampling, adjudication, and agreement |
-| Agent Environment Harness | Controlled environments, tools, state assertions, traces, and fault injection |
-| Security and Red Team | Threat models, adversarial generation, permissions, and regression suites |
-| Quality Gates | Pull-request, CI/CD, canary, release, and exception decisions |
-| Observability | Quality drift, hallucination, bias, latency, cost, and incident signals |
-| Governance | Ownership, approvals, evidence chains, audit, and risk acceptance |
-| Eval-to-RL | Failure mining, preference data, verifiers, rewards, and training exports |
-| Academy | Formal lessons, experiments, assessments, and capstones |
+源码课程只使用锁定 commit 的永久链接。每篇核心课都要给出调用链、关键数据结构、失败语义、设计取舍、可运行实验、预期输出和参考答案，而不是几段概念摘要。
 
-See the [target architecture](docs/ARCHITECTURE.md) and [scope boundary](docs/SCOPE.md).
+## 先跑一次完整评测
 
-## Agent Environment Harness
+需要 Python 3.12。安装依赖后，从仓库根目录执行：
 
-The Agent Environment Harness is a deep core capability inside Evalorium. It will provision and reset environments, expose controlled tools, capture trajectories, inject failures, inspect final state, and score whether an agent truly completed a task safely and reliably.
-
-It evaluates agent products. It is not itself a Claude Code-style general coding-agent runtime.
-
-## Eval-to-RL loop
-
-```text
-evaluations and production incidents
-  → failure clusters and hard cases
-  → human preferences, verifiers, and reward signals
-  → training or policy improvement
-  → regression evaluation and release gates
+```bash
+uv sync --frozen
+uv run eval-harness-ref run reference/examples/shipping/eval.yaml --output output/shipping
+uv run eval-harness-ref inspect output/shipping
+uv run eval-harness-ref score output/shipping
+uv run eval-harness-ref gate output/shipping
 ```
 
-## Current maturity
+这个例子比较两个运费函数。订单金额恰好为 100 元时，buggy 版本错误收费，fixed 版本正确免运费。运行会产生 Trial、Attempt、Trace、内容摘要 Artifact、Observation Bundle、Score、Metric、Gate，以及 JSON、Markdown 和 HTML 报告。它不访问模型 API，也不需要容器。
 
-| Area | State | Evidence |
-|---|---|---|
-| Repository and brand foundation | Implemented | Versioned assets and local validation |
-| Academy curriculum | Learning | Chapter A1 and [A2.1 — 从抽象质量到可测量构念](academy/phase-a/chapter-a2/unit-a2-1/README.md) public artifact contracts validated. Chapter A2 is 《测量理论、效度与可靠性》; A2.1 includes eight templates, three synthetic cases, 188 local tests, and exact-candidate [remote verification](https://github.com/plwslpld-arch/evalorium/actions/runs/31492987925) for [`9e5f8c7`](https://github.com/plwslpld-arch/evalorium/commit/9e5f8c722b83560517709eb90ca383719f28d580). This proves only the public measurement-design, construct, proxy, error, reliability/validity planning, and trace contract—not real measurement, observed reliability or validity, production readiness, release authorization, or personal competency. A2.2 is not started and has no placeholder. |
-| Platform runtime | Planned | Design and roadmap only |
-| Production adoption | Not claimed | Requires external organizational evidence |
+## 建议学习顺序
 
-Read the [project maturity model](docs/PROJECT_MATURITY.md) before interpreting any capability claim.
+1. 从[学习入口](docs/00-start-here.md)理解贯穿案例和阅读方法；
+2. 完成[基础篇](docs/foundations/01-agent-vs-eval-harness.md)，先建立共同对象和状态语义；
+3. 对照 Reference Harness 的代码与实验，把抽象概念变成真实文件；
+4. 进入六条上游源码课程，沿锁定调用链比较不同实现；
+5. 用案例和 Lab 设计自己的 Dataset、Scorer、统计比较与发布 Gate。
 
-## Learning scope
+如果你已经在做评测工程，可以从[学习路线](docs/learning-paths.md)选择“源码阅读”“Agent 评测”或“Eval-to-RL”路径。
 
-The full program targets:
+## Reference Harness 的证据合同
 
-- 8 phases
-- 29 core chapters
-- at least 138 knowledge units
-- 8 phase capstones
-- 1 enterprise capstone
+- Trial 是统计对象；Attempt 是基础设施恢复对象；
+- 产品失败不能通过增加 Attempt 重试成成功；
+- 一个 Trial 最多有一个 canonical Attempt；
+- Score 必须绑定 canonical Attempt、Observation Bundle 和 Scorer 身份；
+- Metric 分母来自预声明 Trial Plan，不来自成功 Attempt 数；
+- invalid、unscorable 或 uncertain 的关键证据不能被 Gate 改写为 passed。
 
-The scope is not reduced to fit a one-month learning rhythm. Time is a pacing constraint, not a reason to remove content or evidence.
+报告可回放评分与门禁，但不会捕获隐藏思维链，也不会把被测系统自述当成独立环境事实。
 
-## Documentation
+## 来源与许可证
 
-- [Documentation index](docs/README.md)
-- [Vision](docs/VISION.md)
-- [Scope and non-goals](docs/SCOPE.md)
-- [Target architecture](docs/ARCHITECTURE.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Project maturity](docs/PROJECT_MATURITY.md)
-- [Mastery standard](docs/MASTERY_STANDARD.md)
-- [Job competency map](docs/JD_COMPETENCY_MAP.md)
-- [Brand guide](docs/BRAND.md)
-- [Resume work on another computer](START_HERE.md)
-- [Cross-device GitHub execution protocol](docs/workflows/cross-device-github.md)
+上游研究对象、锁定 commit、研究路径和许可证见 [`sources/sources.yml`](sources/sources.yml)、[`sources/sources.lock.yml`](sources/sources.lock.yml) 与[第三方来源说明](THIRD_PARTY.md)。上游源码不复制进本仓库；项目名称仅用于识别研究对象，不表示官方认可。
 
-## Contributing and security
+原创代码采用 MIT License；原创文档采用 CC BY 4.0。上游源码、名称和商标继续受各自许可证与规则约束。
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes. Report security issues through the process in [SECURITY.md](SECURITY.md). Community participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+## 结论边界
 
-## License
-
-Apache License 2.0. See [LICENSE](LICENSE).
+仓库的测试、课程和确定性示例通过，只能说明这些教学材料与参考实现满足自身声明的合同。它不能证明任何上游工具生产就绪，不能替代真实业务的 Dataset 有效性审查，也不构成某个 AI 系统的生产发布授权。

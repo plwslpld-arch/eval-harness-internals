@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">成对比较与质量门禁</title><desc id="desc">同一 Sample 和重复序号连接 Baseline 与 Candidate，比较效果和不确定性后才进入 Gate。</desc>
+  <defs><style>text{font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;fill:#14213d}.h{font-size:29px;font-weight:700}.t{font-size:20px}.s{font-size:16px}</style><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#50617a"/></marker></defs>
+  <rect width="1200" height="620" rx="28" fill="#f8fafc"/><text x="600" y="52" text-anchor="middle" class="h">不要只问“谁的平均分高”，还要问“差异有多稳”</text>
+  <rect x="65" y="120" width="235" height="105" rx="18" fill="#e8f2ff" stroke="#2675d8" stroke-width="3"/><text x="183" y="162" text-anchor="middle" class="t">Baseline Trial</text><text x="183" y="193" text-anchor="middle" class="s">Sample-42 · r2</text>
+  <rect x="65" y="325" width="235" height="105" rx="18" fill="#fff2e4" stroke="#ee7b2d" stroke-width="3"/><text x="183" y="367" text-anchor="middle" class="t">Candidate Trial</text><text x="183" y="398" text-anchor="middle" class="s">Sample-42 · r2</text>
+  <rect x="390" y="205" width="250" height="140" rx="20" fill="#e9faf4" stroke="#16966f" stroke-width="3"/><text x="515" y="248" text-anchor="middle" class="t">成对差值</text><text x="515" y="281" text-anchor="middle" class="s">保持 Sample 与重复配对</text><text x="515" y="312" text-anchor="middle" class="s">Bootstrap 重采样配对</text>
+  <rect x="730" y="205" width="195" height="140" rx="20" fill="#f1eafe" stroke="#7b53c6" stroke-width="3"/><text x="828" y="248" text-anchor="middle" class="t">比较结果</text><text x="828" y="280" text-anchor="middle" class="s">效果量</text><text x="828" y="310" text-anchor="middle" class="s">区间与缺失</text>
+  <rect x="1000" y="205" width="150" height="140" rx="20" fill="#14213d"/><text x="1075" y="258" text-anchor="middle" class="t" style="fill:#fff">Gate</text><text x="1075" y="292" text-anchor="middle" class="s" style="fill:#fff">通过 / 失败</text><text x="1075" y="320" text-anchor="middle" class="s" style="fill:#fff">阻断 / 无法判断</text>
+  <path d="M300 172H345V245H385M300 378H345V305H385M640 275H725M925 275H995" fill="none" stroke="#50617a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="140" y="500" width="920" height="64" rx="32" fill="#fff" stroke="#d14d4d" stroke-width="2"/><text x="600" y="540" text-anchor="middle" class="t">质量门禁是预先声明的决策函数，不是看到结果后再挑阈值</text>
+</svg>

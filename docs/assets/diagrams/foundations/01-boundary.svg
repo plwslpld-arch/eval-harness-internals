@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">Agent Harness 与 Eval Harness 责任边界</title>
+  <desc id="desc">上半部分是被测系统的单次执行，下半部分是跨样本评测与质量决定，中间以证据包连接。</desc>
+  <defs><style>text{font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;fill:#12213f}.h{font-size:30px;font-weight:700}.t{font-size:22px}.s{font-size:18px}.agent{fill:#e8f2ff;stroke:#2675d8;stroke-width:3}.eval{fill:#fff2e4;stroke:#ee7b2d;stroke-width:3}.bridge{fill:#e9faf4;stroke:#16966f;stroke-width:3}</style><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#41516f"/></marker></defs>
+  <rect width="1200" height="640" rx="28" fill="#f8fafc"/>
+  <text x="600" y="52" text-anchor="middle" class="h">一次任务怎样执行，与一组实验怎样得出结论</text>
+  <rect x="55" y="95" width="1090" height="175" rx="24" class="agent"/>
+  <text x="85" y="135" class="h">Agent Harness：负责单次行为</text>
+  <rect x="85" y="165" width="185" height="70" rx="14" fill="#fff"/><text x="178" y="208" text-anchor="middle" class="t">模型上下文</text>
+  <rect x="315" y="165" width="185" height="70" rx="14" fill="#fff"/><text x="408" y="208" text-anchor="middle" class="t">循环与停止</text>
+  <rect x="545" y="165" width="185" height="70" rx="14" fill="#fff"/><text x="638" y="208" text-anchor="middle" class="t">工具与权限</text>
+  <rect x="775" y="165" width="185" height="70" rx="14" fill="#fff"/><text x="868" y="208" text-anchor="middle" class="t">Session 恢复</text>
+  <text x="1080" y="205" text-anchor="middle" class="s">产生行为证据</text>
+  <rect x="390" y="290" width="420" height="72" rx="36" class="bridge"/><text x="600" y="335" text-anchor="middle" class="t">Trace · Diff · 日志 · 环境终态</text>
+  <line x1="600" y1="270" x2="600" y2="288" stroke="#41516f" stroke-width="3" marker-end="url(#a)"/><line x1="600" y1="362" x2="600" y2="388" stroke="#41516f" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="55" y="390" width="1090" height="190" rx="24" class="eval"/>
+  <text x="85" y="432" class="h">Eval Harness：负责跨运行推断</text>
+  <rect x="85" y="465" width="160" height="72" rx="14" fill="#fff"/><text x="165" y="509" text-anchor="middle" class="t">计划 Trial</text>
+  <rect x="280" y="465" width="160" height="72" rx="14" fill="#fff"/><text x="360" y="509" text-anchor="middle" class="t">采集证据</text>
+  <rect x="475" y="465" width="160" height="72" rx="14" fill="#fff"/><text x="555" y="509" text-anchor="middle" class="t">独立评分</text>
+  <rect x="670" y="465" width="160" height="72" rx="14" fill="#fff"/><text x="750" y="509" text-anchor="middle" class="t">统计比较</text>
+  <rect x="865" y="465" width="220" height="72" rx="14" fill="#fff"/><text x="975" y="509" text-anchor="middle" class="t">Gate 与报告</text>
+  <text x="600" y="616" text-anchor="middle" class="s">Target Adapter 是边界，不把被测运行时的内部职责复制到评测层</text>
+</svg>

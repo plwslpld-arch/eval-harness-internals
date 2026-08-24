@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">Eval-to-RL 与独立发布评测隔离</title><desc id="desc">开发评测产生失败样本，经 Reward Adapter 进入 DPO、GRPO 或 RFT；独立留出集在训练之外决定发布。</desc>
+  <defs><style>text{font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;fill:#14213d}.h{font-size:29px;font-weight:700}.t{font-size:20px}.s{font-size:16px}</style><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#50617a"/></marker></defs>
+  <rect width="1200" height="650" rx="28" fill="#f8fafc"/><text x="600" y="52" text-anchor="middle" class="h">训练信号可以复用，发布证据不能被训练“看过”</text>
+  <rect x="55" y="115" width="205" height="105" rx="18" fill="#e8f2ff" stroke="#2675d8" stroke-width="3"/><text x="158" y="157" text-anchor="middle" class="t">开发 Eval</text><text x="158" y="188" text-anchor="middle" class="s">失败簇与难例</text>
+  <rect x="330" y="115" width="215" height="105" rx="18" fill="#e9faf4" stroke="#16966f" stroke-width="3"/><text x="438" y="157" text-anchor="middle" class="t">RewardAdapter</text><text x="438" y="188" text-anchor="middle" class="s">评分语义转换</text>
+  <rect x="615" y="115" width="235" height="105" rx="18" fill="#fff2e4" stroke="#ee7b2d" stroke-width="3"/><text x="733" y="157" text-anchor="middle" class="t">DPO / GRPO / RFT</text><text x="733" y="188" text-anchor="middle" class="s">训练或策略改进</text>
+  <rect x="920" y="115" width="225" height="105" rx="18" fill="#f1eafe" stroke="#7b53c6" stroke-width="3"/><text x="1033" y="157" text-anchor="middle" class="t">Candidate</text><text x="1033" y="188" text-anchor="middle" class="s">冻结候选身份</text>
+  <path d="M260 168H325M545 168H610M850 168H915" stroke="#50617a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="330" y="335" width="215" height="105" rx="18" fill="#fff" stroke="#d14d4d" stroke-width="3"/><text x="438" y="377" text-anchor="middle" class="t">独立留出集</text><text x="438" y="408" text-anchor="middle" class="s">训练不可见</text>
+  <rect x="615" y="335" width="235" height="105" rx="18" fill="#fff" stroke="#d14d4d" stroke-width="3"/><text x="733" y="377" text-anchor="middle" class="t">Release Eval</text><text x="733" y="408" text-anchor="middle" class="s">独立执行与评分</text>
+  <rect x="920" y="335" width="225" height="105" rx="18" fill="#14213d"/><text x="1033" y="377" text-anchor="middle" class="t" style="fill:#fff">发布 Gate</text><text x="1033" y="408" text-anchor="middle" class="s" style="fill:#fff">决定是否进入下一环境</text>
+  <path d="M545 388H610M850 388H915M1033 220V330" fill="none" stroke="#50617a" stroke-width="3" marker-end="url(#a)"/>
+  <path d="M438 330V255H158V225" fill="none" stroke="#d14d4d" stroke-width="3" stroke-dasharray="9 8"/><text x="300" y="284" text-anchor="middle" class="s" fill="#d14d4d" style="fill:#d14d4d">禁止泄漏到训练闭环</text>
+  <text x="600" y="540" text-anchor="middle" class="t">同一个 Scorer 进入训练前必须声明 RewardAdapter 语义：可用、部分支持或不可用</text>
+  <text x="600" y="585" text-anchor="middle" class="s">训练 reward、checkpoint 选择和独立发布门禁是三种不同决定</text>
+</svg>
