@@ -31,6 +31,7 @@
 2. [Inspect AI：Solver、Sandbox、Scorer 与 EvalLog](harnesses/inspect-ai/README.md)
 3. [OpenAI Evals：Registry、CompletionFn 与 Recorder](harnesses/openai-evals/README.md)
 4. [Promptfoo：配置矩阵、Provider、断言与 CI](harnesses/promptfoo/README.md)
+5. [DeepEval：Golden、TestCase、Metric 与执行策略](harnesses/deepeval/README.md)
 
 ## 怎样读一篇源码课
 

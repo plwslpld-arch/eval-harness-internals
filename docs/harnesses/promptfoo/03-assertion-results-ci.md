@@ -1,6 +1,6 @@
 # Promptfoo 断言与 CI：从响应判分到门禁还差哪一步
 
-[上一节](02-test-case-runtime.md) · [下一节](../../README.md)
+[上一节](02-test-case-runtime.md) · [下一节](../deepeval/README.md)
 
 ## 本篇要解决什么问题
 
@@ -64,4 +64,4 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 断言实现丰富不能证明 Judge 与人类一致、指标与线上业务相关、阈值合理或结果具有统计显著性。CI 退出码也不是发布授权；真实组织仍需独立数据治理、复核、例外流程和回滚机制。
 
-[上一节](02-test-case-runtime.md) · [下一节](../../README.md)
+[上一节](02-test-case-runtime.md) · [下一节](../deepeval/README.md)

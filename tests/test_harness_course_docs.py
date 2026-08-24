@@ -32,6 +32,12 @@ COURSES = {
         "02-test-case-runtime.md",
         "03-assertion-results-ci.md",
     ],
+    "deepeval": [
+        "README.md",
+        "01-dataset-golden-test-case.md",
+        "02-metric-execution.md",
+        "03-async-cache-errors.md",
+    ],
 }
 HEADINGS = [
     "## 本篇要解决什么问题",
@@ -69,6 +75,7 @@ def test_harness_courses_link_only_to_locked_source_paths() -> None:
         "inspect-ai": "inspect-ai",
         "openai-evals": "openai-evals",
         "promptfoo": "promptfoo",
+        "deepeval": "deepeval",
     }
     for course, files in COURSES.items():
         source = locked[source_ids[course]]
