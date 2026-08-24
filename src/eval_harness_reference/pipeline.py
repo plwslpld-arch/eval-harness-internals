@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .artifacts import ArtifactStore, build_observation_bundle
+from .comparison import ComparisonResult, paired_bootstrap
 from .gates import ThresholdPolicy, evaluate_gate
 from .identity import canonical_digest
 from .metrics import aggregate_pass_rate
@@ -28,17 +29,27 @@ from .models import (
 )
 from .planner import plan_trials
 from .reporting import EvaluationReport, ReportPaths, write_report
-from .runner import RetryPolicy, TrialResult, run_trial
+from .runner import RetryPolicy, TrialResult, run_trial_batch
 from .scorers.rules import FieldMatchesExpectedScorer
 from .targets.subprocess import SubprocessTarget
+from .targets.trace_import import AgentTraceImportTarget
 from .tracing import TraceWriter
 
 
 class PipelineTargetConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     target_id: str = Field(min_length=1)
-    adapter: Literal["python_script"]
-    script: str = Field(min_length=1)
+    adapter: Literal["python_script", "agent_trace"]
+    script: str | None = None
+    trace: str | None = None
+
+    @model_validator(mode="after")
+    def adapter_requires_exact_source(self) -> "PipelineTargetConfig":
+        if self.adapter == "python_script" and (not self.script or self.trace):
+            raise ValueError("python_script 必须且只能配置 script")
+        if self.adapter == "agent_trace" and (not self.trace or self.script):
+            raise ValueError("agent_trace 必须且只能配置 trace")
+        return self
 
 
 class PipelineScorerConfig(BaseModel):
@@ -57,6 +68,7 @@ class PipelineConfig(BaseModel):
     evaluation_id: str = Field(min_length=1)
     dataset: str = Field(min_length=1)
     repetitions: int = Field(ge=1, le=1000)
+    max_concurrency: int = Field(default=1, ge=1, le=64)
     targets: list[PipelineTargetConfig] = Field(min_length=1)
     scorer: PipelineScorerConfig
     gate: PipelineGateConfig
@@ -103,6 +115,18 @@ def _load_samples(path: Path) -> list[Sample]:
     if not samples:
         raise ValueError("Dataset 不能为空")
     return samples
+
+
+def _safe_input_path(base_dir: Path, raw: str, label: str) -> Path:
+    path = Path(raw)
+    if path.is_absolute():
+        raise ValueError(f"{label}必须是配置目录内的相对路径")
+    resolved = (base_dir / path).resolve()
+    try:
+        resolved.relative_to(base_dir)
+    except ValueError as error:
+        raise ValueError(f"{label}不能指向配置目录之外") from error
+    return resolved
 
 
 def _write_model(path: Path, model: BaseModel) -> None:
@@ -178,11 +202,46 @@ def recompute_gates(
     return gates
 
 
+def compare_targets(
+    evidence: RunEvidence,
+    scores: list[ScoreRecord],
+    *,
+    candidate_target: str,
+    baseline_target: str,
+    seed: int,
+    iterations: int,
+) -> ComparisonResult:
+    """按 Sample 与 repetition 对齐两个 Target 的有效分数。"""
+
+    target_ids = {target.target_id for target in evidence.config.targets}
+    for target_id in (candidate_target, baseline_target):
+        if target_id not in target_ids:
+            raise ValueError(f"Target 不存在：{target_id}")
+    score_by_trial = {
+        score.trial_id: score.value for score in scores if score.value is not None
+    }
+    grouped: dict[str, dict[str, float]] = {
+        candidate_target: {},
+        baseline_target: {},
+    }
+    for trial in evidence.trials:
+        if trial.target_id not in grouped or trial.trial_id not in score_by_trial:
+            continue
+        pair_key = f"{trial.sample.sample_id}:r{trial.repetition}"
+        grouped[trial.target_id][pair_key] = score_by_trial[trial.trial_id]
+    return paired_bootstrap(
+        grouped[candidate_target],
+        grouped[baseline_target],
+        seed=seed,
+        iterations=iterations,
+    )
+
+
 def run_evaluation(config_path: Path, *, output_dir: Path) -> PipelineResult:
     config_path = config_path.resolve()
     config = _load_config(config_path)
     base_dir = config_path.parent
-    samples = _load_samples((base_dir / config.dataset).resolve())
+    samples = _load_samples(_safe_input_path(base_dir, config.dataset, "Dataset 路径"))
     spec = EvaluationSpec(
         evaluation_id=config.evaluation_id,
         targets=[
@@ -203,12 +262,21 @@ def run_evaluation(config_path: Path, *, output_dir: Path) -> PipelineResult:
     bundles: list[ObservationBundle] = []
     scores: list[ScoreRecord] = []
 
-    for trial in trials:
+    def target_factory(trial: Trial):
         target_config = target_configs[trial.target_id]
-        script = (base_dir / target_config.script).resolve()
-        target = SubprocessTarget([sys.executable, str(script)], timeout_seconds=10)
-        result = run_trial(trial, target, RetryPolicy(max_infra_attempts=2))
-        trial_results.append(result)
+        if target_config.adapter == "python_script":
+            script = _safe_input_path(base_dir, target_config.script or "", "脚本路径")
+            return SubprocessTarget([sys.executable, str(script)], timeout_seconds=10)
+        trace = _safe_input_path(base_dir, target_config.trace or "", "Trace 路径")
+        return AgentTraceImportTarget(trace)
+
+    trial_results = run_trial_batch(
+        trials,
+        target_factory=target_factory,
+        policy=RetryPolicy(max_infra_attempts=2),
+        max_concurrency=config.max_concurrency,
+    )
+    for trial, result in zip(trials, trial_results, strict=True):
         if result.output is None:
             continue
         events = [

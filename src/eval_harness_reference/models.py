@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pathlib import PurePosixPath
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class FrozenModel(BaseModel):
@@ -94,6 +96,15 @@ class ArtifactRef(FrozenModel):
     kind: str = Field(min_length=1)
     digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     relative_path: str = Field(min_length=1)
+
+    @field_validator("relative_path")
+    @classmethod
+    def path_stays_inside_run_directory(cls, value: str) -> str:
+        normalized = value.replace("\\", "/")
+        path = PurePosixPath(normalized)
+        if path.is_absolute() or ".." in path.parts or ":" in path.parts[0]:
+            raise ValueError("Artifact 路径必须是运行目录内的安全相对路径")
+        return normalized
 
 
 class ObservationBundle(FrozenModel):

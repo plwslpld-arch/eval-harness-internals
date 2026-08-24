@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
+from concurrent.futures import ThreadPoolExecutor
+
 from pydantic import Field, model_validator
 
 from .models import Attempt, AttemptStatus, FrozenModel, Trial, TrialStatus
@@ -73,3 +76,24 @@ def run_trial(
         status=TrialStatus.BLOCKED,
         attempts=attempts,
     )
+
+
+def run_trial_batch(
+    trials: Sequence[Trial],
+    *,
+    target_factory: Callable[[Trial], TargetAdapter],
+    policy: RetryPolicy,
+    max_concurrency: int,
+) -> list[TrialResult]:
+    """以有限本地并发运行计划，并保持返回顺序与计划一致。"""
+
+    if max_concurrency < 1:
+        raise ValueError("max_concurrency 必须大于 0")
+
+    def execute(trial: Trial) -> TrialResult:
+        return run_trial(trial, target_factory(trial), policy)
+
+    if max_concurrency == 1:
+        return [execute(trial) for trial in trials]
+    with ThreadPoolExecutor(max_workers=max_concurrency) as executor:
+        return list(executor.map(execute, trials))

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 
 import typer
 
 from .pipeline import (
     ScoreReplay,
+    compare_targets,
     load_evidence,
     load_report,
     recompute_gates,
@@ -78,6 +80,12 @@ def inspect(run_dir: Path) -> None:
         ]
         if missing_artifacts:
             raise ValueError(f"缺少 Artifact：{missing_artifacts[0]}")
+        for bundle in evidence.bundles:
+            for artifact in bundle.artifacts:
+                artifact_path = run_dir / artifact.relative_path
+                actual = "sha256:" + hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+                if actual != artifact.digest:
+                    raise ValueError(f"Artifact 摘要不一致：{artifact.relative_path}")
     except (OSError, ValueError) as error:
         _fail("运行证据无效", error)
     typer.echo(f"评测：{report.evaluation_id}")
@@ -104,6 +112,38 @@ def score(run_dir: Path) -> None:
     typer.echo(f"重新评分：{len(scores)} 条")
     for metric in metrics:
         typer.echo(f"{metric.metric_id}：{metric.numerator}/{metric.denominator}")
+
+
+@app.command()
+def compare(
+    run_dir: Path,
+    candidate_target: str = typer.Option(..., "--candidate-target"),
+    baseline_target: str = typer.Option(..., "--baseline-target"),
+    seed: int = typer.Option(7, "--seed"),
+    iterations: int = typer.Option(2000, "--iterations", min=1),
+) -> None:
+    """按样本与重复序号对齐 Candidate 和 Baseline。"""
+
+    _require_path(run_dir, "运行目录")
+    try:
+        evidence = load_evidence(run_dir)
+        report = load_report(run_dir)
+        result = compare_targets(
+            evidence,
+            report.scores,
+            candidate_target=candidate_target,
+            baseline_target=baseline_target,
+            seed=seed,
+            iterations=iterations,
+        )
+        _write_json(run_dir / "comparison.json", result.model_dump(mode="json"))
+    except (OSError, ValueError) as error:
+        _fail("比较失败", error)
+    typer.echo(f"配对 Trial：{result.pair_count}")
+    typer.echo(f"平均差值：{result.mean_difference:.4f}")
+    typer.echo(
+        f"95% Bootstrap 区间：[{result.confidence_low:.4f}, {result.confidence_high:.4f}]"
+    )
 
 
 @app.command()
