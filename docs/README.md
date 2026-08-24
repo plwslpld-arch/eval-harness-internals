@@ -28,6 +28,7 @@
 ## 上游源码课程
 
 1. [lm-evaluation-harness：Task 怎样变成批量模型请求](harnesses/lm-evaluation-harness/README.md)
+2. [Inspect AI：Solver、Sandbox、Scorer 与 EvalLog](harnesses/inspect-ai/README.md)
 
 ## 怎样读一篇源码课
 

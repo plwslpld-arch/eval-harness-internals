@@ -7,13 +7,20 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-COURSE = REPO_ROOT / "docs" / "harnesses" / "lm-evaluation-harness"
-FILES = [
-    "README.md",
-    "01-entry-task-loading.md",
-    "02-request-execution.md",
-    "03-scoring-aggregation-tests.md",
-]
+COURSES = {
+    "lm-evaluation-harness": [
+        "README.md",
+        "01-entry-task-loading.md",
+        "02-request-execution.md",
+        "03-scoring-aggregation-tests.md",
+    ],
+    "inspect-ai": [
+        "README.md",
+        "01-eval-task-solver.md",
+        "02-sandbox-sample-run.md",
+        "03-scorer-log-retry.md",
+    ],
+}
 HEADINGS = [
     "## 本篇要解决什么问题",
     "## 先建立源码地图",
@@ -27,31 +34,39 @@ HEADINGS = [
 ]
 
 
-def test_lm_eval_course_is_a_source_verified_learning_sequence() -> None:
-    for filename in FILES:
-        text = (COURSE / filename).read_text(encoding="utf-8")
-        assert len(re.sub(r"\s+", "", text)) >= 1700, filename
-        for heading in HEADINGS:
-            assert heading in text, f"{filename} 缺少 {heading}"
-        assert re.search(r"!\[[^]]+\]\([^)]*\.svg\)", text), filename
-        assert "[上一节]" in text and "[下一节]" in text
+def test_harness_courses_are_source_verified_learning_sequences() -> None:
+    for course, files in COURSES.items():
+        for filename in files:
+            text = (REPO_ROOT / "docs" / "harnesses" / course / filename).read_text(
+                encoding="utf-8"
+            )
+            assert len(re.sub(r"\s+", "", text)) >= 1700, (course, filename)
+            for heading in HEADINGS:
+                assert heading in text, f"{course}/{filename} 缺少 {heading}"
+            assert re.search(r"!\[[^]]+\]\([^)]*\.svg\)", text), filename
+            assert "[上一节]" in text and "[下一节]" in text
 
 
-def test_lm_eval_course_links_only_to_locked_source_paths() -> None:
+def test_harness_courses_link_only_to_locked_source_paths() -> None:
     lock = yaml.safe_load(
         (REPO_ROOT / "sources" / "sources.lock.yml").read_text(encoding="utf-8")
     )
-    source = next(
-        item for item in lock["sources"] if item["id"] == "lm-evaluation-harness"
-    )
-    allowed = set(source["scope_paths"])
-    pattern = re.compile(
-        rf"https://github\.com/{re.escape(source['repo'])}/blob/"
-        rf"{source['commit']}/([^\s)#]+)"
-    )
-    for filename in FILES:
-        text = (COURSE / filename).read_text(encoding="utf-8")
-        paths = pattern.findall(text)
-        assert paths, filename
-        assert set(paths) <= allowed, (filename, set(paths) - allowed)
-
+    locked = {source["id"]: source for source in lock["sources"]}
+    source_ids = {
+        "lm-evaluation-harness": "lm-evaluation-harness",
+        "inspect-ai": "inspect-ai",
+    }
+    for course, files in COURSES.items():
+        source = locked[source_ids[course]]
+        allowed = set(source["scope_paths"])
+        pattern = re.compile(
+            rf"https://github\.com/{re.escape(source['repo'])}/blob/"
+            rf"{source['commit']}/([^\s)#]+)"
+        )
+        for filename in files:
+            text = (
+                REPO_ROOT / "docs" / "harnesses" / course / filename
+            ).read_text(encoding="utf-8")
+            paths = pattern.findall(text)
+            assert paths, (course, filename)
+            assert set(paths) <= allowed, (course, filename, set(paths) - allowed)
