@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eval-harness-reference"
+version = "0.1.0"
+description = "Eval Harness 源码内核配套的最小可运行参考实现"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+dependencies = [
+  "jinja2>=3.1,<4",
+  "pydantic>=2.11,<3",
+  "pyyaml>=6.0,<7",
+  "typer>=0.16,<1",
+]
+
+[project.scripts]
+eval-harness-ref = "eval_harness_reference.cli:app"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4,<9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/eval_harness_reference"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
