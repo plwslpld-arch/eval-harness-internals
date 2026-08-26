@@ -8,7 +8,7 @@ OpenAI Evals 的 Recorder 可以记录 sampling、match、function_call、cond_l
 
 ## 先建立源码地图
 
-RecorderBase、Event、default recorder ContextVar、事件 helper 和 Local/HTTP/数据库实现位于锁定 [`record.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py)。CLI 选择后端、补 token usage 和写 final report 位于 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py)。match helper 位于 [`api.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py)。
+[`RecorderBase`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L54-L93)、[`Event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L44-L51)、default recorder ContextVar 与 [`record_event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L157-L185) 都在锁定 `record.py`，[`LocalRecorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L316-L355) 和 [`HttpRecorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L374-L413) 是它的两种落地。CLI 选择后端在 [`build_recorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L242-L266)，补 token usage 和写 final report 则在 [`run()`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L118-L157)。match helper 位于 [`api.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py)。
 
 ## 完整调用链
 
@@ -47,7 +47,7 @@ Event 到 TraceEvent 为 partial，因为父子/sequence 未必存在；sampling
 
 ## 如何核对
 
-在 [`record.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L91-L96) 阅读 `as_default_recorder`、`record_event`、LocalRecorder、HttpRecorder fallback 与 helper。再在 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py) 核对 final report 与 token usage 是入口后处理，而不是 Recorder 自动推断。
+依次阅读 [`as_default_recorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L91-L96)、[`record_event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L157-L185)、[`LocalRecorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L316-L355) 和 [`HttpRecorder` 的 fallback](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L374-L413)。再在 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py) 核对 final report 与 token usage 是入口后处理，而不是 Recorder 自动推断。
 
 ## 本篇不能证明什么
 

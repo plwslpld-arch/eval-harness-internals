@@ -8,7 +8,7 @@
 
 ## 先建立源码地图
 
-核心实现位于锁定 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py)。CLI 何时添加 registry paths 和覆盖 args 位于 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py)。Eval 怎样使用 `eval_registry_path` 解析数据位于 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py)。
+核心实现位于锁定 [`Registry` 类](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L103-L142)，它下面挂着 [`get_eval`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L210-L211)、[`_dereference`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L156-L191) 和 [`_load_registry`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L287-L310) 三段关键逻辑。CLI 何时添加 registry paths、怎样覆盖 args，在 [`run()`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L118-L157)——注意合并时点在这里，不在 Registry 里。Eval 怎样使用 `eval_registry_path` 解析数据，则要看 [`Eval` 基类](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85)。
 
 Registry 资源类型包括 completion_fns、solvers、eval_sets、evals 和 modelgraded。每次属性访问可从配置路径加载对应目录；加载时保存资源来源路径，并对重复条目执行断言。
 
@@ -49,7 +49,7 @@ CLI override 提高实验速度，却会让静态 YAML 与实际运行不一致�
 
 ## 如何核对
 
-在 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L287-L310) 搜索 `_load_registry`、`duplicate entry`、`_dereference`、`make_completion_fn` 与 `_evals`。在 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py) 核对 extra_eval_params 和 completion_args 的合并时点。
+依次打开 [`_load_registry`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L287-L310)（重复条目在这里被发现）、[`_dereference`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L156-L191) 和 [`make_completion_fn`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L120-L151)。再在 [`run()`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L118-L157) 核对 extra_eval_params 和 completion_args 的合并时点。
 
 ## 本篇不能证明什么
 
