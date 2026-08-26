@@ -36,7 +36,24 @@ uv run eval-harness-ref compare output/lab-04 --candidate-target fixed --baselin
 
 ## 预期输出与答案
 
-一次 repetition：六个 Trial、每 Target denominator=3、pair_count=3，差值 `[0,1,0]`。两次：十二个 Trial、每 Target denominator=6、pair_count=6。Infra retry 只增加某 Trial 的 Attempt 数，不改变任何计划分母或 pair_count。
+一次 repetition 的 compare 输出是这样：
+
+```text
+配对 Trial：3
+平均差值：0.3333
+95% Bootstrap 区间：[0.0000, 1.0000]
+```
+
+三个数字都要读懂。pair_count=3 是因为每个 Target 各跑 3 个 Sample，配成 3 对；
+平均差值 0.3333 来自差值序列 `[0,1,0]`——只有金额 100 那一对分出了胜负。
+
+真正该停下来看的是区间：**[0.0000, 1.0000] 跨过了 0**。fixed 确实比 buggy 好，
+这一点从机制上是确定的，但三个样本撑不起「差异显著」这个统计结论。样本量不足时，
+Bootstrap 会诚实地把区间摊开，而不是给你一个好看的窄区间。
+
+把 repetition 改成两次，Trial 变十二个、每个 Target 的 denominator 变成 6、
+pair_count 变成 6。而 Infra retry 只增加某个 Trial 的 Attempt 数——计划分母和
+pair_count 一个都不动。这就是「重试不改变统计对象」的实际含义。
 
 ## 如何核对
 

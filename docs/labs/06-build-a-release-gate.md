@@ -38,7 +38,21 @@ GatePolicy 版本化；Metric denominator 来自计划；关键 failed 不可被
 
 ## 预期输出与答案
 
-minimum=0.6 会让 2/3 的总体 Metric 达标，但不能覆盖关键金额边界，因此真实政策应将该 Sample/规则设 critical。Ledger 缺失使第一/第二节点 blocked 或 inconclusive；发现越权退款使 critical node 与 release failed；全部有效且满足阈值才 passed。
+`score` 与 `gate` 从同一份冻结证据重算，输出应当是：
+
+```text
+重新评分：6 条
+buggy:pass-rate：2/3
+fixed:pass-rate：3/3
+重新门禁：
+buggy-release：failed
+fixed-release：passed
+```
+
+注意 buggy 的 2/3。minimum=0.6 时这个数字是达标的——0.667 大于 0.6，
+总体 Metric 说「通过」。但漏掉的恰好是金额 100 那个边界样本，也就是整个案例
+最该守住的一条。**总体阈值达标和关键行为正确是两回事**，所以真实政策应当把
+这个 Sample 或规则设成 critical，让它单独一票否决。Ledger 缺失使第一/第二节点 blocked 或 inconclusive；发现越权退款使 critical node 与 release failed；全部有效且满足阈值才 passed。
 
 ## 如何核对
 

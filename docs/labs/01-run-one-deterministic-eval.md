@@ -43,7 +43,38 @@ uv run eval-harness-ref inspect output/lab-01
 
 ## 预期输出与答案
 
-首次运行输出 buggy failed、fixed passed；inspect 显示计划 6、Bundle 6、Score 6。金额 100 的 buggy Attempt 是 succeeded/canonical，但 Score failed。篡改后 inspect 报 Artifact 摘要不一致，这是证据完整性失败；旧 HTML 仍在也不能作为有效结论。
+首次运行会打印报告路径和两个 Target 的结论：
+
+```text
+评测报告：output/lab-01/report.html
+buggy-release：failed
+fixed-release：passed
+```
+
+`inspect` 读的是同一份证据目录，数字要能对上：
+
+```text
+评测：shipping-boundary
+计划 Trial：6
+Observation Bundle：6
+评分记录：6
+buggy-release：failed
+fixed-release：passed
+```
+
+计划 6 个 Trial、6 个 Bundle、6 条 Score——三个数字相等，说明每个 Trial 都留下了
+一份可评分证据，没有中途丢失。金额 100 的 buggy Trial 是 succeeded/canonical，
+但它的 Score 是 failed：执行成功不等于产品通过，这两层在报告里始终分开。
+
+篡改 Artifact 之后再 `inspect`，会直接拒绝出结论：
+
+```text
+错误：运行证据无效：Artifact 摘要不一致：artifacts/ae82e58adceaf5a6…
+```
+
+注意它报的是「运行证据无效」，不是「评分失败」——失败发生在证据层，还没走到评分。
+旧的 report.html 仍然躺在目录里，但它已经不能作为有效结论：报告是证据的函数，
+证据一动，报告就失效了。
 
 ## 如何核对
 
