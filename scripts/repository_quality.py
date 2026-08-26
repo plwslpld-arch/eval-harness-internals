@@ -91,7 +91,13 @@ def markdown_link_violations(root: Path) -> list[str]:
             if target.startswith(("#", "http://", "https://", "mailto:")):
                 continue
             clean = target.split("#", 1)[0].split("?", 1)[0]
-            if clean and not (path.parent / clean).resolve().exists():
+            if not clean:
+                continue
+            resolved = (path.parent / clean).resolve()
+            # 离线 PDF 由 CI 在构建站点前生成，不进主干；站点里这条相对链接是有效的。
+            if resolved.is_relative_to(root / "docs" / "downloads"):
+                continue
+            if not resolved.exists():
                 violations.append(
                     f"{_relative(path, root)}: 本地链接不存在: {raw_target}"
                 )
