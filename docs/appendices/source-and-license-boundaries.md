@@ -2,7 +2,7 @@
 
 [上一节](verification.md) · [下一节](../00-start-here.md)
 
-本仓库原创代码采用 MIT 许可证，原创文档采用 Creative Commons Attribution 4.0（CC BY 4.0）。上游项目的源码、名称、商标、论文与截图保持各自许可证和权利边界；本仓库不是任何上游项目的官方实现或背书。
+本仓库原创代码采用 MIT 许可证，原创文档采用 Creative Commons Attribution 4.0（CC BY 4.0）；上游项目的源码、名称、商标、论文与截图保持各自许可证和权利边界——本仓库不是任何上游项目的官方实现或背书。
 
 ## 来源锁定
 
@@ -11,7 +11,7 @@
 - `THIRD_PARTY.md`：面向读者的第三方来源清单；
 - `NOTICE.md`：原创与第三方材料的归属说明。
 
-上游仓库按需检出到 Git 忽略目录，不复制进本仓库历史。正文只链接锁定 commit 下的 scope 文件。课程中的伪代码、流程图和 Reference Harness 是原创教学简化，不冒充上游源码。
+上游仓库按需检出到 Git 忽略目录，不复制进本仓库历史，而正文只链接锁定 commit 下的 scope 文件；课程中的伪代码、流程图和 Reference Harness 是原创教学简化，不冒充上游源码。
 
 ## 证据等级
 

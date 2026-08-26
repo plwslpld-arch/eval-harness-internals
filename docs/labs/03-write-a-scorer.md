@@ -4,21 +4,21 @@
 
 ## 本篇要解决什么问题
 
-Scorer 不应读取 Target 的“success”字段后照抄，而要根据冻结 Observation 和 Reference 独立判断。本实验从 FieldMatchesExpectedScorer 出发，设计一个集合匹配 Scorer，并正确处理缺字段、无效血缘和多值 Reference。
+Scorer 不应读取 Target 的“success”字段后照抄，而要根据冻结 Observation 和 Reference 独立判断；因此，本实验从 FieldMatchesExpectedScorer 出发，设计一个集合匹配 Scorer，并正确处理缺字段、无效血缘和多值 Reference。
 
 ## 核心机制
 
 ![Observation 到 Score 的转换](../assets/diagrams/foundations/05-scoring.svg)
 
-Scorer 输入 ObservationBundle，查找明确事件/Artifact，输出 ScoreRecord。Score 必须绑定 trial_id、canonical_attempt_id、bundle digest 与 scorer_id。有效不匹配是 failed；没有可用观察是 unscorable；血缘错误是 invalid。
+Scorer 输入 ObservationBundle，查找明确事件/Artifact，输出 ScoreRecord；Score 必须绑定 trial_id、canonical_attempt_id、bundle digest 与 scorer_id——有效不匹配是 failed，没有可用观察是 unscorable，血缘错误是 invalid。
 
 ## 完整流程
 
-1. 写 scoring unit、所需字段、Reference、值域和状态表。
-2. 从 Bundle 倒序找 `target_completed`，只读取允许字段。
-3. 构造稳定 score_id，覆盖 Bundle、Scorer 与规则配置。
-4. 缺 output/expected/field 返回 unscorable，不伪造 0。
-5. 合法值满足规则返回 passed/value=1，否则 failed/value=0。
+1. 写 scoring unit、所需字段、Reference、值域和状态表；
+2. 从 Bundle 倒序找 `target_completed`，只读取允许字段；
+3. 构造稳定 score_id，覆盖 Bundle、Scorer 与规则配置；
+4. 缺 output/expected/field 返回 unscorable，不伪造 0；
+5. 合法值满足规则返回 passed/value=1，否则 failed/value=0；
 6. 为 passed、failed、missing 和 identity 写测试。
 
 ```bash
@@ -27,11 +27,11 @@ uv run pytest tests/test_scoring.py tests/test_models.py -q
 
 ## 关键数据与不变量
 
-Scorer identity 改变时 score_id 应变；threshold 不应丢掉原 value；Score 不能引用非 canonical Attempt。多值 Reference 是允许集合与条件，不是随便取第一个答案。reason 是可核对解释，不采集隐藏思维链。
+Scorer identity 改变时 score_id 应变，threshold 不应丢掉原 value，Score 不能引用非 canonical Attempt；同时，多值 Reference 是允许集合与条件，不是随便取第一个答案。reason 是可核对解释，不采集隐藏思维链。
 
 ## 动手实验
 
-设计 `FieldInAllowedSetScorer(field="risk_band", allowed={"medium","high"})`。输入输出依次为 high、low、缺字段，写出 status/value/reason。然后把 allowed 改为 `{low}`，解释旧 Score 能否继续使用。
+设计 `FieldInAllowedSetScorer(field="risk_band", allowed={"medium","high"})`，输入输出依次为 high、low、缺字段，写出 status/value/reason；然后把 allowed 改为 `{low}`，解释旧 Score 能否继续使用。
 
 ## 预期输出与答案
 

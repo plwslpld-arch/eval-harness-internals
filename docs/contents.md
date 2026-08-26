@@ -1,6 +1,6 @@
 # Eval Harness 源码内核：完整目录
 
-第一次阅读请从[学习入口](00-start-here.md)开始。本目录按“共同语言 → 最小实现 → 上游源码 → 工程专题 → 横向比较 → 案例与实验”组织，避免读者直接从工具名称进入后，把某个项目的内部命名误认为通用语义。
+第一次阅读请从[学习入口](00-start-here.md)开始。本目录按“共同语言 → 最小实现 → 上游源码 → 工程专题 → 横向比较 → 案例与实验”组织——这样可以避免读者直接从工具名称进入后，把某个项目的内部命名误认为通用语义。
 
 ## 入口
 
@@ -26,7 +26,7 @@
 - [`eval-harness-ref` 命令入口](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/cli.py)
 - [Reference Harness 自动化测试](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_shipping_e2e.py)
 
-Reference Harness 展示 Trial/Attempt、Trace、内容寻址 Artifact、Observation、Score、Metric、Comparison、Gate 和离线报告的最小合同。它用于验证教材中的机制，不用于声称复刻任一上游工具。
+Reference Harness 展示 Trial/Attempt、Trace、内容寻址 Artifact、Observation、Score、Metric、Comparison、Gate 和离线报告的最小合同，用于验证教材中的机制，但不用于声称复刻任一上游工具。
 
 ## 第三部分：上游源码课程
 
@@ -37,7 +37,7 @@ Reference Harness 展示 Trial/Attempt、Trace、内容寻址 Artifact、Observa
 5. [DeepEval：Golden、TestCase、Metric 与执行策略](harnesses/deepeval/README.md)
 6. [Harbor 与 Terminal-Bench 1：环境、Agent、Verifier 与 Trial](harnesses/harbor-terminal-bench/README.md)
 
-每条课程都有导读与三篇深入章节。正文沿锁定提交给出源码入口、调用链、关键数据结构、失败传播、设计取舍、实验、预期输出和参考答案。
+每条课程都有导读与三篇深入章节，正文沿锁定提交给出源码入口、调用链、关键数据结构、失败传播、设计取舍、实验、预期输出和参考答案。
 
 ## 第四部分：工程篇
 
@@ -88,4 +88,4 @@ Reference Harness 展示 Trial/Attempt、Trace、内容寻址 Artifact、Observa
 
 ## 怎样读一篇源码课
 
-先看锁定版本与入口，再沿调用链逐站回答：谁调用、输入是什么、状态在哪里改变、返回什么、失败怎样传播、哪组测试锁住行为。最后运行本仓库的确定性实验，验证你理解的是机制而不是 API 记忆。
+先看锁定版本与入口，再沿调用链逐站回答：谁调用、输入是什么、状态在哪里改变、返回什么、失败怎样传播、哪组测试锁住行为。最后运行本仓库的确定性实验。这验证你理解的是机制，而不是 API 记忆。
