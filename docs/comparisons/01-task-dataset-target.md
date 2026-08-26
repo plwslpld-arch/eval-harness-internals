@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-六套 Harness 都会出现“任务、数据、模型”之类名词，但对象边界不同——lm-evaluation-harness 的 Task 同时知道文档、请求和 metric；Inspect Task 把 dataset、solver、scorer 与 sandbox 组合；OpenAI Evals 用 Registry 的 EvalSpec 实例化 Eval；Promptfoo 从 config 展开 prompt/provider/test；DeepEval 可直接接收已执行 TestCase；Harbor Task 还携带环境与 verifier。若只比较 API 名字，新人会误以为它们同构。本篇用统一坐标拆开职责。
+六套 Harness 都会谈到“任务、数据、模型”，可是这些相同名词背后的对象边界并不相同：lm-evaluation-harness 的 Task 同时知道文档、请求和 metric，Inspect Task 把 dataset、solver、scorer 与 sandbox 组合起来，OpenAI Evals 通过 Registry 中的 EvalSpec 实例化 Eval，而 Promptfoo 会从 config 展开 prompt/provider/test。DeepEval 可以直接接收已经执行完的 TestCase，Harbor Task 则连环境与 verifier 一并携带。只盯着 API 名字看，很容易把它们错当成同一种结构——本篇要做的，就是把这些职责放回同一套坐标里比较。
 
 ## 核心机制
 
 ![Task、Dataset 与 Target 的统一坐标](../assets/diagrams/foundations/02-eval-spec-flow.svg)
 
-统一定义：TaskSpec 说明要测什么和允许什么；Dataset 是有版本的 Sample 集合；Target 是被测系统边界；Environment 是执行条件；Scorer 是独立判断。上游项目可以合并这些对象，但比较时先映射能力。不要求改造其 API。
+在这套统一定义里，TaskSpec 说明要测什么以及允许什么，Dataset 保存带版本的 Sample 集合，Target 圈定被测系统的边界，Environment 描述执行条件，而 Scorer 负责独立判断。上游项目完全可以把其中几个对象合在一起，但比较能力之前必须先把职责映射出来，并不需要为了统一术语去改造它们的 API。
 
 | Harness | Task/Dataset 入口 | Target 边界 | 主要特点 |
 | --- | --- | --- | --- |
@@ -23,15 +23,15 @@
 
 ## 完整流程
 
-1. 先找实际 Sample 身份从哪里产生，而不是先找名为 Dataset 的类；
+1. 先找实际 Sample 身份从哪里产生，而不是先找名为 Dataset 的类。
 2. 标注 Target 是否由 Harness 执行：DeepEval 直接 TestCase 模式只评分已有输出，Harbor 则执行完整 Agent。
-3. 查 Task 是否同时包含 Scorer/Metric；若包含，运行身份仍需把数据、目标和评分版本分别保存。
-4. 查 Environment 是否显式；模型 benchmark 往往只有调用环境，Agent 任务需要容器终态；
+3. 查 Task 是否同时包含 Scorer/Metric。若包含，运行身份仍需把数据、目标和评分版本分别保存。
+4. 查 Environment 是否显式。模型 benchmark 往往只有调用环境，Agent 任务需要容器终态。
 5. 把配置解析后的实际对象写入统一清单，再决定能否比较两个运行。
 
 ## 关键数据与不变量
 
-Sample ID、Dataset version、Target resolved identity 和 Scorer identity 是最小四元组；Task 名称相同不代表 Dataset 内容相同；Provider 名称相同不代表模型版本相同；已包含 actual_output 的 TestCase 不能证明 Harness 执行过 Target；任何 Adapter 都必须声明它能提供哪些身份字段，缺失标 partial/unavailable。
+一次运行至少要保存 Sample ID、Dataset version、Target resolved identity 和 Scorer identity 这四项，因为相同的 Task 名称未必指向相同 Dataset，相同的 Provider 名称也未必对应同一模型版本。即便 TestCase 已经带有 actual_output，也不能由此断定 Harness 曾经执行过 Target，所以每个 Adapter 都必须说明自己能提供哪些身份字段，并把缺失项明确标成 partial/unavailable。
 
 ## 动手实验
 
@@ -42,15 +42,15 @@ Sample ID、Dataset version、Target resolved identity 和 Scorer identity 是�
 target=buggy, expected.fee=0, scorer=shipping-fee:v1
 ```
 
-指出每种结构中 output 在执行前还是执行后出现，以及谁负责调用 Target。
+写完这些伪结构后，再逐一指出 output 究竟在执行前还是执行后出现，以及哪一层真正负责调用 Target。
 
 ## 预期输出与答案
 
-lm-eval/Inspect/Promptfoo 通常由 Harness 调用模型/Provider；DeepEval LLMTestCase 模式的 actual_output 已存在，agentic iterator 才把执行纳入；Harbor 在容器里运行 Agent；无论上游命名，统一报告都应分开 SampleSpec、Target identity、Observation 和 Score。
+lm-eval、Inspect 与 Promptfoo 通常由 Harness 调用模型或 Provider，而 DeepEval 的 LLMTestCase 模式接收的是已有 actual_output，只有 agentic iterator 才会把执行过程纳入评测。Harbor 会在容器里实际运行 Agent。名称可以沿用上游习惯，但统一报告必须把 SampleSpec、Target identity、Observation 和 Score 分开保存。
 
 ## 如何核对
 
-回到六条源码课程的第一篇，沿各自入口核对对象构造。再运行：
+回到六条源码课程的第一篇，沿着各自的运行入口核对对象如何构造，然后再运行下面的测试，确认统一规划器没有悄悄抹平这些边界：
 
 ```bash
 uv run pytest tests/test_planner.py tests/test_models.py -q
@@ -58,6 +58,6 @@ uv run pytest tests/test_planner.py tests/test_models.py -q
 
 ## 本篇不能证明什么
 
-对象能映射到统一坐标不表示能力等价；一个字段叫 sandbox 不证明隔离强度相同，一个对象叫 Task 也不证明数据版本、Target 与 Scorer 已独立冻结。
+对象能够映射到统一坐标，只说明我们找到了可比较的职责，并不代表各套工具已经具备同等能力。字段名叫 sandbox 不能证明隔离强度相同，对象名叫 Task 也不能证明数据版本、Target 与 Scorer 已经分别冻结。
 
 [上一节](../harnesses/harbor-terminal-bench/03-verifier-reward-results.md) · [下一节](02-runner-concurrency-cache-retry.md)
