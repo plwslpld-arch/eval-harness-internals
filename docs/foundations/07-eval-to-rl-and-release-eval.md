@@ -50,7 +50,7 @@ RewardAdapter 必须声明能力合同。确定性测试通过可安全映射为
 
 复用同一个 Scorer 能保持目标一致，却也会放大奖励黑客风险；因此 Release Eval 应增加独立切面、不同实现或人工抽查——完全隐藏留出集降低泄漏，但维护成本高且反馈慢；可采用开发集快速迭代、周期性刷新独立集。自动 reward 规模大，人工偏好能覆盖细腻语义，两者都需要来源与授权记录。
 
-OpenAI Evals 的锁定 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py) 展示样本 Eval 抽象，是**上游源码事实**。把 Score 经过 RewardAdapter 连接到 DPO/GRPO/RFT 是本仓库的**架构机制解释**；OpenAI Evals 该文件本身不提供这里描述的训练适配器。
+OpenAI Evals 的锁定 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85) 展示样本 Eval 抽象，是**上游源码事实**。把 Score 经过 RewardAdapter 连接到 DPO/GRPO/RFT 是本仓库的**架构机制解释**；OpenAI Evals 该文件本身不提供这里描述的训练适配器。
 
 ## 失败语义
 

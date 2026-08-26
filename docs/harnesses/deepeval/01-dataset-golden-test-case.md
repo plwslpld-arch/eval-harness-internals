@@ -57,7 +57,7 @@ Dataset 版本还要记录生成/采集来源、授权、去重、污染检查�
 
 ## 如何核对
 
-在 [`deepeval/dataset/dataset.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/dataset/dataset.py#L91-L130) 阅读 `EvaluationDataset` 构造、goldens/test_cases setter 与 add 方法，再定位 agentic `evaluate` iterator；在 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py) 核对 Golden 怎样转为 LLMTestCase。
+在 [`deepeval/dataset/dataset.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/dataset/dataset.py#L91-L130) 阅读 `EvaluationDataset` 构造、goldens/test_cases setter 与 add 方法，再定位 agentic `evaluate` iterator；在 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py#L167-L206) 核对 Golden 怎样转为 LLMTestCase。
 
 ## 本篇不能证明什么
 

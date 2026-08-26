@@ -57,7 +57,7 @@ Agent 阶段若需要安装依赖，可采用 allowlist；Verifier 通常可禁�
 
 ## 如何核对
 
-在 [`src/harbor/environments/base.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/environments/base.py) 核对 capabilities、resource mode、scoped_exec_env、scoped_output_callback、reset/ensure dirs 与 exec 抽象；在 [`src/harbor/trial/trial.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py) 追 network plan、hooks 和环境收尾。
+在 [`src/harbor/environments/base.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/environments/base.py#L84-L123) 核对 capabilities、resource mode、scoped_exec_env、scoped_output_callback、reset/ensure dirs 与 exec 抽象；在 [`src/harbor/trial/trial.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py#L86-L125) 追 network plan、hooks 和环境收尾。
 
 ## 本篇不能证明什么
 

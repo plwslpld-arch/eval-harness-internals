@@ -86,7 +86,7 @@ Harbor 的锁定 [`Trial` 抽象基类](https://github.com/harbor-framework/harb
 
 ## 如何核对
 
-阅读 [`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 的分层状态枚举，再运行 `eval-harness-ref inspect` 查看计划 Trial 数和 Observation Bundle 数。检查 Metric 的 denominator 来自 Trial 清单而不是 Bundle 数。上游 SWE-bench 的 [`infra_failure.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/infra_failure.py) 提供了环境型评测显式处理基础设施失败的另一处源码证据。
+阅读 [`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 的分层状态枚举，再运行 `eval-harness-ref inspect` 查看计划 Trial 数和 Observation Bundle 数。检查 Metric 的 denominator 来自 Trial 清单而不是 Bundle 数。上游 SWE-bench 的 [`infra_failure.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/infra_failure.py#L79-L86) 提供了环境型评测显式处理基础设施失败的另一处源码证据。
 
 ## 与其他 Harness 的关系
 

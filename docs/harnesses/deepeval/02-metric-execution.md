@@ -57,7 +57,7 @@ ExactJsonMetric 在测量前 score/reason/error 应为空或重置，测量后 s
 
 ## 如何核对
 
-阅读 [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py) 的字段、抽象方法和 `is_successful`，再在 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py) 搜索 `_execute_metric`、MetricData 和 test run update，核对异常后是否继续以及结果何时冻结。
+阅读 [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py#L54-L93) 的字段、抽象方法和 `is_successful`，再在 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py#L167-L206) 搜索 `_execute_metric`、MetricData 和 test run update，核对异常后是否继续以及结果何时冻结。
 
 ## 本篇不能证明什么
 

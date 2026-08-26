@@ -57,7 +57,7 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 如何核对
 
-在 [`deepeval/evaluate/evaluate.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/evaluate.py) 查看三种 Config 如何传入执行器及 CLI finalize 分支；在 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py) 搜索 Semaphore、tasks、cache_config、error_config、MetricData 与 TestRun update。
+在 [`deepeval/evaluate/evaluate.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/evaluate.py#L180-L219) 查看三种 Config 如何传入执行器及 CLI finalize 分支；在 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py#L167-L206) 搜索 Semaphore、tasks、cache_config、error_config、MetricData 与 TestRun update。
 
 ## 本篇不能证明什么
 

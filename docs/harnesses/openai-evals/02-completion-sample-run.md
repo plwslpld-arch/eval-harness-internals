@@ -8,7 +8,7 @@ CompletionFn 名字像“完成一次评测”，实际只负责给定 prompt �
 
 ## 先建立源码地图
 
-[`CompletionFn` Protocol](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L23-L40)、[`CompletionResult`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L16-L19) 与匹配 helper 都在锁定 `api.py`，整个文件只有一百多行；Eval ABC、Sample 迭代 helper、CompletionFn 包装和 SolverEval 位于 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85)，而 CompletionFn 的解析入口位于 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py)。
+[`CompletionFn` Protocol](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L23-L40)、[`CompletionResult`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L16-L19) 与匹配 helper 都在锁定 `api.py`，整个文件只有一百多行；Eval ABC、Sample 迭代 helper、CompletionFn 包装和 SolverEval 位于 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85)，而 CompletionFn 的解析入口位于 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L120-L151)。
 
 `Eval` 接收 CompletionFn 列表，`completion_fn` property 只是方便访问单项；`SolverEval` 则要求恰好一个 completion_fn，并将它包装成 Solver，这是两种扩展语义。因此，不应按名称假设完全相同。
 

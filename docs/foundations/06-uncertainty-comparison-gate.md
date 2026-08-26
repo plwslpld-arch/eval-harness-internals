@@ -52,7 +52,7 @@ GateDecision(gate_id, status, metric_ids, reason)
 
 非配对比较实现简单，但同一 Dataset 下会浪费样本内相关信息；配对比较更敏感，却要求身份和缺失处理严格。Bootstrap 对复杂分布直观，但不是小样本的万能证明——也不能修复有偏 Dataset。质量 Gate 可以只看绝对阈值，也可同时要求“不劣于 Baseline”；关键安全风险通常采用非补偿规则，不能被高平均正确率抵消。
 
-lm-evaluation-harness 的 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py) 与 `evaluator_utils.py` 展示任务运行和结果整理的**上游源码事实**；本仓库把发布 Gate 独立建模，是面向质量工程的**教学实现**，不是声称上游自带同一 Gate API。
+lm-evaluation-harness 的 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429-L468) 与 `evaluator_utils.py` 展示任务运行和结果整理的**上游源码事实**；本仓库把发布 Gate 独立建模，是面向质量工程的**教学实现**，不是声称上游自带同一 Gate API。
 
 ## 失败语义
 

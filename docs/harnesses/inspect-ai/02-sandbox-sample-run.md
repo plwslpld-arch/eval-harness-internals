@@ -8,7 +8,7 @@
 
 ## 先建立源码地图
 
-Sample 生命周期集中在锁定 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L465-L504)。Task 级 SandboxManager 与并发准备在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py)。日志侧 `EvalSample`、SandboxEnvironmentSpec、EvalSampleLimit 与事件容器在 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L410-L449)。
+Sample 生命周期集中在锁定 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L465-L504)。Task 级 SandboxManager 与并发准备在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L123-L162)。日志侧 `EvalSample`、SandboxEnvironmentSpec、EvalSampleLimit 与事件容器在 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L410-L449)。
 
 这三个文件共同说明 Environment 不是 Target 的一个字符串参数，而是具有启动、连接、限制、清理和记录语义的执行对象。
 
@@ -50,7 +50,7 @@ SandboxEnvironmentSpec 说明环境类型与配置，但真正的环境证据还
 
 ## 如何核对
 
-在 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L1631-L1670) 搜索 `task_run_sample`、`sandboxenv_context`、`TaskState(`、`span("solvers")`、Scorer 循环、`make_eval_sample` 和递归 retry。再到 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py) 核对 EvalSample 字段，确认哪些观察能持久保存、哪些只存在运行内存。
+在 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L1631-L1670) 搜索 `task_run_sample`、`sandboxenv_context`、`TaskState(`、`span("solvers")`、Scorer 循环、`make_eval_sample` 和递归 retry。再到 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L410-L450) 核对 EvalSample 字段，确认哪些观察能持久保存、哪些只存在运行内存。
 
 ## 本篇不能证明什么
 

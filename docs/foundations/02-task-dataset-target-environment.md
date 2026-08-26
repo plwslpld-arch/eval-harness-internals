@@ -58,7 +58,7 @@ scorer:
 
 Dataset 可以内联在配置，也可以外部版本化——外部 JSONL 更利于稳定 ID、Diff 和分片；代价是要管理文件血缘。Target 可以由构造函数直接创建，也可以 Registry 驱动；Registry 易复用但可能隐藏实际配置，因此运行报告必须保存解析后的身份。Environment 使用容器隔离更强，却不是所有任务都需要；纯函数评测应保持轻量，Agent 副作用任务则必须优先隔离和重置。
 
-lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L64-L103) 与 [`LM`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py) 分别承载任务与模型适配，是**上游源码事实**。本篇的四对象模型是跨 Harness 的**机制解释**，并不要求上游采用 `Environment` 这个类名。
+lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L64-L103) 与 [`LM`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py#L25-L64) 分别承载任务与模型适配，是**上游源码事实**。本篇的四对象模型是跨 Harness 的**机制解释**，并不要求上游采用 `Environment` 这个类名。
 
 ## 失败语义
 
@@ -82,7 +82,7 @@ lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-h
 
 ## 如何核对
 
-运行 `python -m pytest tests/test_planner.py -q`，确认 Target × Sample × Repetition 的数量和顺序稳定。再比较 [`sources/sources.lock.yml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/sources/sources.lock.yml) 与正文永久链接，理解“上游源码身份”同样需要 commit，而不是浮动 `main`。上游 Harbor 的 [`environments/base.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/environments/base.py) 可用于核对 Agent 环境为什么值得独立抽象。
+运行 `python -m pytest tests/test_planner.py -q`，确认 Target × Sample × Repetition 的数量和顺序稳定。再比较 [`sources/sources.lock.yml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/sources/sources.lock.yml) 与正文永久链接，理解“上游源码身份”同样需要 commit，而不是浮动 `main`。上游 Harbor 的 [`environments/base.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/environments/base.py#L84-L123) 可用于核对 Agent 环境为什么值得独立抽象。
 
 ## 与其他 Harness 的关系
 
