@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-评测数据最常见的设计错误，是把“给模型的输入”“参考答案”“模型实际输出”和“运行时检索证据”装进一个模糊 JSON 对象。DeepEval 区分 Dataset、Golden 和 LLMTestCase，恰好提供了理解这些阶段的入口。本篇解释 Dataset 怎样维护单轮/多轮一致性和数据集身份，Golden 为什么适合先于 Target 执行存在，LLMTestCase 又为何必须包含 actual_output 才能被大多数 Metric 测量。
+评测数据最常见的设计错误，是把“给模型的输入”“参考答案”“模型实际输出”和“运行时检索证据”装进一个模糊 JSON 对象。DeepEval 区分 Dataset、Golden 和 LLMTestCase，恰好提供了理解这些阶段的入口——本篇解释 Dataset 怎样维护单轮/多轮一致性和数据集身份，Golden 为什么适合先于 Target 执行存在，LLMTestCase 又为何必须包含 actual_output 才能被大多数 Metric 测量。
 
-这不是字段字典。我们要沿对象生命周期回答：字段由谁写、何时冻结、怎样关联数据集、哪些运行时观测不能回写成参考数据，以及 agentic iterator 怎样在用户代码执行后补全 TestCase。
+这不是字段字典——我们要沿对象生命周期回答：字段由谁写、何时冻结、怎样关联数据集、哪些运行时观测不能回写成参考数据，以及 agentic iterator 怎样在用户代码执行后补全 TestCase。
 
 ## 先建立源码地图
 

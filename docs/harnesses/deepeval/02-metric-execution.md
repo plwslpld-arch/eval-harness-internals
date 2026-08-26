@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-Metric 很容易被误解为一个纯函数 `test_case -> float`。DeepEval 的 `BaseMetric` 却明确持有 threshold、score、reason、error、success、verbose_logs、evaluation_model 和 cost；具体 `measure` 在对象上写状态，执行循环随后读取这些字段形成 MetricData。这种设计方便自定义指标，却带来并发复用、状态清理、阈值解释和错误分类问题。本篇把这些隐含合同展开。
+Metric 很容易被误解为一个纯函数 `test_case -> float`。DeepEval 的 `BaseMetric` 却明确持有 threshold、score、reason、error、success、verbose_logs、evaluation_model 和 cost；具体 `measure` 在对象上写状态，执行循环随后读取这些字段形成 MetricData。这种设计方便自定义指标，却带来并发复用、状态清理、阈值解释和错误分类问题——本篇把这些隐含合同展开。
 
 目标是让读者能够实现一个最小自定义 Metric，并知道哪些字段属于原始测量、哪些属于政策判断、哪些属于运行诊断；同时理解模型 Judge 与确定性 Scorer 为什么不能只按同一个 score 比较。
 
@@ -30,7 +30,7 @@ Metric 很容易被误解为一个纯函数 `test_case -> float`。DeepEval 的 
 
 ## 关键数据结构
 
-BaseMetric 的抽象方法是 `measure`/`a_measure`，返回 float 只是接口表面；真正结果还在实例字段中。`score` 是测量值，`threshold` 是当前政策，`success` 是两者结合后的派生判断，`reason` 解释测量，`error` 表示测量不可得，`evaluation_cost` 是 Judge 运行成本。`score_breakdown` 和 verbose_logs 提供组件诊断。
+BaseMetric 的抽象方法是 `measure`/`a_measure`，返回 float 只是接口表面——真正结果还在实例字段中。`score` 是测量值，`threshold` 是当前政策，`success` 是两者结合后的派生判断，`reason` 解释测量，`error` 表示测量不可得，`evaluation_cost` 是 Judge 运行成本。`score_breakdown` 和 verbose_logs 提供组件诊断。
 
 因此证据存储应保留原始 score 与配置，而不是只保留 success。阈值变化时可以在不重跑 Target 的情况下重新计算政策结论；但若 Metric prompt/model 或解析逻辑变化，旧 score 是否可复用需要指标自身的版本语义。
 
