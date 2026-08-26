@@ -4,19 +4,19 @@
 
 ## 本篇要解决什么问题
 
-很多调用示例只展示 `simple_evaluate(model=..., tasks=...)`，容易让人以为它就是执行循环。源码中它更像装配层：解析模型、加缓存、加载 Task/Group、覆盖 Task 配置、记录实验身份，然后把真正执行交给 `evaluate`。分清两层入口，才能知道一个配置是在运行前固定，还是在样本循环中动态变化。
+很多调用示例只展示 `simple_evaluate(model=..., tasks=...)`，容易让人以为它就是执行循环，但源码中它更像装配层：解析模型、加缓存、加载 Task/Group、覆盖 Task 配置、记录实验身份，然后把真正执行交给 `evaluate`。分清两层入口，才能知道一个配置是在运行前固定，还是在样本循环中动态变化。
 
 ## 先建立源码地图
 
 主要证据位于锁定 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L55-L94)。`simple_evaluate` 接收模型字符串或已初始化 `LM`、Task 名称、few-shot、batch、device、cache、seed、chat template 和日志选项。它调用外部 `TaskManager.load`，但本课程把 Manager 的内部扫描留到扩展节，先专注加载结果怎样进入核心循环。
 
-Model Adapter 抽象在 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py#L250-L289)：`LM` 规定请求方法、rank/world_size 和分布式原语，`CachingLM` 代理特定请求方法并按参数哈希缓存结果。Task 抽象在 [`Task` 基类](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L64-L103)，请求构造的入口是它的 [`build_all_requests()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L268-L307)。
+Model Adapter 抽象在 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py#L250-L289)：`LM` 规定请求方法、rank/world_size 和分布式原语，`CachingLM` 代理特定请求方法并按参数哈希缓存结果；Task 抽象则在 [`Task` 基类](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L64-L103)，请求构造的入口是它的 [`build_all_requests()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L268-L307)。
 
 ## 完整调用链
 
 ![入口、Task 和执行层的关系](../../assets/diagrams/harnesses/lm-eval/end-to-end.svg)
 
-1. `simple_evaluate` 设置 Python、NumPy、Torch 和 few-shot 随机种子。这些种子用途不同，不能只保存一个 `seed` 字段。
+1. `simple_evaluate` 设置 Python、NumPy、Torch 和 few-shot 随机种子，而这些种子用途不同，不能只保存一个 `seed` 字段。
 2. 模型参数若是字符串，Registry 找到 Model 类并调用 `create_from_arg_string`；传入对象则必须是 `LM` 子类，否则抛出 TypeError。
 3. 开启请求缓存时，以 rank 区分 SQLite 文件，再用 `CachingLM` 包住真实模型。非确定性 generation 参数会影响是否缓存。
 4. 若调用者未传 TaskManager，入口创建一个；`load(tasks)` 返回任务、组和层级信息。
@@ -32,9 +32,9 @@ Model Adapter 抽象在 [`api/model.py`](https://github.com/EleutherAI/lm-evalua
 
 ## 实现取舍与失败语义
 
-高层入口集中处理兼容性和用户便利，使 `evaluate` 能假定收到已初始化 LM 与已加载 Task。代价是配置覆盖发生在对象加载后，读者必须追踪最终 Task config，不能只看 YAML。predict-only 通过覆盖 metric 为 bypass 是源码自己标注为较 hacky 的做法；这提醒我们“只生成输出”和“有可解释 Score”是两种运行模式。
+高层入口集中处理兼容性和用户便利，使 `evaluate` 能假定收到已初始化 LM 与已加载 Task；代价是配置覆盖发生在对象加载后，读者必须追踪最终 Task config，不能只看 YAML。predict-only 通过覆盖 metric 为 bypass 是源码自己标注为较 hacky 的做法——这提醒我们“只生成输出”和“有可解释 Score”是两种运行模式，而模型类型不满足 `LM` 协议会在运行前失败。
 
-模型类型不满足 `LM` 协议会在运行前失败；Task 完整性测试失败也应阻断。只有 rank 0 返回结果并写文件，避免多进程重复输出。缓存文件按 rank 分开解决并发写入，却不自动证明不同机器、tokenizer 或浮动模型身份的缓存可互换。
+Task 完整性测试失败也应阻断。只有 rank 0 返回结果并写文件，避免多进程重复输出，而缓存文件按 rank 分开解决并发写入，却不自动证明不同机器、tokenizer 或浮动模型身份的缓存可互换。
 
 ## 动手实验
 
@@ -50,7 +50,7 @@ python scripts/sources.py links
 
 ## 预期输出与答案
 
-`model/model_args` 只能**部分对应** TargetSpec，因为实际服务身份可能需要运行后调和；`tasks` 也只部分对应 Task/Dataset，因为 Task 对象同时含 prompt 和 metric；`limit` 不是随意截断结果，而应在运行前进入 Trial/Sample 计划；`bootstrap_iters` 是聚合不确定性参数；`use_cache` 是执行优化，不应改变逻辑输出。
+`model/model_args` 只能**部分对应** TargetSpec，因为实际服务身份可能需要运行后调和；`tasks` 也只部分对应 Task/Dataset，因为 Task 对象同时含 prompt 和 metric；`limit` 不是随意截断结果，而应在运行前进入 Trial/Sample 计划，同时 `bootstrap_iters` 是聚合不确定性参数，`use_cache` 是执行优化，不应改变逻辑输出。
 
 链接命令应列出 `evaluator.py`、`api/task.py`、`api/model.py`、`api/instance.py` 与 `evaluator_utils.py` 的永久 URL。
 
@@ -60,6 +60,6 @@ python scripts/sources.py links
 
 ## 本篇不能证明什么
 
-保存入口参数不能证明模型服务端实际版本、Dataset 文件内容或网络环境完全相同。它提供了强于命令行截图的运行身份，却仍需要内容摘要、实际身份返回和 Artifact 血缘补足。
+保存入口参数不能证明模型服务端实际版本、Dataset 文件内容或网络环境完全相同；它提供了强于命令行截图的运行身份，却仍需要内容摘要、实际身份返回和 Artifact 血缘补足。
 
 [上一节](README.md) · [下一节](02-request-execution.md)

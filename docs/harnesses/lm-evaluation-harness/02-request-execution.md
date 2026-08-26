@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-一条 benchmark 文档并不一定对应一次模型调用。多项选择题可能为每个选项构造一条 loglikelihood 请求，生成题可能只有一条 generate_until，请求还可能因 repeats 被复制。若把“模型请求数”“文档数”和“统计样本数”混在一起，就会误算成本、分母和重试语义。本节沿 `evaluate` 的核心循环追踪 Instance 的完整生命周期。
+一条 benchmark 文档并不一定对应一次模型调用：多项选择题可能为每个选项构造一条 loglikelihood 请求，生成题可能只有一条 generate_until，请求还可能因 repeats 被复制。若把“模型请求数”“文档数”和“统计样本数”混在一起，就会误算成本、分母和重试语义，因此本节沿 `evaluate` 的核心循环追踪 Instance 的完整生命周期。
 
 ## 先建立源码地图
 
 调度循环位于锁定 [`evaluate()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429)，Task 侧的请求构造入口是 [`build_all_requests()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L268)，Instance 的字段定义在 [`api/instance.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py#L11-L25)，Model 必须实现的三个请求方法列在 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py#L40-L100)。
 
-`OutputType` 包含 loglikelihood、loglikelihood_rolling、generate_until 和 multiple_choice。源码注释说明 multiple_choice 在调度时会分派成若干 loglikelihood 请求，因此 output_type 与最终 LM 方法名也不总是一字不差。
+`OutputType` 包含 loglikelihood、loglikelihood_rolling、generate_until 和 multiple_choice，而源码注释说明 multiple_choice 在调度时会分派成若干 loglikelihood 请求，因此 output_type 与最终 LM 方法名也不总是一字不差。
 
 ## 完整调用链
 
@@ -34,13 +34,13 @@
 | Instance | 每个文档的请求构造 | 模型调用与 batching |
 | cloned requests | Instance.repeats 与分布式 padding | 实际 Adapter 调用数量 |
 
-`resps` 是所有重复返回，`filtered_resps` 是 filter pipeline 的命名输出。`process_results` 接收到的是某个 filter_key 下、同一 doc 的过滤响应列表。于是 filter 不是报告格式化，而是进入评分前的数据变换；改变 filter 可能改变 metric。
+`resps` 是所有重复返回，`filtered_resps` 是 filter pipeline 的命名输出，而 `process_results` 接收到的是某个 filter_key 下、同一 doc 的过滤响应列表。于是 filter 不是报告格式化，而是进入评分前的数据变换；改变 filter 可能改变 metric。
 
 ## 实现取舍与失败语义
 
-按 request_type 全局分桶能让不同 Task 的同类请求共同批处理，充分利用模型吞吐；代价是文档顺序被暂时打散，必须依靠 doc_id/idx 正确重组。把 repeats 实现为同一个 Instance 引用的复制，节省对象构造，但要求响应追加顺序绝对稳定。严格 zip 可以检测响应数量不一致，却不能检测 Adapter 返回顺序错误。
+按 request_type 全局分桶能让不同 Task 的同类请求共同批处理，充分利用模型吞吐；代价是文档顺序被暂时打散，必须依靠 doc_id/idx 正确重组。把 repeats 实现为同一个 Instance 引用的复制，虽然节省对象构造，但要求响应追加顺序绝对稳定——严格 zip 可以检测响应数量不一致，却不能检测 Adapter 返回顺序错误。
 
-分布式 padding 是计算同步需要，伪请求不应进入最终文档 metric。chat template 与 tokenizer identity 参与请求构造缓存键，否则旧请求可能在新模板下被错误复用。unsafe Task 与多模态不兼容会在构造前阻断。具体 LM 网络超时、速率限制和内部 retry 由 Adapter 承担，核心 Instance 没有本仓库 Attempt 的显式失败状态。
+分布式 padding 是计算同步需要，伪请求不应进入最终文档 metric；chat template 与 tokenizer identity 参与请求构造缓存键，否则旧请求可能在新模板下被错误复用。unsafe Task 与多模态不兼容会在构造前阻断，而具体 LM 网络超时、速率限制和内部 retry 由 Adapter 承担，核心 Instance 没有本仓库 Attempt 的显式失败状态。
 
 ## 动手实验
 
@@ -54,13 +54,13 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-四条 Instance 都进入 `loglikelihood` 分桶。响应依次进入各自 `resps`，按 doc_id=7 分组、idx 排序后，`process_results` 能选择最大 loglikelihood 的选项 B。repeats=2 时会有八次响应，但是否形成两个统计观测取决于 Task 如何处理重复；不能仅因 cloned request 增加就把文档分母改成 2。
+四条 Instance 都进入 `loglikelihood` 分桶。响应依次进入各自 `resps`，按 doc_id=7 分组、idx 排序后，`process_results` 能选择最大 loglikelihood 的选项 B；repeats=2 时会有八次响应，但是否形成两个统计观测取决于 Task 如何处理重复，不能仅因 cloned request 增加就把文档分母改成 2。
 
-课程测试应确认本节有图、完整章节、锁定链接和上下导航。它不执行上游模型，所以不会下载 checkpoint 或访问模型 API。
+课程测试应确认本节有图、完整章节、锁定链接和上下导航；它不执行上游模型，所以不会下载 checkpoint 或访问模型 API。
 
 ## 如何核对
 
-调度在源码里是顺序递进的，七个位置依次打开就能跟完一条 Instance 的一生：
+调度在源码里是顺序递进的，七个位置依次打开就能跟完一条 Instance 的一生。
 
 1. [建立按 request_type 的全局分桶](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L489) — `requests = defaultdict(list)`
 2. [请求 Task 构造全部 Instance](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L541) — `task.build_all_requests(...)`
@@ -70,10 +70,10 @@ python -m pytest tests/test_harness_course_docs.py -q
 6. [按 doc_id 分组、按 idx 排序](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L621-L626) — `instances_by_doc_id`
 7. [把多个响应变成文档级 metric](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L639-L641) — `task.process_results(...)`
 
-行号本身就是证据：从 489 到 639 一路递增，正文那七步不是重排出来的叙述顺序，而是源码的执行顺序。再读 [`Instance.args`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py#L31-L38)，确认它如何把非 tuple 参数包装成 tuple。
+行号本身就是证据：从 489 到 639 一路递增，正文那七步不是重排出来的叙述顺序，而是源码的执行顺序；再读 [`Instance.args`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py#L31-L38)，确认它如何把非 tuple 参数包装成 tuple。
 
 ## 本篇不能证明什么
 
-源码顺序与哈希日志不能证明 Model Adapter 没有服务端重试、响应来自声明模型，或每个 benchmark 文档统计独立。它只解释 Harness 核心怎样组织请求；真实身份、相关性和基础设施 Attempt 仍需外层证据。
+源码顺序与哈希日志不能证明 Model Adapter 没有服务端重试、响应来自声明模型，或每个 benchmark 文档统计独立；它只解释 Harness 核心怎样组织请求，真实身份、相关性和基础设施 Attempt 仍需外层证据。
 
 [上一节](01-entry-task-loading.md) · [下一节](03-scoring-aggregation-tests.md)
