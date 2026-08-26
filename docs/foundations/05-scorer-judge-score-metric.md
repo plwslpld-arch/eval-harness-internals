@@ -51,7 +51,7 @@ shipping 的 Scorer 读取 Observation 中的 `fee` 和样本期望值——相�
 
 二元规则简单、可复现，却可能遗漏部分质量；连续分数更细，但阈值、尺度和校准会影响解释。多个 Scorer 可以分别测正确性、安全和格式，再由非补偿 Gate 处理关键风险——不应先把关键安全失败平均进高正确率。Judge 可以降低人工成本，但需要冻结模型、prompt、Rubric 和随机性，并定期与人工样本对照。
 
-DeepEval 的 [`base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py) 展示 Metric/Judge 抽象，是**上游源码事实**；Promptfoo 的 [`assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts) 展示 Assertion 分派。把二者映射到统一的 Scorer 责任是**机制解释**，并非断言其状态枚举相同。
+DeepEval 的 [`BaseMetric`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py#L54-L93) 展示 Metric/Judge 抽象，是**上游源码事实**；Promptfoo 的 [`runAssertion`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts#L683-L703) 展示 Assertion 分派。把二者映射到统一的 Scorer 责任是**机制解释**，并非断言其状态枚举相同。
 
 ## 失败语义
 

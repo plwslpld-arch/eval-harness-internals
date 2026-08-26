@@ -53,7 +53,7 @@ Target Adapter 是明确接口：它接收 Trial 与运行约束，返回被测�
 
 最干净的实现是依赖倒置：Eval Harness 只依赖 Target Adapter 协议，不依赖 Claude、Codex 或某个 RAG 框架的内部类——优点是同一 Dataset 和 Scorer 可以比较不同系统；代价是 Adapter 必须明确声明能力，例如能否导出工具事件、能否重置环境、能否报告实际模型版本。无法提供的能力应标为不可用，而不是伪造空字段。
 
-Inspect AI 的锁定源码把通用评测入口放在 [`_eval/eval.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py)，并把 Task 执行进一步下沉到 `_eval/task`。这是**上游源码事实**。本篇把它抽象成两层责任，是帮助比较多套实现的**机制解释**；不是说所有项目使用相同类名。
+Inspect AI 的锁定源码把通用评测入口放在 [`eval()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L118-L157) 与 [`eval_async()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L413-L452)，并把 Task 执行进一步下沉到 `_eval/task`。这是**上游源码事实**。本篇把它抽象成两层责任，是帮助比较多套实现的**机制解释**；不是说所有项目使用相同类名。
 
 ## 失败语义
 

@@ -62,7 +62,7 @@ Trial 不保存“最终分数”，因为执行和评分是两个阶段；Attem
 
 最简单的本地 Harness 可以同步执行并在内存里选择 canonical；分布式系统还需要 Lease、Fencing Token 和幂等提交，防止超时 Worker 在新 Worker 已接管后迟到写入。首版 Reference Harness 不假装实现分布式一致性，而是把“最多一个 canonical”作为模型不变量——这样课程能清楚展示语义，同时避免用复杂基础设施遮住统计问题。
 
-Harbor 的锁定 [`trial.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py) 展示 Agent Trial 生命周期，是**上游源码事实**。Reference Harness 的 Attempt 分层是本仓库的**教学实现**，字段不能直接当作 Harbor 内部结构的逐项翻译。
+Harbor 的锁定 [`Trial` 抽象基类](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py#L86-L125) 展示 Agent Trial 生命周期，是**上游源码事实**。Reference Harness 的 Attempt 分层是本仓库的**教学实现**，字段不能直接当作 Harbor 内部结构的逐项翻译。
 
 ## 失败语义
 

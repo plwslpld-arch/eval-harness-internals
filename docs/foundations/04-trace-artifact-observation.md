@@ -53,7 +53,7 @@ ScoreRecord(..., observation_bundle_digest, scorer_id)
 
 JSONL 适合追加事件、逐行恢复和命令行检查，代价是跨事件约束需要额外验证。把完整输出同时放事件和 Artifact 会有重复，但小型教学实现借此同时展示可读 payload 与内容寻址；生产系统可让事件只保存 ArtifactRef，但必须确保 Scorer 的实际读取被纳入 Bundle digest。
 
-Inspect AI 的锁定 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py) 是 Eval Log 模型的**上游源码事实**；OpenAI Evals 的 [`record.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py) 展示另一种事件记录边界；把二者统一解释为证据血缘是本篇的**机制解释**。
+Inspect AI 的锁定 [`EvalLog`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L1141-L1181) 是 Eval Log 模型的**上游源码事实**；OpenAI Evals 的 [`RecorderBase`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L54-L93) 与 [`Event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L44-L51) 展示另一种事件记录边界；把二者统一解释为证据血缘是本篇的**机制解释**。
 
 ## 失败语义
 
