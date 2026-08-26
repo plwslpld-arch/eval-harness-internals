@@ -4,11 +4,11 @@
 
 ## 本篇要解决什么问题
 
-对普通问答，Sample 似乎只是 input 到 output；对 Agent Eval，Sample 还可能复制文件、执行 setup、创建 Sandbox、暴露工具、产生多轮消息、达到 token/time/cost limit，并在清理前检查终态，因此只看最终 output 会遗漏大量产品行为。本节追踪 `task_run` 如何把 Dataset Sample 变成 TaskState，再如何在隔离上下文中运行 Solver 和保存 EvalSample。
+对普通问答来说，Sample 看起来只是从 input 走到 output，可是在 Agent Eval 中，它还可能复制文件、执行 setup、创建 Sandbox、暴露工具、产生多轮消息、触发 token、time 或 cost limit，并在清理前检查终态，因此只看最终 output 会漏掉大量产品行为。本节会追踪 `task_run` 如何把 Dataset Sample 变成 TaskState，再看它怎样在隔离上下文中运行 Solver 并保存 EvalSample。
 
 ## 先建立源码地图
 
-Sample 生命周期集中在锁定 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L465-L504)。Task 级 SandboxManager 与并发准备在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L123-L162)。日志侧 `EvalSample`、SandboxEnvironmentSpec、EvalSampleLimit 与事件容器在 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L410-L449)。
+Sample 生命周期集中在锁定 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L465-L504)，而 Task 级 SandboxManager 与并发准备可以在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L123-L162) 找到，至于日志侧的 `EvalSample`、SandboxEnvironmentSpec、EvalSampleLimit 与事件容器，则位于 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L410-L449)。
 
 这三个文件共同说明 Environment 不是 Target 的一个字符串参数，而是具有启动、连接、限制、清理和记录语义的执行对象。
 
@@ -26,15 +26,15 @@ Sample 生命周期集中在锁定 [`_eval/task/run.py`](https://github.com/UKGo
 
 ## 关键数据结构
 
-`TaskState` 是运行中的可变视图，包含 model、sample_id、epoch、input、messages、output、tools、store、metadata 与 scores；`EvalSample` 则是日志中的持久化快照，除输入输出外还记录 target、sandbox、files、setup、events、scores、model_usage、error、limit 和时间摘要。
+`TaskState` 是运行中的可变视图，其中包含 model、sample_id、epoch、input、messages、output、tools、store、metadata 与 scores，而 `EvalSample` 是写入日志的持久化快照，除了输入输出，还会记录 target、sandbox、files、setup、events、scores、model_usage、error、limit 和时间摘要。
 
-SandboxEnvironmentSpec 说明环境类型与配置，但真正的环境证据还包括连接、文件、命令结果和终态。EvalSampleLimit 则要区分是 token、message、turn、time、working time 还是 cost 限制，因为这些停止原因对产品解释不同。
+SandboxEnvironmentSpec 说明环境类型与配置，但真正的环境证据还包括连接、文件、命令结果和终态。EvalSampleLimit 则要区分是 token、message、turn、time、working time 还是 cost 限制，因为这些停止原因对产品解释不同。停止原因很重要。
 
 ## 实现取舍与失败语义
 
-每 Sample Sandbox 隔离最容易复现和清理，却会增加启动成本；复用环境更快，但必须证明 reset 消除了跨 Sample 状态。Inspect AI 允许 Task/Sample 级 Sandbox 和并发上限，给实现者灵活性；教材将其视为能力——不把“用了容器”直接等同于无污染。
+每个 Sample 使用独立 Sandbox，通常最容易复现和清理，但代价是更高的启动成本。复用环境虽然更快，却必须先证明 reset 已经消除跨 Sample 状态。Inspect AI 允许设置 Task 或 Sample 级 Sandbox 及并发上限，这给实现者留下了选择空间——教材只把它视为一种能力，不会把“用了容器”直接等同于无污染。
 
-`retry_on_error` 是 Sample 级错误重试，递归重建新 TaskState 并保留 error_retries；它与 Solver 内部自我修正、Task 级 retry、普通 Score 失败不同。`score_on_error` 只在重试耗尽后允许错误 Sample 进入 Scorer；这能评估部分完成，但错误仍计入 fail_on_error，不应被 Score 掩盖。操作员 cancel 的 score/error/abort/retry 也具有不同终止语义。
+`retry_on_error` 处理 Sample 级错误，它会递归重建新的 TaskState，同时保留 error_retries，因此不能与 Solver 内部自我修正、Task 级 retry 或普通 Score 失败混为一谈。`score_on_error` 只在重试耗尽后允许错误 Sample 进入 Scorer，这样可以评估已经完成的部分，但错误仍会计入 fail_on_error，不能被 Score 掩盖，而操作员 cancel 所选的 score、error、abort 或 retry，也各有不同的终止语义。
 
 ## 动手实验
 
@@ -44,9 +44,9 @@ SandboxEnvironmentSpec 说明环境类型与配置，但真正的环境证据还
 
 ## 预期输出与答案
 
-最终文本只是 output；若执行过程无异常，EvalSample 可以没有 error，但环境事实 Scorer 应给 failed。不能因为 Agent 自述成功而通过。若 Sandbox 无法创建，Sample 是基础设施错误，可按 retry_on_error 恢复；若 Agent 执行 `rm` 返回权限错误，这是被测行为证据，是否产品失败由 Task/Scorer 契约决定，不能默认当平台重试。
+最终文本只是 output，因此即使执行过程没有异常，EvalSample 可以不带 error，环境事实 Scorer 仍应给出 failed。不能因为 Agent 自述成功而通过，但如果 Sandbox 无法创建，Sample 就属于基础设施错误，可以按 retry_on_error 恢复。可如果 Agent 执行 `rm` 时返回权限错误，这就是被测行为证据，是否判为产品失败应由 Task 与 Scorer 契约决定，不能默认触发平台重试。错误归属要说清。
 
-上述观察中，终态目录与文件摘要应作为 Artifact 或结构化 Event 进入评分；reset 失败会污染后续 Sample，应阻断后续运行，而不是继续累计分数。
+在上述观察里，终态目录与文件摘要应作为 Artifact 或结构化 Event 进入评分，而一旦 reset 失败，后续 Sample 就可能受到污染，因此应当阻断运行，不能继续累计分数。
 
 ## 如何核对
 
@@ -54,6 +54,6 @@ SandboxEnvironmentSpec 说明环境类型与配置，但真正的环境证据还
 
 ## 本篇不能证明什么
 
-有 Sandbox 与事件日志不证明环境无逃逸、reset 完整或所有副作用都被观察；真正的 Agent 发布评测仍需威胁模型、最小权限、外部服务隔离和独立终态断言。
+有 Sandbox 和事件日志，并不能证明环境没有逃逸、reset 足够完整，或者所有副作用都已被观察。要把 Agent 评测用于发布，还需要威胁模型、最小权限、外部服务隔离和独立终态断言。
 
 [上一节](01-eval-task-solver.md) · [下一节](03-scorer-log-retry.md)

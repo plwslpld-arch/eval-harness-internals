@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-一个响应可以同时接受 contains、JSON schema、自定义脚本和模型判分，断言还可能有权重、阈值、命名指标、否定前缀与嵌套集合；于是“pass”并不是 Provider 的属性，而是某组判据在某次响应上的聚合结论——本篇追踪 `runAssertions` 怎样产生 `GradingResult`、Evaluator 怎样把它并入结果和 metrics，并解释为什么这些统计还不是一个完整发布 Gate。
+一个响应可同时接受 contains、JSON schema、自定义脚本和模型判分，断言还可带权重、阈值、命名指标、否定前缀与嵌套集合。因此，“pass”并不是 Provider 自带的属性，而是某组判据对某次响应作出的聚合结论。本篇会追踪 `runAssertions` 怎样产生 `GradingResult`，Evaluator 怎样把它并入结果和 metrics——然后再解释为什么这些统计还构不成完整的发布 Gate。
 
-读完应能回答：单断言失败和断言执行错误如何区分；模型判分为什么可能额外消耗 token；断言集合怎样保留组件结果；比较型断言为什么要延迟到多行结果齐备；CI 阈值应该读取哪些稳定字段。
+读完后，应能区分单断言失败与执行错误，说明模型判分的 token 成本、断言集合的组件结果和比较型断言的延迟判分，并确定 CI 阈值读取的稳定字段。
 
 ## 先建立源码地图
 
@@ -31,19 +31,19 @@
 
 ## 关键数据结构
 
-`Assertion` 包含 type、value、threshold、weight、metric、provider 等；`AssertionSet` 用嵌套 assert 数组表达组合判据；`AssertionParams` 把 assertion、标准化 baseType、inverse、output、renderedValue、test、provider、ProviderResponse 和上下文交给 handler。`GradingResult` 至少含 pass、score、reason，并可含 namedScores、tokensUsed、componentResults、assertion 与 metadata。
+`Assertion` 包含 type、value、threshold、weight、metric、provider 等字段，`AssertionSet` 用嵌套 assert 数组表达组合判据，而 `AssertionParams` 会把 assertion、标准化 baseType、inverse、output、renderedValue、test、provider、ProviderResponse 和上下文交给 handler。`GradingResult` 至少包含 pass、score、reason，还可以带有 namedScores、tokensUsed、componentResults、assertion 与 metadata。
 
-`EvaluateResult.success` 是整条结果的最终布尔结论，`failureReason` 区分目标错误和断言失败，`namedScores` 支持多个指标；PromptMetrics 再汇总 testPassCount、testFailCount、assertPassCount、assertFailCount 与 score。若只导出 success，会丢掉“为何失败”和“哪个判据变化”的诊断证据。
+`EvaluateResult.success` 是整条结果的最终布尔结论，`failureReason` 用来区分目标错误和断言失败，`namedScores` 则支持多个指标。PromptMetrics 会继续汇总 testPassCount、testFailCount、assertPassCount、assertFailCount 与 score。如果只导出 success，就会丢掉为何失败以及哪个判据发生变化的诊断证据。
 
 ## 实现取舍与失败语义
 
-统一断言分派使大量判据共享模板渲染、反向语义与错误处理；动态脚本和模型判分提高表达力，也引入外部代码安全、Judge 偏差和额外网络失败。集合聚合保留 componentResults，优于只返回总分——但阈值和权重仍是产品政策，必须有版本与理由。
+统一分派让判据共享模板渲染、反向语义和错误处理，但动态脚本与模型判分也会带来外部代码安全、Judge 偏差和网络失败。集合聚合会保留 componentResults，比只返回总分提供了更多证据，但阈值与权重仍属于产品政策，必须记录版本和采用理由。
 
-断言 false 是被测对象不满足契约；断言 handler 抛错是评测系统无法得出结论；评分 Provider 不可用是 Judge 层故障；trace 缺失可能让 trace-aware 判据不可判。发布规则不应把后三者当普通负样本计入失败率，否则基础设施故障会伪装成产品质量下降——反过来，也不能忽略它们后用较小分母宣布通过。
+断言为 false 表示被测对象不满足契约，handler 抛错表示无法得出结论，评分 Provider 不可用属于 Judge 故障，trace 缺失会让 trace-aware 判据不可判。它们不是一回事。发布规则不能把后三者当作普通负样本计入失败率，否则基础设施故障会伪装成产品质量下降。反过来，也不能忽略这些记录结果，再用缩小后的分母宣布通过。
 
 ## 动手实验
 
-给同一响应设计三项断言：格式正确权重 1、事实一致权重 2、安全约束权重 3，并分别计算全部通过、仅事实失败、Judge 超时三种情况下应保存的组件结果和总体状态；再设计一个候选 A/B 的 `select-best`，说明为什么它不能在 A 返回后立即判分。最后写一份 CI Gate 输入契约，至少包括结果集完整性、错误率、核心指标、最小样本数和置信区间策略。
+为同一响应设计三项断言，其中格式正确的权重是 1，事实一致为 2，安全约束为 3，并计算全部通过、仅事实失败和 Judge 超时时的组件结果与总体状态。然后再设计一个候选 A/B 的 `select-best`，说明为什么它不能在 A 返回后立即判分。最后写 CI Gate 输入契约，涵盖结果集完整性、错误率、核心指标、最小样本数和置信区间策略。
 
 ```bash
 python scripts/sources.py verify
@@ -52,16 +52,16 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-全部通过时总体 pass，组件仍应逐项保存；事实失败时总体规则按配置阈值计算，并保留事实项 reason，而不是只写总分；Judge 超时应标为评分不可用或评测错误。不能等同事实断言为 false。A/B 比较必须拿到同组输出才能形成相对结论。
+全部通过时，总体状态是 pass。组件结果仍应逐项保存。事实失败时，总体规则要按配置阈值计算，并保留事实项的 reason，不能只写一个总分。Judge 超时应该标为评分不可用或评测错误，不能等同于事实断言为 false。A/B 比较必须取得同组输出，才能形成相对结论。
 
-合格 Gate 至少先验证预期坐标全部出现且无不可解释重复，再把产品失败与 harness error 分开；随后计算预注册核心指标及不确定性，最后按明确阈值给 pass/fail/inconclusive。Promptfoo 的 assertions 和 CI 退出码提供重要构件，但课程不把它们自动等同完整发布制度。
+合格的 Gate 至少要先验证预期坐标全部出现，并且没有不可解释的重复，再把产品失败与 harness error 分开。随后计算预注册的核心指标及其不确定性，最后依据明确阈值给出 pass/fail/inconclusive。Promptfoo 的 assertions 和 CI 退出码提供了重要构件，但本课程不会把它们自动等同于完整发布制度。
 
 ## 如何核对
 
-从 [`src/assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts#L752-L791) 的 `runAssertions` 追到 `runAssertion`、`runAssertionInternal` 和 handler 映射，观察集合、并发与 trace-aware 分支；再在 [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts#L1344-L1383) 查 `gradeRunEvalResponse`、`applyGradingResult`、comparison merging 与 metrics 更新。
+先从 [`src/assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts#L752-L791) 的 `runAssertions` 追到 `runAssertion`、`runAssertionInternal` 和 handler 映射，观察集合、并发与 trace-aware 分支，再到 [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts#L1344-L1383) 查 `gradeRunEvalResponse`、`applyGradingResult`、comparison merging 与 metrics 更新。
 
 ## 本篇不能证明什么
 
-断言实现丰富不能证明 Judge 与人类一致、指标与线上业务相关、阈值合理或结果具有统计显著性。CI 退出码也不是发布授权；真实组织仍需独立数据治理、复核、例外流程和回滚机制。
+断言实现再丰富，也不能证明 Judge 与人类判断一致、指标与线上业务相关、阈值合理，或结果具有统计显著性。CI 退出码同样不是发布授权，真实组织仍然需要独立的数据治理、复核、例外流程和回滚机制。
 
 [上一节](02-test-case-runtime.md) · [下一节](../deepeval/README.md)

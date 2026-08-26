@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-看到 `providers: [openai:gpt-4o-mini]` 时，新人容易把它理解成 Evaluator 直接拿字符串调用 SDK，但实际实现必须解决更多问题：Provider 可以来自短名、带 config 的对象、JavaScript 函数、模块文件或多 Provider 配置；prompt 也可能有标签、原始模板和配置；测试还可以覆盖 Provider。若不先把这些形式归一化，执行层会充满类型分支，运行身份也无法准确记录——本篇追踪 Provider 解析和 prompt/provider/test 组合的边界。
+看到 `providers: [openai:gpt-4o-mini]` 时，很容易以为 Evaluator 会直接用字符串调用 SDK，但实现还要处理短名、带 config 对象、JavaScript 函数、模块文件及多 Provider 配置。prompt 还可能带标签、模板和配置，测试也能覆盖 Provider。如果这些形式没有先归一化，执行层就会堆满类型分支，运行身份也难以准确记录，所以本篇追踪 Provider 解析及 prompt/provider/test 的组合边界。
 
-锁定源码允许我们解释解析路径，不承诺列出 Promptfoo 支持的全部 Provider。某个短名在未来映射到哪个实现可能改变，因此教材以锁定 commit 和解析后的 `id()`、配置与输入为核对单位。
+锁定源码让解析路径可以逐段核对，但本篇不承诺列出 Promptfoo 支持的全部 Provider。由于同一短名将来可能映射到另一种实现，教材会以锁定 commit 以及解析后的 `id()`、配置与输入为核对单位。
 
 ## 先建立源码地图
 
@@ -29,19 +29,19 @@
 
 ## 关键数据结构
 
-`ApiProvider` 的核心不是厂商名称，而是稳定身份与调用能力：`id()` 用于结果归属，`callApi()` 是目标边界，label/config/transform/delay/inputs 描述额外行为；`Prompt` 同时保留 raw、label 与 config，避免报告只显示长模板而无法区分候选。`TestSuite` 是未展开的配置集合，`AtomicTestCase` 是合并 default/scenario 后的测试——`RunEvalOptions` 才是某个 provider × prompt × test × vars 的执行单位。
+`ApiProvider` 的核心不是厂商名称，而是稳定身份与调用能力，其中 `id()` 用于结果归属，`callApi()` 划出目标边界，label/config/transform/delay/inputs 描述额外行为。`Prompt` 同时保留 raw、label 与 config，避免报告只显示长模板而无法区分候选。`TestSuite` 是未展开的配置集合，`AtomicTestCase` 是合并 default/scenario 后的测试，只有 `RunEvalOptions` 才对应某个 provider × prompt × test × vars 的执行单位。
 
-复现清单至少应包含：锁定 Promptfoo commit、解析后的 Provider ID 与 label、非敏感配置摘要、prompt 原文摘要、变量值、测试断言、输入文件摘要和运行选项；环境变量中的密钥只记录名称或来源，不得写入证据包。
+复现清单至少要有锁定 commit、解析后的 Provider ID 与 label、非敏感配置摘要、prompt 摘要、变量值、测试断言、输入文件摘要和运行选项。环境变量中的密钥只记录名称或来源，不能写入证据包。
 
 ## 实现取舍与失败语义
 
-多输入形式让用户可以从简单 YAML 平滑扩展到自定义函数，代价是配置解析本身成为可信计算的一部分；文件导出多个 Provider 时拒绝隐式挑选，是用显式失败换取可预测性。动态配置延迟到调用时渲染，支持 per-test 变量——这意味着“Provider 在加载时看起来相同”不代表每个测试实际请求相同。
+多种输入形式让用户可以从简单 YAML 逐步扩展到自定义函数——代价是配置解析本身也成了可信计算的一部分。当一个文件导出多个 Provider 时，解析器拒绝隐式挑选，从而用显式失败换取可预测性。动态配置要等到调用时才渲染，这样才能支持 per-test 变量，也说明 Provider 在加载时看起来相同，并不代表每个测试发出的实际请求相同。
 
-Provider 解析失败属于装配错误，应在目标调用前暴露；`callApi` 返回 error 属于目标执行结果；transform 或 prompt 渲染失败属于输入/适配层错误；三者若都压成 `success: false`，使用者会失去修复方向。缓存命中是一次执行的来源属性。它不等于新增独立观察。
+Provider 解析失败属于装配错误，应该在目标调用前暴露，而 `callApi` 返回 error 属于目标执行结果，transform 或 prompt 渲染失败则属于输入或适配层错误。如果三者全被压成 `success: false`，使用者就会失去修复方向。缓存命中只是一次执行的来源属性。它不等于新增独立观察。
 
 ## 动手实验
 
-设计三个逻辑相同的 Provider：短名、内联函数和模块文件，并为每个写出应该记录的 identity 字段，说明为什么只记录展示 label 不足以复现；再构造一个 test 级 Provider override，画出它与 suite 默认 Provider 的优先级。最后给 prompt 配置加入 `temperature`，说明它应在哪一层合并、怎样进入审计信息。
+设计短名、内联函数和模块文件三种逻辑相同的 Provider，写出各自的 identity 字段，并说明只留展示 label 为何不足以复现。随后构造一个 test 级 Provider override，画出它与 suite 默认 Provider 的优先级，最后给 prompt 配置加入 `temperature`，说明它应该在哪一层合并，以及怎样进入审计信息。
 
 离线核对命令：
 
@@ -52,16 +52,16 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-短名至少记录解析后的实现 ID 和配置；函数记录模块或代码摘要与稳定 label；文件记录规范化相对路径、文件摘要和导出对象 ID。展示 label 可以重复或被用户修改。它不能单独充当身份。测试级 override 只影响该测试生成的步骤，其他测试仍使用 suite providers。prompt config 应在创建调用上下文时与 Provider/prompt 配置按明确优先级合并，并随结果或运行清单保存非敏感快照。
+短名至少要记录解析后的实现 ID 和配置，函数要记录模块或代码摘要与稳定 label，文件则要记录规范化相对路径、文件摘要和导出对象 ID。展示 label 可能重复，也可能被用户修改。它不能单独充当身份。测试级 override 只影响由该测试生成的步骤，其他测试仍然使用 suite providers。创建调用上下文时，prompt config 应按明确优先级与 Provider/prompt 配置合并，并随结果或运行清单保存非敏感快照。
 
-若一个文件导出多个 Provider，却经单 Provider API 加载，预期是明确错误，而不是默默选择；若配置包含每测试模板变量，预期在运行时根据当前 vars 渲染。
+如果一个文件导出多个 Provider，却通过单 Provider API 加载，预期行为应该是给出明确错误，而不是默默选中一个。如果配置包含每测试模板变量，则应在运行时根据当前 vars 渲染。
 
 ## 如何核对
 
-在 [`src/providers/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/providers/index.ts#L370-L409) 从 `loadApiProviders` 追到 `loadApiProvider`，观察函数包装、对象直通、文件配置和多导出拒绝逻辑；再在 [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts#L2577-L2616) 追 `appendRunEvalOptionsForTestCase`、`appendRunEvalOptionsForVars`、`appendRunEvalOptionsForProvider` 和 `createRunEvalOption`。
+先在 [`src/providers/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/providers/index.ts#L370-L409) 从 `loadApiProviders` 追到 `loadApiProvider`，观察函数包装、对象直通、文件配置和多导出拒绝逻辑，然后再到 [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts#L2577-L2616) 追 `appendRunEvalOptionsForTestCase`、`appendRunEvalOptionsForVars`、`appendRunEvalOptionsForProvider` 和 `createRunEvalOption`。
 
 ## 本篇不能证明什么
 
-Provider 成功加载不能证明凭据有效、模型版本固定、外部 API 可用或请求被服务端按声明参数执行；配置摘要也不能替代完整供应链锁定，自定义函数的安全性与沙箱边界需要单独审计。
+Provider 成功加载以后，仍然不能证明凭据有效、模型版本固定、外部 API 可用，或请求确实被服务端按声明参数执行。配置摘要也替代不了完整的供应链锁定，而自定义函数的安全性与沙箱边界还需要单独审计。
 
 [上一节](README.md) · [下一节](02-test-case-runtime.md)

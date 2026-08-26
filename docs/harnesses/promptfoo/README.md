@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-Promptfoo 常被介绍为“用 YAML 对比多个提示词和模型”，但这句话省略了 Eval Harness 最关键的部分——配置中的 prompt、provider、test、变量、重复次数与断言并不是一条请求，而是一张需要展开、调度、执行、判分和持久化的运行计划。本课程要回答：配置对象怎样被标准化为原子测试，Provider 怎样成为统一调用边界，运行器为什么有时必须放弃并发，断言怎样把响应转换为通过、得分和失败原因，以及 CI 看见的汇总与单条证据之间是什么关系。
+Promptfoo 常被介绍为“用 YAML 对比多个提示词和模型”，但这句话略过了 Eval Harness 最关键的部分，因为配置里的 prompt、provider、test、变量、重复次数与断言并不等于一条请求，它们共同描述的是一张需要展开、调度、执行、判分和持久化的运行计划——每一步都会影响最终证据。本课程要回答配置对象怎样被标准化为原子测试、Provider 怎样成为统一调用边界、运行器为什么有时必须放弃并发，以及断言怎样把响应转成通过、得分与失败原因。最后还要分清 CI 看见的汇总与单条证据之间到底是什么关系。
 
-锁定版本为 `ce89186a22c59543f4f71a55d42442ff3f0e3654`。课程只对该版本列出的五个源码文件作可核对解释。Promptfoo 还包含红队、缓存、Web 界面、远程服务与大量 Provider；它们不是本组入门课的覆盖承诺。
+锁定版本为 `ce89186a22c59543f4f71a55d42442ff3f0e3654`。课程只对该版本列出的五个源码文件作可核对解释，并明确说明它们的适用边界。Promptfoo 还包含红队、缓存、Web 界面、远程服务与大量 Provider，但这些内容不在本组入门课的覆盖承诺内。
 
 ## 先建立源码地图
 
@@ -32,19 +32,19 @@ Promptfoo 常被介绍为“用 YAML 对比多个提示词和模型”，但这�
 
 ## 关键数据结构
 
-`AtomicTestCase` 是已经可运行的测试语义，包含 vars、assert、provider override、metadata 等；`RunEvalOptions` 再把具体 prompt/provider/testIdx/promptIdx 与超时、缓存和信号装到一次执行。`ProviderResponse` 是目标调用边界，既可能有 output，也可能有 error、tokenUsage、latencyMs 与 metadata。`EvaluateResult` 是一行运行结果，保留原测试、响应、评分、成功状态和失败原因。`GradingResult` 则专注判分：pass、score、reason、namedScores、componentResults 和 assertion。
+`AtomicTestCase` 表达已经可以运行的测试语义，其中包含 vars、assert、provider override、metadata 等字段，而 `RunEvalOptions` 会继续把具体 prompt/provider/testIdx/promptIdx 与超时、缓存和信号装进一次执行。`ProviderResponse` 是目标调用边界及其调用结果的来源，既可能带有 output，也可能带有 error、tokenUsage、latencyMs 与 metadata。`EvaluateResult` 对应一行运行结果，保留原测试、响应、评分、成功状态和失败原因，而 `GradingResult` 只关注 pass、score、reason、namedScores、componentResults 和 assertion 等判分信息。
 
-这些结构相互关联，却不能互换——Provider 有返回不等于断言通过；断言通过不等于整个 Trial 有统计代表性；prompt 汇总也不等于发布 Gate。Reference Harness 会用 Trial/Attempt 和独立 Gate 把这几层进一步拆开。
+这些结构相互关联，却不能彼此替换。类型边界必须保留。Provider 有返回并不表示断言通过，断言通过也不表示整个 Trial 具有统计代表性，而 prompt 汇总更不能直接充当发布 Gate。Reference Harness 会通过 Trial/Attempt 与独立 Gate 进一步拆开这几层含义。
 
 ## 实现取舍与失败语义
 
-配置矩阵让同一组测试可以快速横向比较多个模型和提示词，代价是“配置中的一行”与“结果中的一行”不再一一对应。排查数量异常时先计算展开规则。统一 Provider 接口降低接入成本，但字符串解析、插件加载和运行时配置意味着复现记录应保存解析后的 Provider 身份，而不只是原始短名。
+配置矩阵让同一组测试能够快速横向比较多个模型和提示词，代价是配置中的一行与结果中的一行不再一一对应，所以排查数量异常时要先计算展开规则。统一 Provider 接口降低了接入成本，但因为中间还存在字符串解析、插件加载和运行时配置，复现记录必须保存解析后的 Provider 身份，不能只留下原始短名。
 
-并发降级是正确性选择：会话历史或前一步输出参与后一步输入时，乱序会改变样本本身。Provider 重试、缓存命中和断言中的模型调用又是不同恢复层，不能把多次底层调用当成多个独立样本。持久化失败会被记录并尝试保留 JSONL 权威副本；这保护已有证据，但不能自动证明结果集无缺口。
+并发降级是为了保证正确性，因为一旦会话历史或前一步输出参与后一步输入，乱序就会改变样本本身。Provider 重试、缓存命中和断言中的模型调用属于不同恢复层，不能把多次底层调用算作多个独立样本。持久化失败会被记录，并尝试保留 JSONL 权威副本，这能保护已有证据，却无法自动证明结果集没有缺口。
 
 ## 动手实验
 
-假设配置有 2 个 prompt、3 个 provider、4 个 test，其中一个 test 的变量 `tone` 有 2 个值。先不运行代码，写出最小步骤数；再加入 `repeat: 2` 重新计算。随后标出哪些字段属于配置身份、目标响应、评分结果和运行汇总。最后解释如果某个 test 使用会话变量，为什么把并发设为 8 也不应并发执行。
+假设配置有 2 个 prompt、3 个 provider 和 4 个 test，其中一个 test 的变量 `tone` 有 2 个值。先不要运行代码，写出最小步骤数，然后加入 `repeat: 2` 重新计算。接着标出哪些字段属于配置身份、目标响应、评分结果和运行汇总，最后解释如果某个 test 使用了会话变量，为什么把并发设为 8 也不应该并发执行。
 
 运行仓库的离线检查：
 
@@ -55,9 +55,9 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-若四个 test 都只有一个变量组合，基础步骤数是 `2 × 3 × 4 = 24`；若只有其中一个 test 因 `tone` 展开为两个原子测试，总数是 `2 × 3 × (3 + 2) = 30`。全部重复两次则为 60。真实配置还可能受 scenarios、过滤、已完成结果恢复、比较断言和 provider override 影响，因此这是用于理解的最小模型。
+如果四个 test 都只有一个变量组合，基础步骤数就是 `2 × 3 × 4 = 24`。如果只有一个 test 因 `tone` 展开为两个原子测试，总数则是 `2 × 3 × (3 + 2) = 30`，全部重复两次以后变为 60。真实配置还可能受到 scenarios、过滤、已完成结果恢复、比较断言和 provider override 的影响，所以这里只给出用于理解展开规则的最小模型。
 
-会话变量依赖前序结果，任意并发会让输入取到错误历史或不同历史，所以调度器应串行化。课程测试应在无模型密钥、无网络调用时通过；它验证课程结构和锁定链接，不声称执行了 Promptfoo 全套集成测试。
+会话变量依赖前序结果，而任意并发都可能让输入取得错误历史或不同历史，所以调度器应该把相关步骤串行化。课程测试应在没有模型密钥和网络调用时通过，它验证的是课程结构与锁定链接，并不声称已经执行 Promptfoo 的全套集成测试。
 
 ## 如何核对
 
@@ -65,6 +65,6 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 本篇不能证明什么
 
-本篇不能证明某个 Promptfoo 配置适合生产发布、模型判分可靠、缓存无污染、所有 Provider 行为一致，或 CI 中一次全绿具有统计显著性。它提供的是锁定版本的运行骨架和核对方法。
+本篇无法证明某个 Promptfoo 配置适合生产发布、模型判分可靠、缓存没有污染、所有 Provider 行为一致，或 CI 中的一次全绿具有统计显著性。它提供的是锁定版本下的运行骨架与核对方法。
 
 [上一节](../openai-evals/03-recorder-metrics-boundaries.md) · [下一节](01-config-provider-prompt.md)

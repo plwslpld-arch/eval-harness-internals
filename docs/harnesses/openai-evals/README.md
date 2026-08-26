@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-OpenAI Evals 的经典实现围绕 Registry、EvalSpec、CompletionFn 和 Recorder 展开——命令行接收几个字符串，运行时却要把它们解析为 Eval 类、数据路径、模型调用对象和日志后端。新人若只看 YAML，会误以为配置本身就是执行；若只看某个 Eval 子类，又看不到运行身份和事件怎样统一记录，因此本课程追踪 `oaieval.run` 从配置键到 final report 的全过程。
+OpenAI Evals 的经典实现围绕 Registry、EvalSpec、CompletionFn 和 Recorder 展开，命令行虽然只接收几个字符串，运行时却要把它们逐一解析为 Eval 类、数据路径、模型调用对象和日志后端。只看 YAML 容易把配置误当成执行，而只看某个 Eval 子类又会漏掉运行身份和统一事件记录，所以本课程沿着 `oaieval.run` 追踪配置键变成 final report 的全过程。
 
-锁定版本为 `8eac7a7de5215c907fbddc30efdaf316913eccdd`。这套源码包含较早的 CompletionFn/Eval Registry 设计，也有 SolverEval 等扩展，课程将它作为配置驱动 Eval Harness 的重要实现研究，不把其公开接口推断成 OpenAI 当前所有内部评测系统。
+锁定版本为 `8eac7a7de5215c907fbddc30efdaf316913eccdd`。这套源码既包含较早的 CompletionFn/Eval Registry 设计，也提供了 SolverEval 等扩展，课程把它当作配置驱动 Eval Harness 的具体实现来研究，但不会根据这些公开接口推断 OpenAI 当前所有内部评测系统。
 
 ## 先建立源码地图
 
@@ -31,15 +31,15 @@ OpenAI Evals 的经典实现围绕 Registry、EvalSpec、CompletionFn 和 Record
 
 ## 关键数据结构
 
-`EvalSpec` 保存 key、class、args 与 registry_path；`CompletionFnSpec` 保存类和参数；`RunSpec` 把 completion_fns、EvalSpec 和 run_id 固定为运行头。`Event` 至少把 run_id/sample_id/type/data/time 关联起来，而 CompletionFn Protocol 接收 prompt 并返回 CompletionResult，Eval 决定怎样把结果转成 match 或其他 metric。
+`EvalSpec` 保存 key、class、args 与 registry_path，`CompletionFnSpec` 保存类和参数，而 `RunSpec` 会把 completion_fns、EvalSpec 和 run_id 固定为运行头。`Event` 至少关联 run_id/sample_id/type/data/time，CompletionFn Protocol 则负责接收 prompt 并返回 CompletionResult，至于结果怎样变成 match 或其他 metric，要由 Eval 决定。
 
-这里的 Sample event 与 Reference Harness TraceEvent 相似，但没有强制 parent/sequence、canonical Attempt 或 Observation Bundle digest——课程会把这一能力映射标为 partial，而不是因为都是 JSONL 就声称等价。
+这里的 Sample event 与 Reference Harness TraceEvent 有相似之处，但它没有强制的 parent/sequence、canonical Attempt 或 Observation Bundle digest——缺失的正是关键血缘，因此课程会把这项能力映射标为 partial。两边都使用 JSONL，并不代表它们等价。
 
 ## 实现取舍与失败语义
 
-Registry 降低新增 Eval/模型配置的代码耦合，也让同一类可以由不同 args 实例化；代价是运行身份分散在 YAML、路径优先级、解引用链和 CLI override。Recorder 使用 ContextVar 提供隐式 sample_id，Eval 代码简洁，但异步/线程边界和缺失上下文必须谨慎处理。
+Registry 降低了新增 Eval 或模型配置时的代码耦合，也允许同一个类用不同 args 实例化，但运行身份因此分散在 YAML、路径优先级、解引用链和 CLI override 中。Recorder 用 ContextVar 提供隐式 sample_id，虽然能让 Eval 代码更简洁，却要求实现谨慎处理异步边界、线程边界和缺失上下文。
 
-HTTP Recorder 失败可回落 LocalRecorder，保护证据不因远端日志服务故障完全丢失；这属于记录层恢复，不代表产品 Sample 可以重答，而 CompletionFn 的网络 retry 与 Eval 的 Sample 语义也未在核心对象里形成显式 Trial/Attempt 分层。
+HTTP Recorder 失败时可以回落到 LocalRecorder，从而避免证据因远端日志服务故障而完全丢失。这只是记录层恢复，并不意味着产品 Sample 可以重答，而且 CompletionFn 的网络 retry 与 Eval 的 Sample 语义也没有在核心对象中形成显式的 Trial/Attempt 分层。
 
 ## 动手实验
 
@@ -54,9 +54,9 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-仅保存 `oaieval model eval-name` 会丢 Registry 路径优先级、spec 解引用、CLI override、模型实际版本、数据内容摘要和 Recorder fallback；可复现记录必须保存解析后 RunSpec 与实际资源版本。
+如果只保存 `oaieval model eval-name`，Registry 路径优先级、spec 解引用、CLI override、模型实际版本、数据内容摘要和 Recorder fallback 都会丢失，所以可复现记录必须保存解析后的 RunSpec 与实际资源版本。
 
-课程门禁只有在四篇正文、图示、锁定链接和上下导航完整时通过；它不需要 OpenAI API key，也不运行外部模型。
+课程门禁只有在四篇正文、图示、锁定链接和上下导航都完整时才会通过。检查过程不需要 OpenAI API key，也不会运行外部模型。
 
 ## 如何核对
 
@@ -64,6 +64,6 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 本篇不能证明什么
 
-Registry 与 Recorder 完整不能证明 Eval 数据有效、CompletionFn 是声明模型、事件足以审计 Agent 副作用，或 final report 可直接作为发布 Gate；它解释配置驱动机制，不扩大为生产质量证明。
+即使 Registry 与 Recorder 的记录都完整，也不能证明 Eval 数据有效、CompletionFn 确实是声明模型、事件足以审计 Agent 副作用，或 final report 可以直接充当发布 Gate。本课解释的是配置驱动机制，不把它扩大成生产质量证明。
 
 [上一节](../inspect-ai/03-scorer-log-retry.md) · [下一节](01-registry-eval-spec.md)

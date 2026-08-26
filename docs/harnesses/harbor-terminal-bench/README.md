@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-语言模型基准常把“输入发给模型、比较答案”作为主循环；终端 Agent 评测则必须启动隔离环境、安装或连接 Agent、执行多轮命令、保留日志和文件，再在相同或独立环境中运行 verifier；Harbor 是 Terminal-Bench 后续演进出的通用 Agent Harness/Eval Harness 框架，而 Terminal-Bench 1 保留了更紧凑的早期 Harness 结构。把两者一起阅读，可以看见 Job/Dataset 如何展开 Trial、环境与 Agent 如何交替、Verifier 如何从容器产物生成 reward，以及结果恢复为什么不能只看一个 `resolved` 布尔值。
+语言模型基准常把“输入发给模型、比较答案”作为主循环，而终端 Agent 评测必须先启动隔离环境、安装或连接 Agent、执行多轮命令并保留日志与文件，然后才能在相同或独立环境中运行 verifier。Harbor 是从 Terminal-Bench 后续演进出来的通用 Agent Harness/Eval Harness 框架，Terminal-Bench 1 则保留了更紧凑的早期 Harness 结构——把两者放在一起阅读，就能沿源码看到 Job/Dataset 怎样展开 Trial、环境与 Agent 如何交替、Verifier 如何从容器产物生成 reward，以及恢复结果时为什么不能只看一个 `resolved` 布尔值。
 
-本课程锁定 Harbor `74f0176384cff88b99306770473b4875760c5a21` 与 Terminal-Bench 1 `d28711d0da2675d0bb1d56de45ae5df6082438a3`。课程用 Terminal-Bench 1 解释紧凑基线，再用 Harbor 展示网络策略、资源能力、事件 hook、regrade、多步结果等扩展——它不是两个项目版本差异大全，也不声称 Harbor 的每项能力都来自 Terminal-Bench 1。
+本课程锁定 Harbor `74f0176384cff88b99306770473b4875760c5a21` 与 Terminal-Bench 1 `d28711d0da2675d0bb1d56de45ae5df6082438a3`。我们先用 Terminal-Bench 1 解释紧凑基线，再用 Harbor 展示网络策略、资源能力、事件 hook、regrade 与多步结果等扩展，但这并不是两个项目的版本差异大全，也不表示 Harbor 的每项能力都来自 Terminal-Bench 1。
 
 ## 先建立源码地图
 
@@ -33,19 +33,19 @@
 
 ## 关键数据结构
 
-Task 描述 instruction、环境构建和 verifier，Dataset 是锁定任务集合；TrialConfig 把一个 Task、一个 Agent/模型、一个 attempt 与环境政策固定为运行单位。AgentContext/AgentResult 保存终端 Agent 轨迹、token 与成本，VerifierResult 保存具名 rewards，TrialResult 还保存异常和各阶段时间；JobResult/BenchmarkResults 是派生汇总——不能替代 Trial 目录中的配置、日志与 verifier 产物。
+Task 描述 instruction、环境构建和 verifier，而 Dataset 表示锁定后的任务集合，TrialConfig 则把一个 Task、一个 Agent/模型、一个 attempt 与一套环境政策固定成运行单位。AgentContext/AgentResult 保存终端 Agent 的轨迹、token 与成本，VerifierResult 保存具名 rewards，TrialResult 还会记录异常和各阶段时间。汇总不能替代行级证据。JobResult/BenchmarkResults 只是从行级结果派生出的汇总，不能替代 Trial 目录中的配置、日志与 verifier 产物。
 
-在统一模型中，Terminal-Bench 的 n_attempts 更接近同一 Sample 的多个随机 Trial，而非网络重试 Attempt。Reference Harness 使用 Trial/Attempt 术语时会明确区分：随机重复增加 Trial 分母，基础设施恢复留在同一 Trial 下。跨工具比较必须先翻译术语，不能只看字段名。
+放进统一模型后，Terminal-Bench 的 n_attempts 更接近同一 Sample 上的多个随机 Trial，并不是网络重试 Attempt。Reference Harness 使用 Trial/Attempt 这组术语时会把两者明确分开，因为随机重复会增加 Trial 分母，而基础设施恢复仍留在同一个 Trial 下。跨工具比较之前必须先把各自术语翻译到同一模型中，不能只凭字段名称判断对象是否相同。
 
 ## 实现取舍与失败语义
 
-容器把任务依赖和副作用隔离，使文件与命令可验证；代价是镜像、运行时、网络和资源限制都进入实验身份。Verifier 与 Agent 分离提高防篡改能力，但需要复制工作区或明确共享产物，环境差异也可能制造假失败。resume 节省成本，但必须在锁配置相同且结果完整时复用，残留目录不能冒充完成。
+容器把任务依赖与副作用隔离开，使文件和命令可以接受验证，不过镜像、运行时、网络与资源限制也因此进入实验身份。将 Verifier 与 Agent 分开能够提高防篡改能力，但需要复制工作区或明确哪些产物共享，而且环境差异本身也可能制造假失败。resume 可以节省成本——却只能在锁定配置相同且结果完整时复用，残留目录不能冒充完成状态。
 
-Agent 未解决任务是产品失败；Agent 进程崩溃可能是产品或适配错误；环境构建失败、健康检查失败、Verifier reward 缺失是 Harness 错误；超时还要注明发生在 setup、agent 还是 verifier——只有分层记录，Gate 才能区分“不通过”和“无法判断”。
+Agent 没有解决任务属于产品失败，而 Agent 进程崩溃可能来自产品本身，也可能是适配错误。环境构建失败、健康检查失败与 Verifier reward 缺失则属于 Harness 错误，超时还必须注明发生在 setup、agent 还是 verifier 阶段。不同阶段不能混写。只有把这些情况分层记录，Gate 才能区分“不通过”和“无法判断”。
 
 ## 动手实验
 
-为“在容器中修复一个损坏的配置文件”设计 Task：列出 instruction、初始文件、网络策略、资源限制、Agent 可写路径、隐藏 verifier 和 reward。给同一 Task 安排 3 个随机 Trial，再为第二个 Trial 的容器启动失败安排一次基础设施重试；写出正确的 Trial/Attempt 数量。最后解释其中原因。只保存 `reward=1` 无法复现或审计。
+为“在容器中修复一个损坏的配置文件”设计 Task，列出 instruction、初始文件、网络策略、资源限制、Agent 可写路径、隐藏 verifier 和 reward。给同一个 Task 安排 3 个随机 Trial，再为第二个 Trial 的容器启动失败安排一次基础设施重试，并写出正确的 Trial/Attempt 数量。最后解释为什么只保存 `reward=1` 无法复现或审计这次运行。
 
 ```bash
 python scripts/sources.py verify
@@ -54,16 +54,16 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-三个随机重复是 3 个 Trial；第二个 Trial 的容器恢复是该 Trial 下的另一个 Attempt，统计分母仍是 3。reward=1 没有说明任务/测试版本、Agent/模型、环境镜像、网络、资源、轨迹、Verifier 命令与产物，也不能判断奖励是否由合法 verifier 生成。
+三个随机重复对应 3 个 Trial，而第二个 Trial 的容器恢复只是该 Trial 下面的另一个 Attempt，所以统计分母仍然是 3。统计分母没有增加。reward=1 没有说明任务与测试版本、Agent 与模型、环境镜像、网络、资源、轨迹、Verifier 命令和产物，也无法判断奖励是否由合法 verifier 生成。
 
-课程测试只验证锁定链接和教材合同，不会拉起 Docker 或运行外部 Agent；具体平台的容器安全与资源隔离需要单独集成测试。
+课程测试只验证锁定链接和教材合同，不会拉起 Docker 或运行外部 Agent，因此具体平台的容器安全与资源隔离仍然需要单独的集成测试。
 
 ## 如何核对
 
-从 [`src/harbor/job.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/job.py) 追 Job.create、TrialConfig 初始化与 queue hooks；在 [`src/harbor/trial/trial.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py) 找环境/Agent/verifier phase；再与 [`terminal_bench/harness/harness.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/harness.py) 的 resume 和并发逻辑对照。
+先从 [`src/harbor/job.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/job.py) 追踪 Job.create、TrialConfig 初始化与 queue hooks，再到 [`src/harbor/trial/trial.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py) 找到环境、Agent 和 verifier phase，最后与 [`terminal_bench/harness/harness.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/harness.py) 的 resume 及并发逻辑对照。
 
 ## 本篇不能证明什么
 
-容器、隐藏测试、reward 文件和 pass@k 不能证明任务无漏洞、Agent 未利用侧信道、测试覆盖完整或结果可外推到真实软件工程。课程也不把框架自身测试通过扩大为某个 Agent 能力证明。
+容器、隐藏测试、reward 文件与 pass@k 都不能证明任务没有漏洞、Agent 从未利用侧信道、测试覆盖完整，或结果能够外推到真实软件工程。课程也不会把框架自身测试通过，扩大解释成某个 Agent 的能力证明。
 
 [上一节](../deepeval/03-async-cache-errors.md) · [下一节](01-job-dataset-trial.md)

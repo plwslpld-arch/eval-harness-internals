@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-运行 100 个任务、每个 3 次，看似就是 300 个并发工作项；真正实现还要处理任务过滤、不同 Agent/模型组合、恢复既有结果、结果目录冲突、随机重复身份和 Job 级统计——Harbor 的 Job 与 Terminal-Bench 1 的 Harness 都把这些责任放在 Trial 之上。本篇解释计划怎样展开、配置怎样锁定，以及为什么恢复逻辑是统计正确性的一部分。
+运行 100 个任务并把每个任务重复 3 次，看起来只是得到 300 个并发工作项，但真正实现时还得处理任务过滤、不同 Agent 与模型组合、既有结果恢复、结果目录冲突、随机重复身份和 Job 级统计。Harbor 的 Job 与 Terminal-Bench 1 的 Harness 都把这些责任放在 Trial 之上，所以下文会解释计划怎样展开、配置怎样锁定，以及恢复逻辑为何也是统计正确性的一部分。
 
-重点是区分三类对象：Dataset 决定候选任务，Job/Harness 决定本次实验政策，Trial 才是一个 Agent 在一个任务环境中的独立运行。任何一个层级被修改，都可能让历史结果与新结果不可直接合并。
+首先要分清三类对象，因为 Dataset 决定候选任务，Job/Harness 决定本次实验政策，而 Trial 才表示一个 Agent 在一个任务环境中的独立运行。只要其中任意一层发生变化，历史结果就可能无法与新结果直接合并。
 
 ## 先建立源码地图
 
@@ -30,19 +30,19 @@
 
 ## 关键数据结构
 
-DatasetConfig 固定数据集名、版本、路径和筛选条件，JobConfig/RunLock 则固定 Agent、模型、并发、n_attempts、超时、网络和环境政策。TrialConfig 是不可混淆的运行坐标。TrialResult 是已执行证据——“目录存在”或“config 存在”都不能代替它。JobStats 与 BenchmarkResults 是由 TrialResult 派生的缓存，重建时应能从行级结果重新计算。
+DatasetConfig 固定数据集名称、版本、路径与筛选条件，JobConfig/RunLock 则固定 Agent、模型、并发、n_attempts、超时、网络和环境政策，因此 TrialConfig 才是一组不可混淆的运行坐标。坐标必须保持稳定。真正代表完整执行证据的是 TrialResult，单凭“目录存在”或“config 存在”都不能替代它。JobStats 与 BenchmarkResults 只是从 TrialResult 派生出来的缓存，所以即使需要重建，也应该能从行级结果重新计算。
 
-Terminal-Bench 的 TrialResults 包含 task_name、trial_name、reward 等，BenchmarkResults 先得到每 task 的成功计数再估计 pass@k，这保留了 task 作为聚类单位——避免把 300 条 Trial 当成 300 个不同任务来夸大覆盖。
+Terminal-Bench 的 TrialResults 包含 task_name、trial_name、reward 等字段，而 BenchmarkResults 会先按任务计算每个 task 的成功次数，再据此估计 pass@k。这样做保留了 task 这个聚类单位，避免把 300 条 Trial 当成 300 个不同任务，从而夸大任务覆盖。
 
 ## 实现取舍与失败语义
 
-预先展开计划便于进度显示与恢复，但大规模矩阵可能占内存。动态任务还需版本冻结。按预计时长排序提升吞吐，不应改变 Trial 内容；如果全局超时使后排任务更易缺失，排序反而会影响缺失机制，分析时必须记录。
+预先展开计划方便显示进度和恢复运行，不过矩阵规模很大时也可能占用不少内存，而动态任务还必须冻结版本。按照预计时长排序可以提高吞吐，却不应该改变 Trial 内容。可如果全局超时让排在后面的任务更容易缺失，排序就已经影响了缺失机制，分析时必须把它记录下来。
 
-严格 RunLock 防止错误合并，代价是小配置变化也需新 run_id，这是正确成本；清理不完整产物前必须确认目录只属于目标 Trial，已完成结果如果缺摘要或配置不匹配，应拒绝复用。取消、进程崩溃和用户中断要保留状态，不得因没有 reward 就从计划中消失。
+严格的 RunLock 可以阻止不相容结果被错误合并，代价是很小的配置变化也需要新的 run_id，而这是维护实验身份必须承担的成本——在清理不完整产物之前，必须确认目录只属于目标 Trial，如果已完成结果缺少摘要或配置不匹配，就应拒绝复用。取消、进程崩溃和用户中断也要保留状态，不能因为没有 reward 就从计划里消失。缺失状态也要入账。
 
 ## 动手实验
 
-设 Dataset 有 12 个任务，include 选 8 个，exclude 再去掉 2 个，2 个 Agent、每项 3 个随机 Trial，计算计划规模，并设计稳定坐标。假设完成 30 条、8 条有完整 config 但无 result、其余未启动，写出 resume 应复用、清理与重新调度的数量，再说明若模型版本改变，为什么不能沿用原 run_id。
+设 Dataset 共有 12 个任务，include 选中其中 8 个，exclude 又去掉 2 个，同时配置 2 个 Agent，并为每项安排 3 个随机 Trial。请计算计划规模并设计稳定坐标。随后假设已经完成 30 条，另有 8 条带完整 config 却没有 result，其余尚未启动，写出 resume 应复用、清理和重新调度的数量，再说明模型版本一旦改变，为何不能沿用原 run_id。
 
 ```bash
 python scripts/sources.py verify
@@ -51,16 +51,16 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-实际任务 6 个，计划为 `6 × 2 × 3 = 36` 个 Trial，稳定坐标至少含 dataset commit/task id、Agent+模型 identity 和 repetition index。30 个完整结果复用；8 个无 result 的描述与总计划矛盾，因为计划仅 36，说明恢复清单本身必须先校验而不能盲算。若改为 4 条不完整，则清理 4 条并重新调度，另 2 条未启动也调度，共 6 条；模型版本变化会改变 Target identity，应建立新 Job。
+筛选后的实际任务有 6 个，因此计划共包含 `6 × 2 × 3 = 36` 个 Trial，而稳定坐标至少要覆盖 dataset commit/task id、Agent 与模型 identity 以及 repetition index。30 个完整结果可以复用，但“8 个无 result”与总计划互相矛盾，因为整个计划只有 36 项，这说明恢复清单必须先校验，不能拿到数字就盲算。如果把条件改成 4 条不完整，就应清理并重新调度这 4 条，同时调度另外 2 条未启动任务，共计 6 条。模型版本变化会改写 Target identity，所以应建立新的 Job。
 
-这个刻意的矛盾训练读者先验证计划全集和集合关系，而不是把日志数字直接相加。
+这个矛盾是有意留下的，它要求读者先验证计划全集与集合关系，而不是拿到日志数字就直接相加。应先校验恢复清单。
 
 ## 如何核对
 
-在 [`src/harbor/job.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/job.py#L237-L276) 阅读 `_maybe_init_existing_job`、`_init_trial_configs` 与 remaining config；在 [`terminal_bench/harness/harness.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/harness.py#L200-L239) 阅读 `_validate_resume_configuration` 和 `_filter_completed_and_cleanup_incomplete_tasks`。
+先在 [`src/harbor/job.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/job.py#L237-L276) 阅读 `_maybe_init_existing_job`、`_init_trial_configs` 与 remaining config，然后到 [`terminal_bench/harness/harness.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/harness.py#L200-L239) 对照 `_validate_resume_configuration` 和 `_filter_completed_and_cleanup_incomplete_tasks`，核对两套恢复边界。
 
 ## 本篇不能证明什么
 
-计划完整、RunLock 匹配和 resume 成功不能证明 Trial 真的独立、随机种子有效、任务难度代表真实场景或历史结果未被人工修改。证据摘要和不可变存储仍需额外机制。
+计划完整、RunLock 匹配并且 resume 成功，都不能证明 Trial 彼此真正独立、随机种子有效、任务难度能够代表真实场景，也不能排除历史结果被人工修改的可能。证据摘要与不可变存储仍然需要额外机制。
 
 [上一节](README.md) · [下一节](02-environment-agent-lifecycle.md)

@@ -4,11 +4,11 @@
 
 ## 本篇要解决什么问题
 
-Inspect AI 能保存完整 EvalLog，也支持 Sample retry、Task retry、score_on_error、多个 Scorer 和 epoch Reducer；功能丰富也带来解释风险：一次失败后重试的结果怎样进入日志？Scorer 身份能否重建？未评分样本是否从分母消失？Task retry 会不会用成功尝试覆盖失败历史？本节把评分与恢复分别追到持久化对象。
+Inspect AI 既能保存完整 EvalLog，也支持 Sample retry、Task retry、score_on_error、多个 Scorer 和 epoch Reducer，但功能越丰富，解释结果时越容易踩中边界问题：一次失败后重试的结果怎样进入日志？Scorer 身份能否重建？未评分样本是否从分母消失？Task retry 会不会用成功尝试覆盖失败历史？本节会把评分与恢复分别追到持久化对象。
 
 ## 先建立源码地图
 
-Scorer 侧的四个对象都在锁定 `scorer/_scorer.py`，各自占一段：[Scorer Protocol](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L34-L65) 定义调用契约，[`ScorerSpec`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L66-L88) 承载注册元数据，[`@scorer` 装饰器](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L133-L206) 完成 Registry 包装，[`scorer_metrics`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L252-L261) 取出 Metric 元数据；Sample Scorer 调用、Reducer 和 Task 结果聚合在 [`task_run()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L465-L505)——这个文件有三千多行，入口在这里，而 Task 级重试调度位于 [`eval_run()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L123-L163)，日志 Schema 则由 [`EvalSample`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L410-L450)、[`EvalScore`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L744-L784) 和 [`EvalLog`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L1141-L1181) 三个模型共同描述。
+Scorer 侧的四个对象都在锁定 `scorer/_scorer.py`，而且各自占据一段清晰的代码：[Scorer Protocol](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L34-L65) 定义调用契约，[`ScorerSpec`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L66-L88) 承载注册元数据，[`@scorer` 装饰器](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L133-L206) 完成 Registry 包装，[`scorer_metrics`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L252-L261) 取出 Metric 元数据。Sample Scorer 调用、Reducer 和 Task 结果聚合都在 [`task_run()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L465-L505)，这个文件有三千多行，入口就在这里，而 Task 级重试调度位于 [`eval_run()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L123-L163)，日志 Schema 则由 [`EvalSample`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L410-L450)、[`EvalScore`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L744-L784) 和 [`EvalLog`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L1141-L1181) 三个模型共同描述。
 
 ## 完整调用链
 
@@ -24,27 +24,27 @@ Scorer 侧的四个对象都在锁定 `scorer/_scorer.py`，各自占一段：[S
 
 ## 关键数据结构
 
-`ScorerSpec(scorer, args, metadata, metrics)` 记录如何重建评分器，而 `EvalSample.scores` 是 scorer-name 到 Score 的映射；`EvalScore` 保存 name/scorer、参数、Metric、scored_samples、unscored_samples 和 metadata，`EvalResults.scores` 汇总各 Scorer，`EvalLog` 再保存 status、eval spec、plan、samples、results、stats、error 与 location。
+`ScorerSpec(scorer, args, metadata, metrics)` 记录如何重建评分器，而 `EvalSample.scores` 是 scorer-name 到 Score 的映射。沿着持久化层继续往外看，`EvalScore` 保存 name/scorer、参数、Metric、scored_samples、unscored_samples 和 metadata，`EvalResults.scores` 汇总各 Scorer，最后由 `EvalLog` 保存 status、eval spec、plan、samples、results、stats、error 与 location。
 
-Reference Harness 的 ScoreRecord 强制绑定 canonical Attempt 与 Observation digest。Inspect AI 更强调 TaskState、Sample events 和可重建 Scorer；做 Adapter 时应把缺少的严格 digest/canonical 语义标为 partial，而不是凭字段相似声称完全对应。
+Reference Harness 的 ScoreRecord 强制绑定 canonical Attempt 与 Observation digest，而 Inspect AI 更强调 TaskState、Sample events 和可重建 Scorer，因此做 Adapter 时，应把缺少的严格 digest 或 canonical 语义标为 partial，不能因为字段相似就声称完全对应。
 
 ## 实现取舍与失败语义
 
-Registry Scorer 便于日志重评分和共享，但动态闭包或本地对象若无法记录构造参数，会降低可复现性。多个 Scorer 与 Reducer 支持丰富评测，却要求每个 Metric 明确分母和 reducer 语义；`scored_samples`/`unscored_samples` 是重要信号，发布 Gate 不应只读取已评分子集的平均值。
+Registry Scorer 方便后续根据日志重评分和共享，但如果动态闭包或本地对象无法记录构造参数，可复现性就会下降。多个 Scorer 与 Reducer 支持更丰富的评测，不过每个 Metric 都必须明确自己的分母和 reducer 语义。缺失不能藏起来——`scored_samples`/`unscored_samples` 正是暴露缺失的重要信号，因此发布 Gate 不应只读取已评分子集的平均值。
 
-Sample retry 重建状态，适合瞬时错误；若模型答错却没有异常，不应进入 retry_on_error，而 Task retry 复用已完成 Sample 可节省成本，但前提是 Task/Model/Sandbox/Scorer 身份没有改变，失败日志和新日志关联可追踪；源码注释明确区分 retry、abort、score/error graceful resolution 与外部取消——只有错误或显式 retry 且预算未耗尽时重新排队。
+Sample retry 会重建状态，所以适合处理瞬时错误，而模型只是答错却没有异常时，不应进入 retry_on_error。Task retry 复用已经完成的 Sample 可以节省成本，但前提是 Task、Model、Sandbox 和 Scorer 的身份都没有改变，并且失败日志与新日志之间的关联可追踪。源码注释还明确区分了 retry、abort、score/error graceful resolution 与外部取消，只有发生错误或收到显式 retry，并且预算尚未耗尽时，任务才会重新排队。
 
 ## 动手实验
 
-构造 100 个计划 Sample 的思想实验：90 个有 Score，其中 80 passed、10 failed；5 个 Solver error 且 score_on_error=false；5 个 Scorer 返回 None；分别计算“只在 scored samples 上的通过率”和“以计划 Sample 为分母的通过率”，并决定 Gate 应该 passed、failed 还是 inconclusive。
+构造一个包含 100 个计划 Sample 的思想实验，其中 90 个有 Score，具体是 80 passed、10 failed，另有 5 个 Solver error 且 score_on_error=false，还有 5 个 Scorer 返回 None。分别计算“只在 scored samples 上的通过率”和“以计划 Sample 为分母的通过率”，再决定 Gate 应该是 passed、failed 还是 inconclusive。
 
-再比较两种恢复：Sample 23 第一次 API 超时后 retry 成功；Task 日志写入阶段失败后 Task retry 复用已完成 Sample，并画出每种情况下应该保留的错误、重试和最终 Score 关系。
+接着比较两种恢复路径：第一种是 Sample 23 首次调用 API 超时，随后 retry 成功，第二种是 Task 在日志写入阶段失败，Task retry 因而复用已经完成的 Sample。请画出两种路径中应该保留的错误、重试和最终 Score 关系。
 
 ## 预期输出与答案
 
-只看已评分子集为 80/90≈88.9%，而计划分母为 80/100=80%；若政策要求 85% 且关键缺失不可忽略，Gate 不应以 88.9% passed，而应因 10 个未评分样本 inconclusive，或按预声明的保守政策 failed。选择必须在运行前声明。
+只看已评分子集时，通过率是 80/90≈88.9%，而改用计划分母后则是 80/100=80%。如果政策要求达到 85%，同时又规定关键缺失不可忽略，Gate 就不能按 88.9% 判为 passed，而应因为 10 个未评分样本判为 inconclusive，或按预声明的保守政策判为 failed。选择必须在运行前声明。
 
-Sample retry 应保留第一次 error_retries，并让新状态的 Score进入结果；Task retry 应保留失败 EvalLog，新 entry 记录复用 SampleSource 和新的 Task 尝试，而两者都不能伪装成“从未失败过”。
+Sample retry 应保留第一次 error_retries，并让新状态产生的 Score 进入结果，而 Task retry 应保留失败的 EvalLog，再由新 entry 记录复用的 SampleSource 和新的 Task 尝试。两种恢复都不能伪装成“从未失败过”。
 
 ## 如何核对
 
@@ -52,6 +52,6 @@ Sample retry 应保留第一次 error_retries，并让新状态的 Score进入�
 
 ## 本篇不能证明什么
 
-日志字段齐全不能证明 Scorer 校准、Judge 无偏或 Task retry 在外部服务变化后仍可比较；它只提供恢复与评分的可见结构，独立发布 Gate 仍需固定身份、分母和缺失政策。
+日志字段齐全只能提供恢复与评分的可见结构，不能证明 Scorer 已经校准、Judge 没有偏差，也不能保证外部服务变化后的 Task retry 仍可比较。独立发布 Gate 仍需固定身份、分母和缺失政策。
 
 [上一节](02-sandbox-sample-run.md) · [下一节](../../contents.md)

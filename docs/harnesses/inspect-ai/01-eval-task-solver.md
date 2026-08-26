@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-Inspect AI 的 `eval()` 参数很多，模型、Task、Sandbox、Solver、epochs、并发、预算、日志与 retry 都能在入口覆盖；若只把它看成一个大函数，就看不出哪些值属于 Eval 级调度，哪些会进入每个 Task，哪些最终改变单个 Sample 的 Solver Plan。本节沿同步 API、异步上下文、Task 解析和 TaskRunOptions 四层拆开这条装配链。
+Inspect AI 的 `eval()` 参数很多，模型、Task、Sandbox、Solver、epochs、并发、预算、日志与 retry 都能在入口覆盖，因此一旦只把它看成一个大函数，就很难分清哪些值属于 Eval 级调度、哪些会进入每个 Task，以及哪些最终改变单个 Sample 的 Solver Plan。本节会沿着同步 API、异步上下文、Task 解析和 TaskRunOptions 四层，把这条装配链逐层拆开。
 
 ## 先建立源码地图
 
 公共入口有同步和异步两个——[`eval()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L118-L157) 与 [`eval_async()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L413-L452)，模型和 Task 的解析则在 [`eval_resolve_tasks()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L1899-L1938)。Task 级准备和调度在 [`eval_run()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L123-L162)。Solver Plan 的解析与单 Task 主循环在 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L465-L504)。
 
-源码直接显示 `eval_async` 同时只能有一个活动调用，并通过 anyio TaskGroup 运行 `_eval_async_inner`；这属于锁定版本的**源码事实**，不应推广为所有版本或所有部署模式的永久限制。
+源码直接显示，`eval_async` 同时只能有一个活动调用，并通过 anyio TaskGroup 运行 `_eval_async_inner`，而这个结论只属于锁定版本的**源码事实**，不能推广成所有版本或部署模式都不会改变的永久限制。
 
 ## 完整调用链
 
@@ -26,15 +26,15 @@ Inspect AI 的 `eval()` 参数很多，模型、Task、Sandbox、Solver、epochs
 
 ## 关键数据结构
 
-`ResolvedTask` 表示 Registry/File/对象解析后的 Task 与来源；`TaskRunOptions` 则是一次 Task 执行所需的冻结装配结果，包含 Task、Model、Sandbox、EvalConfig、Solver、Scorer、Logger、SampleSource 和运行限制。`Plan` 是 Solver steps 的有序列表。每个 step 会被记录为 EvalPlanStep，便于日志重放“实际运行了哪些 Solver”。
+`ResolvedTask` 表示 Registry、File 或对象解析后的 Task 及其来源，而 `TaskRunOptions` 是一次 Task 执行所需的冻结装配结果，其中包含 Task、Model、Sandbox、EvalConfig、Solver、Scorer、Logger、SampleSource 和运行限制。`Plan` 是 Solver steps 的有序列表。每个 step 都会记录为 EvalPlanStep，以便日志重放“实际运行了哪些 Solver”。
 
 Task 的 Dataset 与 Sample 是评测输入，Solver 改变 TaskState，包括 messages、output、tools 与 store，而 Scorer 在 Solver 结束后读取 state 与 Target。这个切分比把 prompt、模型调用和评分全塞进一个 callback 更容易审计，但 Task 对象仍是多项配置的聚合根。
 
 ## 实现取舍与失败语义
 
-统一同步与异步入口降低使用门槛，anyio 便于并发 Task/Sample；全局单活动 `eval_async` 则限制同进程嵌套运行。调用参数可覆盖 Task 默认值，这带来实验便利，也意味着日志必须保存**解析后配置**，否则仅凭 Task 源码无法重建运行。
+统一同步与异步入口降低了使用门槛，而 anyio 也让并发 Task 与 Sample 更容易组织，不过全局只允许一个活动 `eval_async`，所以同一进程里的嵌套运行仍受限制。调用参数可以覆盖 Task 默认值，这虽然方便实验，却也要求日志保存**解析后配置**，否则只凭 Task 源码无法重建当时的运行。
 
-Solver 覆盖适合对同一 Dataset 比较不同策略。它可能改变工具、消息和终止语义，不能只把 Solver 名当作普通超参数。Task 解析失败、模型角色缺失或 Sandbox 规格无效应在 Sample 前阻断；与此不同，Solver 返回错误行为则是 Sample 级产品结果，不能自动解释为 Eval 基础设施错误。
+Solver 覆盖适合用同一份 Dataset 比较不同策略，但因为它可能同时改变工具、消息和终止语义，所以不能只把 Solver 名当作普通超参数。Task 解析失败、模型角色缺失或 Sandbox 规格无效，都应在 Sample 开始前阻断。边界不能混淆。与这些装配错误不同，Solver 返回错误行为属于 Sample 级产品结果，不能自动解释成 Eval 基础设施错误。
 
 ## 动手实验
 
@@ -44,9 +44,9 @@ Solver 覆盖适合对同一 Dataset 比较不同策略。它可能改变工具�
 
 ## 预期输出与答案
 
-两种 Solver 不能只按最终文本比较，因为 tool_agent 还会产生工具副作用和环境终态。至少应冻结 SolverSpec、Model、工具权限、审批和各项预算。`resolve_plan` 复制的原因是同一 Task/Plan 可能被多次 eval；若原地 prepend setup，第二次运行会重复执行 setup，实际 Plan 与声明不一致。
+两种 Solver 不能只按最终文本比较，因为 tool_agent 还会留下工具副作用和环境终态，因此至少要冻结 SolverSpec、Model、工具权限、审批和各项预算。`resolve_plan` 之所以复制 Plan，是因为同一 Task 或 Plan 可能被多次 eval，一旦原地 prepend setup，第二次运行就会重复执行 setup，最终让实际 Plan 偏离声明。
 
-课程测试应继续保持红色，直到本课程另外两篇都存在并满足内容合同；这防止一张全局图取代 Sample 和 Scorer 的细节。
+在本课程另外两篇都存在并满足内容合同之前，课程测试应继续保持红色，因为这道约束能防止一张全局图取代 Sample 和 Scorer 的细节。
 
 ## 如何核对
 
@@ -54,6 +54,6 @@ Solver 覆盖适合对同一 Dataset 比较不同策略。它可能改变工具�
 
 ## 本篇不能证明什么
 
-完整记录 Plan 不证明 Solver 安全、工具权限最小或任务有效——它只能证明锁定实现怎样把声明解析成执行计划；实际模型身份、Sandbox 隔离和 Scorer 有效性需要后续证据。
+完整记录 Plan 只能证明锁定实现怎样把声明解析成执行计划，不能证明 Solver 安全、工具权限最小或任务有效。实际模型身份、Sandbox 隔离和 Scorer 有效性，还需要后续证据。
 
 [上一节](README.md) · [下一节](02-sandbox-sample-run.md)
