@@ -58,7 +58,7 @@ scorer:
 
 Dataset 可以内联在配置，也可以外部版本化。外部 JSONL 更利于稳定 ID、Diff 和分片；代价是要管理文件血缘。Target 可以由构造函数直接创建，也可以 Registry 驱动；Registry 易复用但可能隐藏实际配置，因此运行报告必须保存解析后的身份。Environment 使用容器隔离更强，却不是所有任务都需要；纯函数评测应保持轻量，Agent 副作用任务则必须优先隔离和重置。
 
-lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py) 与 [`LM`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py) 分别承载任务与模型适配，是**上游源码事实**。本篇的四对象模型是跨 Harness 的**机制解释**，并不要求上游采用 `Environment` 这个类名。
+lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L64-L103) 与 [`LM`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py) 分别承载任务与模型适配，是**上游源码事实**。本篇的四对象模型是跨 Harness 的**机制解释**，并不要求上游采用 `Environment` 这个类名。
 
 ## 失败语义
 

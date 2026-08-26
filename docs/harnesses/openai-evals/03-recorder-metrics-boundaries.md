@@ -47,7 +47,7 @@ Event 到 TraceEvent 为 partial，因为父子/sequence 未必存在；sampling
 
 ## 如何核对
 
-在 [`record.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py) 阅读 `as_default_recorder`、`record_event`、LocalRecorder、HttpRecorder fallback 与 helper。再在 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py) 核对 final report 与 token usage 是入口后处理，而不是 Recorder 自动推断。
+在 [`record.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L91-L96) 阅读 `as_default_recorder`、`record_event`、LocalRecorder、HttpRecorder fallback 与 helper。再在 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py) 核对 final report 与 token usage 是入口后处理，而不是 Recorder 自动推断。
 
 ## 本篇不能证明什么
 

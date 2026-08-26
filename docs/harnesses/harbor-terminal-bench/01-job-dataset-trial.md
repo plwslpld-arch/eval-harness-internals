@@ -57,7 +57,7 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 如何核对
 
-在 [`src/harbor/job.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/job.py) 阅读 `_maybe_init_existing_job`、`_init_trial_configs` 与 remaining config；在 [`terminal_bench/harness/harness.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/harness.py) 阅读 `_validate_resume_configuration` 和 `_filter_completed_and_cleanup_incomplete_tasks`。
+在 [`src/harbor/job.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/job.py#L237-L276) 阅读 `_maybe_init_existing_job`、`_init_trial_configs` 与 remaining config；在 [`terminal_bench/harness/harness.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/harness.py#L200-L239) 阅读 `_validate_resume_configuration` 和 `_filter_completed_and_cleanup_incomplete_tasks`。
 
 ## 本篇不能证明什么
 

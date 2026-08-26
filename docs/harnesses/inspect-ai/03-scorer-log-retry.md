@@ -48,7 +48,7 @@ Sample retry 应保留第一次 error_retries，并让新状态的 Score进入�
 
 ## 如何核对
 
-在 [`scorer/_scorer.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py) 查看 Scorer Protocol、装饰器和 `as_scorer_spec`。在 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py) 追 Scorer 循环、ScoreEvent、Reducer 与 unscored count。在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py) 阅读 `run_task_retry_attempts` 对 cancel_type 和 result.status 的分支。
+在 [`scorer/_scorer.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/scorer/_scorer.py#L207-L222) 查看 Scorer Protocol、装饰器和 `as_scorer_spec`。在 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py) 追 Scorer 循环、ScoreEvent、Reducer 与 unscored count。在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L590-L629) 阅读 `run_task_retry_attempts` 对 cancel_type 和 result.status 的分支。
 
 ## 本篇不能证明什么
 

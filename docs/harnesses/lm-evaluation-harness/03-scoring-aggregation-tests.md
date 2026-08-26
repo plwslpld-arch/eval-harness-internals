@@ -60,7 +60,7 @@ T1=0.5，T2=0.75。按样本数加权为 `(2×0.5 + 4×0.75)/6 = 2/3`；Task 等
 
 ## 如何核对
 
-从 [`evaluator_utils.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py) 依次阅读 `_compute_task_aggregations`、`_collect_results`、`aggregate_groups` 和 `_process_results`。特别核对 fallback mean、bootstrap 上限特例、sample_len TODO 与 post-order traversal。再回到 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py) 查看 ConfigurableTask 怎样注册 aggregation 和 higher_is_better。
+从 [`evaluator_utils.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L173-L212) 依次阅读 `_compute_task_aggregations`、`_collect_results`、`aggregate_groups` 和 `_process_results`。特别核对 fallback mean、bootstrap 上限特例、sample_len TODO 与 post-order traversal。再回到 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py) 查看 ConfigurableTask 怎样注册 aggregation 和 higher_is_better。
 
 ## 本篇不能证明什么
 

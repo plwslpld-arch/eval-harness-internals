@@ -57,7 +57,7 @@ Regrade 至少保存 source trial id 与 artifact digest、新旧 verifier commi
 
 ## 如何核对
 
-在 [`src/harbor/verifier/verifier.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/verifier/verifier.py) 顺序核对 `_resolve_tests`、verify、reward JSON/text 解析和专门异常；在 [`src/harbor/models/trial/result.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/models/trial/result.py) 核对异常、阶段时间与多步字段；最后看 [`terminal_bench/harness/models.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/models.py) 的 pass@k 聚合单位。
+在 [`src/harbor/verifier/verifier.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/verifier/verifier.py#L96-L135) 顺序核对 `_resolve_tests`、verify、reward JSON/text 解析和专门异常；在 [`src/harbor/models/trial/result.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/models/trial/result.py) 核对异常、阶段时间与多步字段；最后看 [`terminal_bench/harness/models.py`](https://github.com/harbor-framework/terminal-bench-1/blob/d28711d0da2675d0bb1d56de45ae5df6082438a3/terminal_bench/harness/models.py) 的 pass@k 聚合单位。
 
 ## 本篇不能证明什么
 

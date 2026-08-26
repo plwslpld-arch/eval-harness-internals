@@ -8,9 +8,9 @@
 
 ## 先建立源码地图
 
-主要证据位于锁定 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py)。`simple_evaluate` 接收模型字符串或已初始化 `LM`、Task 名称、few-shot、batch、device、cache、seed、chat template 和日志选项。它调用外部 `TaskManager.load`，但本课程把 Manager 的内部扫描留到扩展节，先专注加载结果怎样进入核心循环。
+主要证据位于锁定 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L55-L94)。`simple_evaluate` 接收模型字符串或已初始化 `LM`、Task 名称、few-shot、batch、device、cache、seed、chat template 和日志选项。它调用外部 `TaskManager.load`，但本课程把 Manager 的内部扫描留到扩展节，先专注加载结果怎样进入核心循环。
 
-Model Adapter 抽象在 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py)：`LM` 规定请求方法、rank/world_size 和分布式原语，`CachingLM` 代理特定请求方法并按参数哈希缓存结果。Task 抽象在 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py)。
+Model Adapter 抽象在 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py#L250-L289)：`LM` 规定请求方法、rank/world_size 和分布式原语，`CachingLM` 代理特定请求方法并按参数哈希缓存结果。Task 抽象在 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py)。
 
 ## 完整调用链
 
@@ -56,7 +56,7 @@ python scripts/sources.py links
 
 ## 如何核对
 
-在 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py) 中按顺序定位 `get_model(...).create_from_arg_string`、`CachingLM`、`task_manager.load`、Task 配置覆盖、`evaluate(` 和结果 config。再到 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py) 核对缓存仅代理哪些请求类型以及 generation 采样为何可能禁用缓存。
+在 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py) 中按顺序定位 `get_model(...).create_from_arg_string`、`CachingLM`、`task_manager.load`、Task 配置覆盖、`evaluate(` 和结果 config。再到 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py#L250-L289) 核对缓存仅代理哪些请求类型以及 generation 采样为何可能禁用缓存。
 
 ## 本篇不能证明什么
 

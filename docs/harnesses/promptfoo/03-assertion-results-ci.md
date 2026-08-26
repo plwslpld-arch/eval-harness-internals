@@ -12,9 +12,9 @@
 
 | 源码位置 | 责任 | 阅读焦点 |
 | --- | --- | --- |
-| [`src/assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts) | 断言分派、求值、聚合与比较 | pass/score/reason 怎样生成 |
+| [`src/assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts#L752-L791) | 断言分派、求值、聚合与比较 | pass/score/reason 怎样生成 |
 | [`src/types/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/types/index.ts) | Assertion、AssertionSet、GradingResult | 判分契约保存什么 |
-| [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts) | grading、comparison、metrics 和统计 | 单行结论怎样汇总 |
+| [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts#L1344-L1383) | grading、comparison、metrics 和统计 | 单行结论怎样汇总 |
 
 ## 完整调用链
 
@@ -58,7 +58,7 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 如何核对
 
-从 [`src/assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts) 的 `runAssertions` 追到 `runAssertion`、`runAssertionInternal` 和 handler 映射，观察集合、并发与 trace-aware 分支；再在 [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts) 查 `gradeRunEvalResponse`、`applyGradingResult`、comparison merging 与 metrics 更新。
+从 [`src/assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts#L752-L791) 的 `runAssertions` 追到 `runAssertion`、`runAssertionInternal` 和 handler 映射，观察集合、并发与 trace-aware 分支；再在 [`src/evaluator.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/evaluator.ts#L1344-L1383) 查 `gradeRunEvalResponse`、`applyGradingResult`、comparison merging 与 metrics 更新。
 
 ## 本篇不能证明什么
 

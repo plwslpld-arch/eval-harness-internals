@@ -12,7 +12,7 @@ Metric 很容易被误解为一个纯函数 `test_case -> float`。DeepEval 的 
 
 | 源码位置 | 责任 | 阅读焦点 |
 | --- | --- | --- |
-| [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py) | Metric 抽象和 `is_successful` | 测量状态与阈值语义 |
+| [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py#L54-L93) | Metric 抽象和 `is_successful` | 测量状态与阈值语义 |
 | [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py) | 执行、跳过、错误与结果更新 | 对象状态怎样冻结为证据 |
 | [`deepeval/evaluate/evaluate.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/evaluate.py) | 指标输入验证和入口行为 | 阈值与 assert_test 的关系 |
 

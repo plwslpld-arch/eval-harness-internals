@@ -50,7 +50,7 @@ Solver 覆盖适合对同一 Dataset 比较不同策略，但它可能改变工�
 
 ## 如何核对
 
-在 [`_eval/eval.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py) 定位 `eval_async`、`_eval_async_inner`、`eval_resolve_tasks` 与 `eval_run`。在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py) 查看 TaskRunOptions 的构造。最后在 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py) 核对 `resolve_plan` 对 Solver、Chain、Plan 和 setup 的分支。
+在 [`_eval/eval.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L413-L452) 定位 `eval_async`、`_eval_async_inner`、`eval_resolve_tasks` 与 `eval_run`。在 [`_eval/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/run.py#L123-L162) 查看 TaskRunOptions 的构造。最后在 [`_eval/task/run.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/task/run.py#L396-L416) 核对 `resolve_plan` 对 Solver、Chain、Plan 和 setup 的分支。
 
 ## 本篇不能证明什么
 

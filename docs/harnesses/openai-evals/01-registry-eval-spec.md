@@ -49,7 +49,7 @@ CLI override 提高实验速度，却会让静态 YAML 与实际运行不一致�
 
 ## 如何核对
 
-在 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py) 搜索 `_load_registry`、`duplicate entry`、`_dereference`、`make_completion_fn` 与 `_evals`。在 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py) 核对 extra_eval_params 和 completion_args 的合并时点。
+在 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L287-L310) 搜索 `_load_registry`、`duplicate entry`、`_dereference`、`make_completion_fn` 与 `_evals`。在 [`cli/oaieval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py) 核对 extra_eval_params 和 completion_args 的合并时点。
 
 ## 本篇不能证明什么
 
