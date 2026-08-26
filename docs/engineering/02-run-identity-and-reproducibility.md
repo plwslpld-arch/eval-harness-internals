@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-“使用 model-x 在 dataset-v2 上运行”不是可复现身份。模型别名可能漂移，Dataset 文件可被覆盖，脚本依赖当前工作目录，环境变量能改变行为，Scorer prompt 与阈值也可能后来修改。Eval Harness 必须在执行前把声明身份解析为实际身份，并用内容摘要把配置、输入、代码与产物连起来。本篇从 `canonical_digest`、安全相对路径、Trial ID 和 Artifact digest 说明最小做法。
+“使用 model-x 在 dataset-v2 上运行”不是可复现身份，因为模型别名可能漂移，Dataset 文件可被覆盖，脚本依赖当前工作目录，环境变量能改变行为，Scorer prompt 与阈值也可能后来修改。Eval Harness 必须在执行前把声明身份解析为实际身份，并用内容摘要把配置、输入、代码与产物连起来；本篇从 `canonical_digest`、安全相对路径、Trial ID 和 Artifact digest 说明最小做法。
 
 读完后，你应能设计 RunManifest，区分 logical name、resolved identity 和 content digest；也能判断两次报告是否具备直接成对比较条件。这里的“可复现”不是保证未来远程 API 返回同样文本，而是保证读者知道当时使用了什么，并能在可控组件上重新构造。
 
@@ -12,9 +12,9 @@
 
 ![运行身份从声明到证据](../assets/diagrams/foundations/04-lineage.svg)
 
-Reference Harness 使用规范 JSON 序列化：字典键排序、固定分隔符、UTF-8，再计算 SHA-256。相同语义映射不因键顺序变化而改变 digest。Planner 将 EvaluationSpec digest 的一部分写进 run_id，再把 target_id、sample_id、repetition 组合为 Trial ID。ArtifactStore 对真实 bytes 求摘要，Bundle digest 再覆盖 Artifact 引用和 Trace 事件。
+Reference Harness 使用规范 JSON 序列化：字典键排序、固定分隔符、UTF-8，再计算 SHA-256，所以相同语义映射不因键顺序变化而改变 digest。Planner 将 EvaluationSpec digest 的一部分写进 run_id，再把 target_id、sample_id、repetition 组合为 Trial ID；ArtifactStore 对真实 bytes 求摘要，Bundle digest 再覆盖 Artifact 引用和 Trace 事件。
 
-身份不能只靠摘要：摘要回答“内容是否相同”，字段回答“内容是什么角色”。RunManifest 应同时保存 evaluation_id、源码 commit、Python/依赖版本、Dataset digest、Target Adapter identity、实际模型/镜像、Scorer identity、Gate policy、随机种子和时间。秘密只记录来源名称，不记录值。
+身份不能只靠摘要——摘要回答“内容是否相同”，字段回答“内容是什么角色”，所以 RunManifest 应同时保存 evaluation_id、源码 commit、Python/依赖版本、Dataset digest、Target Adapter identity、实际模型/镜像、Scorer identity、Gate policy、随机种子和时间。秘密只记录来源名称，不记录值。
 
 ## 完整流程
 
@@ -29,7 +29,7 @@ Reference Harness 使用规范 JSON 序列化：字典键排序、固定分隔�
 
 ## 关键数据与不变量
 
-逻辑身份例如 `target_id=fixed`，解析身份例如脚本相对路径、digest、解释器版本，运行实例身份例如 `trial_id` 和 `attempt_id`。三者都要保留。Digest 必须带算法前缀 `sha256:`，否则未来算法迁移无法解释。Artifact relative_path 必须是运行目录内规范路径；验证时不能跟随它逃出证据根目录。
+逻辑身份例如 `target_id=fixed`，解析身份例如脚本相对路径、digest、解释器版本，运行实例身份例如 `trial_id` 和 `attempt_id`，三者都要保留。Digest 必须带算法前缀 `sha256:`，否则未来算法迁移无法解释；Artifact relative_path 必须是运行目录内规范路径，验证时不能跟随它逃出证据根目录。
 
 直接比较的最小不变量：Dataset 内容/切分相同，Sample 配对键相同，Target 之外的执行政策相同，Scorer/Metric 定义相同，缺失规则预先确定。如果 Judge 模型或 prompt 变化，即使 metric_id 相同，也不是同一测量合同。
 
@@ -46,9 +46,9 @@ uv run eval-harness-ref run reference/examples/shipping/eval.yaml --output outpu
 
 ## 预期输出与答案
 
-路径越界在加载 ArtifactRef 时失败；bytes 篡改在摘要核验时失败。仅改 target_id 时，脚本内容可能相同，但逻辑 Target identity 已改变，报告坐标也改变；如果明确记录 rename mapping，可以说明实现内容等价，但不能仅凭 digest 自动断言实验条件完全相同，因为其他配置与运行环境也需核对。
+路径越界在加载 ArtifactRef 时失败，bytes 篡改在摘要核验时失败。仅改 target_id 时，脚本内容可能相同，但逻辑 Target identity 已改变，报告坐标也改变；如果明确记录 rename mapping，可以说明实现内容等价，但不能仅凭 digest 自动断言实验条件完全相同，因为其他配置与运行环境也需核对。
 
-`canonical_digest` 对字典键顺序稳定，但列表顺序有语义，所以改变样本、Target 或事件顺序应改变 digest。SHA-256 证明内容一致性，不证明来源可信或文件无恶意。
+`canonical_digest` 对字典键顺序稳定，但列表顺序有语义，所以改变样本、Target 或事件顺序应改变 digest；SHA-256 证明内容一致性，但不证明来源可信或文件无恶意。
 
 ## 如何核对
 
@@ -56,6 +56,6 @@ uv run eval-harness-ref run reference/examples/shipping/eval.yaml --output outpu
 
 ## 本篇不能证明什么
 
-内容摘要、锁文件和稳定 ID 不能保证远程模型确定、容器镜像供应链安全、时间依赖服务可重放或作者身份真实。它们建立可审计基础，不是密码学签名或可重复科学实验的全部条件。
+内容摘要、锁文件和稳定 ID 不能保证远程模型确定、容器镜像供应链安全、时间依赖服务可重放或作者身份真实——它们建立可审计基础，不是密码学签名或可重复科学实验的全部条件。
 
 [上一节](01-minimal-eval-loop.md) · [下一节](03-retries-and-recovery.md)

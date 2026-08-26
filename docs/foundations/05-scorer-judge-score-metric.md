@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-评测项目常把“指标”一词同时用于判断一句回答、计算一组平均值和决定是否发布。结果是 Judge 的一条主观判断被当成总体质量，或缺失输出被无声写成 0。要避免这种混乱，必须把执行评分器的组件、单 Trial 评分事实和跨 Trial 统计估计拆开。
+评测项目常把“指标”一词同时用于判断一句回答、计算一组平均值和决定是否发布，所以结果是 Judge 的一条主观判断被当成总体质量，或缺失输出被无声写成 0。要避免这种混乱，必须把执行评分器的组件、单 Trial 评分事实和跨 Trial 统计估计拆开。
 
 ## 学完你能解释什么
 
@@ -15,13 +15,13 @@
 
 ## 贯穿案例
 
-shipping 的 Scorer 读取 Observation 中的 `fee` 和样本期望值：相等得到 passed/1，不等得到 failed/0。它不关心 Target 是脚本还是模型。对三个 Sample 聚合时，Metric 分母固定为三个计划 Trial；即使某个 Bundle 缺少 `fee`，分母仍为三，该条 Score 是 unscorable，并进一步使 Gate 无法判断，而不是从分母删除。
+shipping 的 Scorer 读取 Observation 中的 `fee` 和样本期望值——相等得到 passed/1，不等得到 failed/0。它不关心 Target 是脚本还是模型。对三个 Sample 聚合时，Metric 分母固定为三个计划 Trial；即使某个 Bundle 缺少 `fee`，分母仍为三，该条 Score 是 unscorable，并进一步使 Gate 无法判断，而不是从分母删除。
 
 ## 核心概念与边界
 
-**Scorer** 是把一个 Observation Bundle 转换成 ScoreRecord 的可版本化函数。**LLM-as-Judge** 是使用模型实现的 Scorer，不是独立层级；它还需 Rubric、采样设置、校准集、偏差检查和分歧处理。**ScoreRecord** 是对单个 Trial 的评分事实，包含状态、值、理由、Scorer 身份和证据血缘。**MetricEstimate** 对预声明的 Trial/Score 集合做聚合，包含分子、分母、估计值和 score_ids。
+**Scorer** 是把一个 Observation Bundle 转换成 ScoreRecord 的可版本化函数；**LLM-as-Judge** 是使用模型实现的 Scorer，不是独立层级，它还需 Rubric、采样设置、校准集、偏差检查和分歧处理。**ScoreRecord** 是对单个 Trial 的评分事实，包含状态、值、理由、Scorer 身份和证据血缘；**MetricEstimate** 对预声明的 Trial/Score 集合做聚合，包含分子、分母、估计值和 score_ids。
 
-环境事实可直接验证时，优先用测试、规则或终态断言。Judge 适合多值文本质量、语义符合度和需要 Rubric 的判断，但其输出应允许 uncertain，并与人工标注或确定性切面校准。模型说“我完成了”只是 Target 输出，不能作为自己的独立评分。
+环境事实可直接验证时，优先用测试、规则或终态断言；Judge 适合多值文本质量、语义符合度和需要 Rubric 的判断，但其输出应允许 uncertain，并与人工标注或确定性切面校准。模型说“我完成了”只是 Target 输出，不能作为自己的独立评分。
 
 ## 机制图
 
@@ -45,13 +45,13 @@ shipping 的 Scorer 读取 Observation 中的 `fee` 和样本期望值：相等�
 | ScoreRecord | status、value、reason | Trial、Attempt、Bundle、Scorer |
 | MetricEstimate | numerator、denominator、value | metric_id 与 score_ids |
 
-值和状态必须同时保留。`value=0` 可能代表规则明确判错，却不能表达缺证据或协议无效；只有状态能告诉 Gate 这个数是否可用于推断。理由用于人类核对，不应取代结构化状态。
+值和状态必须同时保留，因为 `value=0` 可能代表规则明确判错，却不能表达缺证据或协议无效；只有状态能告诉 Gate 这个数是否可用于推断。理由用于人类核对，不应取代结构化状态。
 
 ## 设计取舍
 
-二元规则简单、可复现，却可能遗漏部分质量。连续分数更细，但阈值、尺度和校准会影响解释。多个 Scorer 可以分别测正确性、安全和格式，再由非补偿 Gate 处理关键风险；不应先把关键安全失败平均进高正确率。Judge 可以降低人工成本，但需要冻结模型、prompt、Rubric 和随机性，并定期与人工样本对照。
+二元规则简单、可复现，却可能遗漏部分质量；连续分数更细，但阈值、尺度和校准会影响解释。多个 Scorer 可以分别测正确性、安全和格式，再由非补偿 Gate 处理关键风险——不应先把关键安全失败平均进高正确率。Judge 可以降低人工成本，但需要冻结模型、prompt、Rubric 和随机性，并定期与人工样本对照。
 
-DeepEval 的 [`base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py) 展示 Metric/Judge 抽象，是**上游源码事实**。Promptfoo 的 [`assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts) 展示 Assertion 分派。把二者映射到统一的 Scorer 责任是**机制解释**，并非断言其状态枚举相同。
+DeepEval 的 [`base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py) 展示 Metric/Judge 抽象，是**上游源码事实**；Promptfoo 的 [`assertions/index.ts`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts) 展示 Assertion 分派。把二者映射到统一的 Scorer 责任是**机制解释**，并非断言其状态枚举相同。
 
 ## 失败语义
 
@@ -67,7 +67,7 @@ DeepEval 的 [`base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2
 
 ## 预期输出与答案
 
-缺字段的 Bundle 应产生 `unscorable` 且 value 为 null；它不能被默认为 failed。两条 passed Score 配三个计划 Trial 时 Metric 为 2/3，而不是 2/2。若把 unscorable Score 一起交给 Gate，Gate 应为 inconclusive，因为证据不足以支持通过或明确失败。
+缺字段的 Bundle 应产生 `unscorable` 且 value 为 null，它不能被默认为 failed；两条 passed Score 配三个计划 Trial 时 Metric 为 2/3，而不是 2/2。若把 unscorable Score 一起交给 Gate，Gate 应为 inconclusive，因为证据不足以支持通过或明确失败。
 
 ## 常见误解
 
@@ -75,7 +75,7 @@ DeepEval 的 [`base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2
 
 ## 如何核对
 
-运行 `python -m pytest tests/test_scoring.py tests/test_metrics.py tests/test_gates.py -q`。重点检查缺字段状态、计划分母、重复 score_id 和不可用证据不能过 Gate。再阅读锁定 DeepEval 实现，区分上游所谓 Metric 何时同时承担本篇的 Scorer 与 Score 汇总责任。
+运行 `python -m pytest tests/test_scoring.py tests/test_metrics.py tests/test_gates.py -q`，重点检查缺字段状态、计划分母、重复 score_id 和不可用证据不能过 Gate；再阅读锁定 DeepEval 实现，区分上游所谓 Metric 何时同时承担本篇的 Scorer 与 Score 汇总责任。
 
 ## 与其他 Harness 的关系
 
