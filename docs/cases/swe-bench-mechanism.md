@@ -29,7 +29,7 @@
 
 ## 一次 Trial 的身份是什么
 
-可以把一个 SWE-bench 风格 Trial 的身份写成：
+一个 SWE-bench 风格 Trial 的身份可以写成下面的形式。
 
 ```text
 trial_id = hash(
@@ -44,7 +44,7 @@ trial_id = hash(
 
 这里最容易遗漏的是环境和测试规范；只记录 `instance_id + model_name` 不够，因为基础镜像、依赖解析或测试选择发生变化，都可能改变结果。
 
-本仓库的通用对象与该场景对应如下：
+本仓库的通用对象与该场景的对应关系如下。
 
 | 通用对象 | SWE-bench 场景中的含义 | 必须冻结的内容 |
 | --- | --- | --- |
@@ -115,7 +115,7 @@ Harness 根据实例和镜像规范准备隔离环境。此时需要记录：
 - 容器被系统终止；
 - Harness 无法解析日志。
 
-这些情况不能都压缩成 `0 分`。推荐先构造规范化 Observation：
+这些情况不能都压缩成 `0 分`。推荐先构造下面这份规范化 Observation。
 
 ```json
 {
@@ -134,7 +134,7 @@ Harness 根据实例和镜像规范准备隔离环境。此时需要记录：
 
 ### 5. 生成实例级 Score
 
-教学化的判定逻辑可以写成：
+教学化的判定逻辑可以写成下面的形式。
 
 ```python
 if observation.infrastructure_error:
@@ -151,7 +151,7 @@ return Score(status="passed" if resolved else "failed", value=int(resolved))
 
 ## Retry 为什么不能改变分母
 
-假设预声明计划包含 100 个问题实例，每个实例一个 Trial。某个 Trial 第一次因镜像下载超时失败，第二次正常完成：
+假设预声明计划包含 100 个问题实例，每个实例一个 Trial。某个 Trial 第一次因镜像下载超时失败，第二次正常完成，过程如下。
 
 ```text
 100 Trials
@@ -185,7 +185,7 @@ return Score(status="passed" if resolved else "failed", value=int(resolved))
 5. Metric 聚合 Trial 级 Score；
 6. Gate 同时检查解决率、无效率和证据完整性。
 
-推荐的 Gate 不是单一阈值：
+推荐的 Gate 不是单一阈值。
 
 ```yaml
 rules:

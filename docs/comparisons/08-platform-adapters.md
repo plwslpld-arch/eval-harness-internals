@@ -12,7 +12,7 @@
 2. 平台没有的概念会被悄悄丢失；
 3. 更换平台时，评测协议也被迫重写。
 
-更稳妥的方向是先定义内部合同：
+更稳妥的方向是先定义下面这份内部合同，明确其中对象的先后关系。
 
 ```text
 Dataset → Sample → Trial → Attempt → Observation → Score → Metric → Gate
@@ -37,7 +37,7 @@ Dataset → Sample → Trial → Attempt → Observation → Score → Metric �
 
 ## 先写 Capability Contract
 
-每个 Adapter 都应该公开一份能力合同：
+每个 Adapter 都应该公开一份如下所示的能力合同，列出能力状态和已知限制。
 
 ```yaml
 adapter: example-platform
@@ -75,7 +75,7 @@ limitations:
 4. 记录来源平台、对象 ID 和导入时间；
 5. 对无法恢复的语义显式标记缺失。
 
-推荐的数据结构：
+推荐的数据结构如下所示，其中同时保存了来源、事件和能力快照。
 
 ```json
 {
@@ -106,7 +106,7 @@ limitations:
 - Metric 的统计单位、分母与不确定性；
 - Gate 的规则结果，但不要把平台标签当作发布授权。
 
-平台字段不够时，可以把不可分解的合同保存为版本化 JSON Artifact，而不是删掉字段。例如：
+平台字段不够时，可以把不可分解的合同保存为版本化 JSON Artifact，而不是删掉字段，例如可以保存为下面的形式。
 
 ```json
 {
@@ -141,13 +141,13 @@ limitations:
 
 一个 Trial 可能没有模型 Trace，例如纯规则函数；也可能有多条 Trace，例如环境初始化、Agent 执行和评分 Judge 分别产生 Trace；反过来，一条平台 Trace 也可能只是开发调试调用，不属于任何预声明 Eval Trial。
 
-因此不要做下面这种硬编码：
+因此不要采用下面这种把平台 Trace ID 与 Trial ID 直接等同的硬编码。
 
 ```text
 platform_trace_id == trial_id
 ```
 
-正确关系更像：
+正确关系更接近下面所示的 Trial、Attempt、Trace 和 Score 关联形式。
 
 ```text
 Trial 1 ── 1..N Attempt
@@ -158,7 +158,7 @@ Score ── 绑定一个 canonical Attempt 的 Observation
 
 ## 平台 Scorer 与本地 Scorer 怎样共存
 
-有三种合理模式：
+平台 Scorer 与本地 Scorer 可以通过下面三种合理模式共存。
 
 ### 模式 A：平台只存结果
 

@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-DeepEval 经常以“像 pytest 一样测试大模型应用”出现，但源码中的核心并不是一个 `assert score >= threshold`。输入可能是已经包含 actual_output 的 `LLMTestCase`，也可能是等待用户代码执行的 Golden；指标可能同步、异步、面向单轮、对话或 trace；缓存、忽略错误、并发和测试运行管理器又会改变执行与记录方式。本课程追踪这些对象怎样汇合为 `TestResult`、`MetricData` 与一次 TestRun。
+DeepEval 经常以“像 pytest 一样测试大模型应用”出现，但源码中的核心并不是一个 `assert score >= threshold`——输入可能是已经包含 actual_output 的 `LLMTestCase`，也可能是等待用户代码执行的 Golden；指标可能同步、异步、面向单轮、对话或 trace；缓存、忽略错误、并发和测试运行管理器又会改变执行与记录方式。本课程追踪这些对象怎样汇合为 `TestResult`、`MetricData` 与一次 TestRun。
 
-锁定版本为 `a2e0d4cfd3118352d321c1c84bdeba17d4a201bc`。DeepEval 项目还包含大量具体指标、追踪、平台集成和 Agentic 入口，本课程只解释锁定范围内可直接核对的执行骨架。我们会把它映射到统一的 Dataset → Sample → Target → Scorer → Result 模型，同时保留 DeepEval 自己的 Golden、TestCase、Metric 命名。
+锁定版本为 `a2e0d4cfd3118352d321c1c84bdeba17d4a201bc`。DeepEval 项目还包含大量具体指标、追踪、平台集成和 Agentic 入口，本课程只解释锁定范围内可直接核对的执行骨架——我们会把它映射到统一的 Dataset → Sample → Target → Scorer → Result 模型，同时保留 DeepEval 自己的 Golden、TestCase、Metric 命名。
 
 ## 先建立源码地图
 
@@ -32,15 +32,15 @@ DeepEval 经常以“像 pytest 一样测试大模型应用”出现，但源码
 
 ## 关键数据结构
 
-`Golden` 更接近待执行样本：保存输入、期望与上下文，但通常没有被测应用的 actual_output。`LLMTestCase` 是可评分观测，包含 input、actual_output、expected_output、context、retrieval_context、tools_called、expected_tools、metadata 等。`BaseMetric` 是有状态 Scorer 实例，测量后持有 score、threshold、reason、error、success、verbose_logs 和 evaluation_cost。`MetricData` 是把这些状态冻结到结果中的记录。`EvaluationResult` 汇总 TestResults、confident link 与 run identity。
+`Golden` 更接近待执行样本，保存输入、期望与上下文，但通常没有被测应用的 actual_output；`LLMTestCase` 是可评分观测，包含 input、actual_output、expected_output、context、retrieval_context、tools_called、expected_tools、metadata 等。`BaseMetric` 是有状态 Scorer 实例，测量后持有 score、threshold、reason、error、success、verbose_logs 和 evaluation_cost，`MetricData` 是把这些状态冻结到结果中的记录，`EvaluationResult` 汇总 TestResults、confident link 与 run identity。
 
-同一个 Metric 实例在多测试和并发中如何重置状态非常关键。对象字段便于实现具体指标，却要求执行器在每次运行前清理 error 等字段，并避免跨协程污染。结果证据应保存 metric 名称、实现/模型版本、threshold、strict mode 和单次输出，而不是只保存最终布尔值。
+这里涉及多测试和并发。如何重置同一个 Metric 实例的状态非常关键。对象字段便于实现具体指标，却要求执行器在每次运行前清理 error 等字段，并避免跨协程污染。结果证据应保存 metric 名称、实现/模型版本、threshold、strict mode 和单次输出，而不是只保存最终布尔值。
 
 ## 实现取舍与失败语义
 
-允许用户直接提交 TestCase，使 DeepEval 可以评测任何外部系统输出；agentic iterator 又能把被测代码执行纳入 trace。两者的证据强度不同：前者信任调用者填入 actual_output，后者可以关联运行 trace，但仍需锁定用户代码与环境。
+允许用户直接提交 TestCase，使 DeepEval 可以评测任何外部系统输出；agentic iterator 又能把被测代码执行纳入 trace。两者的证据强度不同——前者信任调用者填入 actual_output，后者可以关联运行 trace，但仍需锁定用户代码与环境。
 
-Metric 失败表示有效测量低于阈值，metric.error 表示没有得到可信测量。`ignore_errors=True` 让批量运行继续，却不应把错误项从分母静默移除。缓存可节省 Judge 调用，前提是 key 覆盖测试、指标配置、模型和依赖版本。异步并发提高吞吐，但会暴露有状态 Metric、事件循环和全局 TestRun 管理的隔离要求。
+Metric 失败表示有效测量低于阈值，metric.error 表示没有得到可信测量。`ignore_errors=True` 让批量运行继续，却不应把错误项从分母静默移除。缓存可节省 Judge 调用。前提是 key 覆盖测试、指标配置、模型和依赖版本。异步并发提高吞吐，但会暴露有状态 Metric、事件循环和全局 TestRun 管理的隔离要求。
 
 ## 动手实验
 
