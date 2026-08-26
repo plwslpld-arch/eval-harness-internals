@@ -5,7 +5,7 @@
     <a href="https://plwslpld-arch.github.io/eval-harness-internals/">在线阅读</a> ·
     <a href="docs/00-start-here.md">开始学习</a> ·
     <a href="docs/contents.md">完整目录</a> ·
-    <a href="docs/downloads/eval-harness-internals-cn.pdf">下载完整中文 PDF</a>
+    <a href="https://plwslpld-arch.github.io/eval-harness-internals/downloads/eval-harness-internals-cn.pdf">下载完整中文 PDF</a>
   </p>
 </div>
 

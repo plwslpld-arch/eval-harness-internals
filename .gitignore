@@ -45,3 +45,6 @@ Thumbs.db
 
 # 锚点核对脚本的上游源码缓存。
 .cache/
+
+# 离线 PDF 由 CI 构建并随站点发布，不进主干。
+docs/downloads/

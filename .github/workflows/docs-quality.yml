@@ -60,6 +60,9 @@ jobs:
       - name: 正文节奏门禁（仅本次改动的文档）
         run: python3 scripts/check_prose.py --changed
 
+      - name: 构建离线 PDF
+        run: uv run python scripts/build_pdf.py --output docs/downloads/eval-harness-internals-cn.pdf
+
       - name: 严格构建中文站点
         run: uv run mkdocs build --strict
 
