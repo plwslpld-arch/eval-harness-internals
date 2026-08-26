@@ -1,6 +1,6 @@
 # 平台适配器：LangSmith、Phoenix、MLflow 与 Braintrust 应该接在哪里
 
-> 这些平台可以保存数据集、Trace、反馈或实验结果，但它们不是本仓库六条主源码课程的替代品。本章用统一对象解释“应该适配什么、不能假设什么、怎样避免平台字段反过来污染 Eval Harness 的语义”。
+> 这些平台可以保存数据集、Trace、反馈或实验结果，但它们不是本仓库六条主源码课程的替代品——本章用统一对象解释“应该适配什么、不能假设什么、怎样避免平台字段反过来污染 Eval Harness 的语义”。
 
 ![平台适配器边界](../assets/diagrams/platform-adapter-boundaries.svg)
 
@@ -20,11 +20,11 @@ Dataset → Sample → Trial → Attempt → Observation → Score → Metric �
                          └── Trace ───────┘
 ```
 
-平台适配器只负责导入或导出这些对象，不决定它们的含义。
+平台适配器只负责导入或导出这些对象——不决定它们的含义。
 
 ## 四类平台各自擅长什么
 
-下表是工程定位，不是功能排行榜。平台能力会随版本变化；接入时必须以实际 API 和锁定版本复核。
+下表是工程定位，不是功能排行榜；平台能力会随版本变化，所以接入时必须以实际 API 和锁定版本复核。
 
 | 平台 | 常见优势 | 适合承担的适配器角色 | 不能默认等价的概念 |
 | --- | --- | --- | --- |
@@ -67,7 +67,7 @@ limitations:
 
 ## 入站适配：从平台导入 Trace
 
-假设 Agent 已在平台中产生一条 Trace。入站 Adapter 至少要做五件事：
+假设 Agent 已在平台中产生一条 Trace，入站 Adapter 至少要做五件事：
 
 1. 读取 Trace 和 Span；
 2. 规范化时间、父子关系和事件顺序；
@@ -94,11 +94,11 @@ limitations:
 }
 ```
 
-如果 Trace 没有 Trial 身份，Adapter 不能自己猜一个。调用方应明确把它绑定到新建 Trial，或者仅将它当作待分析的外部 Observation。
+如果 Trace 没有 Trial 身份，Adapter 不能自己猜一个；调用方应明确把它绑定到新建 Trial，或者仅将它当作待分析的外部 Observation。
 
 ## 出站适配：把 Eval 结果写回平台
 
-出站 Adapter 常见目标是可视化与协作。应优先写入：
+出站 Adapter 常见目标是可视化与协作，应优先写入：
 
 - Trial ID 与 Attempt ID；
 - Target、Dataset、Scorer 的版本摘要；
@@ -139,7 +139,7 @@ limitations:
 
 ## Trace 与 Trial 不是一回事
 
-一个 Trial 可能没有模型 Trace，例如纯规则函数；也可能有多条 Trace，例如环境初始化、Agent 执行和评分 Judge 分别产生 Trace。反过来，一条平台 Trace 也可能只是开发调试调用，不属于任何预声明 Eval Trial。
+一个 Trial 可能没有模型 Trace，例如纯规则函数；也可能有多条 Trace，例如环境初始化、Agent 执行和评分 Judge 分别产生 Trace；反过来，一条平台 Trace 也可能只是开发调试调用，不属于任何预声明 Eval Trial。
 
 因此不要做下面这种硬编码：
 
@@ -166,11 +166,11 @@ Scorer 在本地运行，Adapter 把 Score 和血缘写到平台。语义最容�
 
 ### 模式 B：平台执行 Scorer
 
-Adapter 发起平台评测，再导回结果。必须记录平台评测定义、模型、Prompt、版本和原始响应；超时和解析失败要保留为状态，不能折叠成 0 分。
+Adapter 发起平台评测，再导回结果；必须记录平台评测定义、模型、Prompt、版本和原始响应，超时和解析失败要保留为状态，不能折叠成 0 分。
 
 ### 模式 C：双重评分
 
-同一 Observation 同时送给本地和平台 Scorer，用于校准或迁移。两个 Score 是不同 Scorer 产生的独立事实，不能事后挑较高者作为正式结果。
+同一 Observation 同时送给本地和平台 Scorer，用于校准或迁移；两个 Score 是不同 Scorer 产生的独立事实，不能事后挑较高者作为正式结果。
 
 ## Gate 为什么必须留在独立边界
 
@@ -182,7 +182,7 @@ Adapter 发起平台评测，再导回结果。必须记录平台评测定义、
 - 多规则组合逻辑；
 - 审批或发布系统的责任边界。
 
-Adapter 可以导出 `gate_status=passed`，但这个字段只代表本仓库规则的计算结果。它不自动等于“允许生产发布”，除非组织的发布系统明确把该 Gate 注册为一个授权输入。
+Adapter 可以导出 `gate_status=passed`，但这个字段只代表本仓库规则的计算结果——它不自动等于“允许生产发布”，除非组织的发布系统明确把该 Gate 注册为一个授权输入。
 
 ## 一个可测试的 Adapter 接口
 
@@ -200,7 +200,7 @@ class ResultExporter(Protocol):
     def export_score(self, score: "ScoreEnvelope") -> "ExportReceipt": ...
 ```
 
-测试不应只断言“API 返回 200”。至少要覆盖：
+测试不应只断言“API 返回 200”，至少要覆盖：
 
 - 身份字段是否稳定往返；
 - 丢失字段是否按合同报告；
@@ -240,7 +240,7 @@ class ResultExporter(Protocol):
 
 为什么不把平台的“实验通过”直接当作发布授权？
 
-**参考答案：**实验结果是证据，发布授权是组织决策。后者还依赖风险、审批、环境和责任边界；二者可以连接，但不能默认等价。
+**参考答案：**实验结果是证据，发布授权是组织决策；后者还依赖风险、审批、环境和责任边界；二者可以连接，但不能默认等价。
 
 ## 继续阅读
 
