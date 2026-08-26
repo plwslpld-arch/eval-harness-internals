@@ -14,7 +14,7 @@
 
 `PipelineConfig` 冻结 evaluation_id、Dataset 路径、Target Adapter、repetition、Scorer 和 Gate；`plan_trials` 物化 sample × target × repetition，确保分母先于执行确定。`run_trial_batch` 以有限本地并发执行，但返回顺序仍与计划一致；每个 Trial 内部由 `run_trial` 管理基础设施 Attempt——成功输出形成两个 TraceEvent 和内容寻址 Artifact，再由 `build_observation_bundle` 绑定 canonical Attempt。
 
-评分器 `FieldMatchesExpectedScorer` 从 `target_completed` 事件取 output 与 expected，不信任 Target 的自我评价；`aggregate_pass_rate` 用计划 Trial ID 作为 denominator，缺少 Score 不会缩小分母。`evaluate_gate` 先检查无效/不可评分证据，再应用预声明 threshold；`write_report` 从同一 EvaluationReport 生成机器可读 JSON、审阅用 Markdown 和独立 HTML。
+评分器 `FieldMatchesExpectedScorer` 从 `target_completed` 事件取 output 与 expected，不信任 Target 的自我评价；`aggregate_pass_rate` 用计划 Trial ID 作为 denominator，缺少 Score 不会缩小分母；`evaluate_gate` 先检查无效/不可评分证据，再应用预声明 threshold；`write_report` 从同一 EvaluationReport 生成机器可读 JSON、审阅用 Markdown 和独立 HTML。
 
 ## 完整流程
 
@@ -49,7 +49,7 @@ uv run eval-harness-ref gate output/shipping
 
 ## 预期输出与答案
 
-运行会报告 `buggy-release：failed`、`fixed-release：passed`；计划 Trial 为 6，两个 pass-rate 的 denominator 各为 3。金额 100 的 buggy 输出 fee=10，期望 fee=0，因此 Score failed；buggy 的通过数 2/3，低于 minimum=1.0。篡改 Artifact 后 inspect 应以“Artifact 摘要不一致”失败，而不是仍显示原 Gate。
+运行会报告 `buggy-release：failed`、`fixed-release：passed`；计划 Trial 为 6，两个 pass-rate 的 denominator 各为 3；金额 100 的 buggy 输出 fee=10，期望 fee=0，因此 Score failed；buggy 的通过数 2/3，低于 minimum=1.0。篡改 Artifact 后 inspect 应以“Artifact 摘要不一致”失败，而不是仍显示原 Gate。
 
 若重新 score/gate，不会重跑 Target；它们只消费冻结 evidence——这展示“执行证据”和“政策判定”可分离，但前提是 evidence 先通过完整性检查。
 

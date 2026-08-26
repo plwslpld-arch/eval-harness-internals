@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-吞吐相关功能在所有 Harness 中都存在，却有不同语义：lm-eval 批量请求，Inspect 以 task/sample 并发并管理 retry，Promptfoo 展开矩阵后检测串行特性，DeepEval 用 asyncio semaphore，Harbor 并发 Trial 并恢复目录。缓存有时保存模型响应，有时保存评分或完整 Trial。若只比较“支持并发/重试”，会掩盖正确性风险。
+吞吐相关功能在所有 Harness 中都存在，却有不同语义：lm-eval 批量请求，Inspect 以 task/sample 并发并管理 retry，Promptfoo 展开矩阵后检测串行特性，DeepEval 用 asyncio semaphore，Harbor 并发 Trial 并恢复目录。缓存有时保存模型响应，有时保存评分或完整 Trial；若只比较“支持并发/重试”，会掩盖正确性风险。
 
 ## 核心机制
 
 ![Runner 的串并行与恢复边界](../assets/diagrams/harnesses/promptfoo/runtime.svg)
 
-统一拆为 Planner、Scheduler、Target call、Scorer call、Persistence 五层。并发发生在哪层、缓存键覆盖哪层、retry 恢复哪层，必须明确。产品失败只能进入 Score，不能由 Harness retry 改写；依赖前序状态的步骤必须串行。
+统一拆为 Planner、Scheduler、Target call、Scorer call、Persistence 五层——并发发生在哪层、缓存键覆盖哪层、retry 恢复哪层，必须明确。产品失败只能进入 Score，不能由 Harness retry 改写，所以依赖前序状态的步骤必须串行。
 
 | Harness | 并发单位 | 缓存重点 | 恢复/Retry 风险 |
 | --- | --- | --- | --- |
@@ -23,16 +23,16 @@
 
 ## 完整流程
 
-1. 从计划全集计算工作项，固定 Trial denominator。
+1. 从计划全集计算工作项，固定 Trial denominator；
 2. 标注状态依赖、速率限制和资源约束，决定 batch/并发上限。
-3. 为 Target 与 Judge 分别定义 timeout、retry 和预算；不要共享一个“retries”。
+3. 为 Target 与 Judge 分别定义 timeout、retry 和预算；不要共享一个“retries”；
 4. 缓存 key 覆盖输入、Target/Scorer identity、配置与代码版本；缓存命中写入证据来源。
 5. 持久化每个完成项；恢复时核对 config/digest 和完整结果，清理不完整 artifact。
 6. 报告 pass/fail/infra_error/metric_error/cancelled，不因 continue-on-error 缩小分母。
 
 ## 关键数据与不变量
 
-并发上限不是实验身份的全部，实际调度、排队和限流也可能影响延迟。Cache hit 仍属于原 Trial，不增加观察数。Target 内部 retry 是产品行为；Harness Attempt 是基础设施恢复；Judge retry 是评分恢复。Resume 不能改变 Target、Dataset、Scorer 或 Gate policy 后复用旧行。
+并发上限不是实验身份的全部，实际调度、排队和限流也可能影响延迟。Cache hit 仍属于原 Trial，不增加观察数；Target 内部 retry 是产品行为；Harness Attempt 是基础设施恢复；Judge retry 是评分恢复。Resume 不能改变 Target、Dataset、Scorer 或 Gate policy 后复用旧行。
 
 ## 动手实验
 
@@ -47,7 +47,7 @@ uv run pytest tests/test_runtime_extensions.py -k concurrency -q
 
 ## 预期输出与答案
 
-有限并发不应改变计划顺序、Trial ID、Score 或 Gate，Runner 返回顺序仍与计划一致。有跨步骤状态时，应把相关序列建模为单个 Trial 内的 episode，或显式依赖 DAG 并串行，而不是让独立 Trial 偷偷共享全局变量。
+有限并发不应改变计划顺序、Trial ID、Score 或 Gate，Runner 返回顺序仍与计划一致；有跨步骤状态时，应把相关序列建模为单个 Trial 内的 episode，或显式依赖 DAG 并串行，而不是让独立 Trial 偷偷共享全局变量。
 
 ## 如何核对
 
