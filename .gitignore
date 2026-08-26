@@ -42,3 +42,6 @@ Thumbs.db
 *.tmp
 *.swp
 *.bak
+
+# 锚点核对脚本的上游源码缓存。
+.cache/

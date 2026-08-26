@@ -52,6 +52,11 @@ jobs:
       - name: 构建 Reference Harness 包
         run: uv build
 
+      - name: 核对行号锚点
+        run: uv run python scripts/verify_anchors.py
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
       - name: 正文节奏门禁（仅本次改动的文档）
         run: python3 scripts/check_prose.py --changed
 
