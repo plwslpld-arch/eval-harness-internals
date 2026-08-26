@@ -8,7 +8,7 @@
 
 ## 先建立源码地图
 
-调度循环位于锁定 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py)，Task 构造逻辑与各 output_type 的处理位于 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py)，Instance 字段位于 [`api/instance.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py)，Model 请求协议位于 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py)。
+调度循环位于锁定 [`evaluate()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429)，Task 侧的请求构造入口是 [`build_all_requests()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L268)，Instance 的字段定义在 [`api/instance.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py#L11-L25)，Model 必须实现的三个请求方法列在 [`api/model.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py#L40-L100)。
 
 `OutputType` 包含 loglikelihood、loglikelihood_rolling、generate_until 和 multiple_choice。源码注释说明 multiple_choice 在调度时会分派成若干 loglikelihood 请求，因此 output_type 与最终 LM 方法名也不总是一字不差。
 
@@ -60,7 +60,17 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 如何核对
 
-在 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py) 依次搜索 `requests = defaultdict`、`build_all_requests`、`cloned_reqs`、`getattr(lm, reqtype)`、`req.resps.append`、`instances_by_doc_id` 和 `process_results`。再读 [`api/instance.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py)，确认 args 属性如何把非 tuple 参数包装成 tuple。
+调度在源码里是顺序递进的，七个位置依次打开就能跟完一条 Instance 的一生：
+
+1. [建立按 request_type 的全局分桶](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L489) — `requests = defaultdict(list)`
+2. [请求 Task 构造全部 Instance](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L541) — `task.build_all_requests(...)`
+3. [按 repeats 复制、按分布式补齐](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L591-L597) — `cloned_reqs`
+4. [调用对应的 Model Adapter 方法](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L600) — `getattr(lm, reqtype)(cloned_reqs)`
+5. [响应严格 zip 回填到原 Instance](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L602-L605) — `req.resps.append(x)`
+6. [按 doc_id 分组、按 idx 排序](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L621-L626) — `instances_by_doc_id`
+7. [把多个响应变成文档级 metric](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L639-L641) — `task.process_results(...)`
+
+行号本身就是证据：从 489 到 639 一路递增，正文那七步不是重排出来的叙述顺序，而是源码的执行顺序。再读 [`Instance.args`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py#L31-L38)，确认它如何把非 tuple 参数包装成 tuple。
 
 ## 本篇不能证明什么
 
