@@ -15,13 +15,13 @@
 
 ## 贯穿案例
 
-金额 100 的 Sample 分别交给 buggy 与 fixed Target，形成两个 Trial。如果 buggy 脚本正常启动并返回运费 10，这个 Trial 已完成；答案虽错，也不能再启动一次“希望它答对”。若 Python 子进程因临时资源错误没有启动，Harness 可以在预声明的两次基础设施预算内创建 Attempt 2。恢复成功后 Attempt 2 成为唯一 canonical Attempt，Attempt 1 仍保留在证据中。
+金额 100 的 Sample 分别交给 buggy 与 fixed Target，形成两个 Trial——如果 buggy 脚本正常启动并返回运费 10，这个 Trial 已完成；答案虽错，也不能再启动一次“希望它答对”。若 Python 子进程因临时资源错误没有启动，Harness 可以在预声明的两次基础设施预算内创建 Attempt 2；恢复成功后 Attempt 2 成为唯一 canonical Attempt，Attempt 1 仍保留在证据中。
 
 ## 核心概念与边界
 
 **Sample** 是 Dataset 中稳定的输入与 Reference 单元。**Trial** 是 Sample × Target × Repetition 物化后的统计对象，它在执行前已进入计划分母。**Attempt** 是为完成一个 Trial 而发生的基础设施执行记录，记录序号、错误码和是否 canonical。
 
-重复次数不是 Attempt。对随机模型做 5 次重复会生成 5 个 Trial，因为每次都是计划内观测；某个 Trial 因网络握手失败而恢复 2 次，仍只有 1 个统计单位。产品级 retry 若本来就是 Target 的算法，例如 Agent 自己在 Loop 内重新调用模型，应封装在同一个 Target 行为里，并在 Trace 中可见，而不是由 Eval Harness 偷偷增加 Attempt。
+重复次数不是 Attempt。对随机模型做 5 次重复会生成 5 个 Trial，因为每次都是计划内观测；某个 Trial 因网络握手失败而恢复 2 次，仍只有 1 个统计单位。产品级 retry 若本来就是 Target 的算法——例如 Agent 自己在 Loop 内重新调用模型，应封装在同一个 Target 行为里，并在 Trace 中可见，而不是由 Eval Harness 偷偷增加 Attempt。
 
 ## 机制图
 
@@ -34,7 +34,7 @@
 3. Adapter 返回正常结果时，Attempt 状态为 `succeeded` 且成为 canonical；Trial 状态为 `completed`。
 4. Adapter 抛出被声明为基础设施错误的异常时，Attempt 为 `infra_failed`；若还有预算，Runner 创建下一个 Attempt。
 5. 所有恢复机会耗尽后，Trial 为 `blocked`，没有 canonical Attempt，也不能伪造 Observation Bundle。
-6. 产品失败由 Adapter 作为正常返回的一种结果类型传回。它仍产生 canonical Attempt，随后由 Scorer 判断失败。
+6. 产品失败由 Adapter 作为正常返回的一种结果类型传回——它仍产生 canonical Attempt，随后由 Scorer 判断失败。
 
 这条状态机直接实现在 [`run_trial`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/runner.py)；[`tests/test_runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_runner.py) 分别锁住基础设施恢复、产品失败不重试和 canonical 唯一性。
 
@@ -56,11 +56,11 @@ Attempt
   error_code
 ```
 
-Trial 不保存“最终分数”，因为执行和评分是两个阶段。Attempt 也不保存 Dataset 权重，因为统计设计不属于恢复层。canonical 不是“最好的一次”，而是协议允许进入后续证据链的唯一一次；选择规则必须在看到结果前确定。
+Trial 不保存“最终分数”，因为执行和评分是两个阶段；Attempt 也不保存 Dataset 权重，因为统计设计不属于恢复层。canonical 不是“最好的一次”，而是协议允许进入后续证据链的唯一一次；选择规则必须在看到结果前确定。
 
 ## 设计取舍
 
-最简单的本地 Harness 可以同步执行并在内存里选择 canonical。分布式系统还需要 Lease、Fencing Token 和幂等提交，防止超时 Worker 在新 Worker 已接管后迟到写入。首版 Reference Harness 不假装实现分布式一致性，而是把“最多一个 canonical”作为模型不变量。这样课程能清楚展示语义，同时避免用复杂基础设施遮住统计问题。
+最简单的本地 Harness 可以同步执行并在内存里选择 canonical；分布式系统还需要 Lease、Fencing Token 和幂等提交，防止超时 Worker 在新 Worker 已接管后迟到写入。首版 Reference Harness 不假装实现分布式一致性，而是把“最多一个 canonical”作为模型不变量——这样课程能清楚展示语义，同时避免用复杂基础设施遮住统计问题。
 
 Harbor 的锁定 [`trial.py`](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py) 展示 Agent Trial 生命周期，是**上游源码事实**。Reference Harness 的 Attempt 分层是本仓库的**教学实现**，字段不能直接当作 Harbor 内部结构的逐项翻译。
 

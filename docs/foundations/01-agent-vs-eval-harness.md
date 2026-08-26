@@ -6,7 +6,7 @@
 
 看到 Agent 调用模型、执行工具、保存 Trace，再看到评测系统也读取 Trace、设置超时和报告成功率，新人很容易把两者理解成同一个 Harness。真正的分界不在“是否调用模型”，而在它为哪一种决定负责：Agent Harness 要完成一次用户任务；Eval Harness 要让许多次被测行为在相同规则下可比较，并把证据转成质量结论。
 
-如果边界不清，评测层会悄悄替被测 Agent 重写提示、补工具结果或重试错误答案，最终测到的是评测器与 Agent 的混合系统。反过来，只保存 Agent 的最终回答而不冻结 Dataset、Target 身份和评分策略，又无法回答“这个版本在这组任务上是否更好”。
+如果边界不清，评测层会悄悄替被测 Agent 重写提示、补工具结果或重试错误答案，最终测到的是评测器与 Agent 的混合系统；反过来，只保存 Agent 的最终回答而不冻结 Dataset、Target 身份和评分策略，又无法回答“这个版本在这组任务上是否更好”。
 
 ## 学完你能解释什么
 
@@ -21,9 +21,9 @@
 
 ## 核心概念与边界
 
-**Agent Harness** 管理模型上下文、Agent Loop、工具暴露、权限、Session、压缩和恢复。它的成功语义通常与“这一次任务能否继续或结束”有关。**Eval Harness** 管理 EvaluationSpec、Dataset、Trial Plan、Target Adapter、Observation、Scorer、Metric、比较和 Gate。它的成功语义分层存在：运行可能完成但评分失败，评分可能通过但整体 Gate 因缺失样本而无法判断。
+**Agent Harness** 管理模型上下文、Agent Loop、工具暴露、权限、Session、压缩和恢复，它的成功语义通常与“这一次任务能否继续或结束”有关；**Eval Harness** 管理 EvaluationSpec、Dataset、Trial Plan、Target Adapter、Observation、Scorer、Metric、比较和 Gate，它的成功语义分层存在：运行可能完成但评分失败，评分可能通过但整体 Gate 因缺失样本而无法判断。
 
-Target Adapter 是明确接口：它接收 Trial 与运行约束，返回被测行为和可观察证据。它可以包住一个普通函数、RAG 服务、Coding Agent 或多智能体系统，却不应在适配层重新实现这些系统的内部决策。Agent Harness 生产 Trace 的语义；Eval Harness 检查 Trace 是否完整、是否属于正确 Target，并决定哪些字段进入评分。
+Target Adapter 是明确接口：它接收 Trial 与运行约束，返回被测行为和可观察证据；它可以包住一个普通函数、RAG 服务、Coding Agent 或多智能体系统，却不应在适配层重新实现这些系统的内部决策。Agent Harness 生产 Trace 的语义——而 Eval Harness 检查 Trace 是否完整、是否属于正确 Target，并决定哪些字段进入评分。
 
 ## 机制图
 
@@ -51,9 +51,9 @@ Target Adapter 是明确接口：它接收 Trial 与运行约束，返回被测�
 
 ## 设计取舍
 
-最干净的实现是依赖倒置：Eval Harness 只依赖 Target Adapter 协议，不依赖 Claude、Codex 或某个 RAG 框架的内部类。优点是同一 Dataset 和 Scorer 可以比较不同系统；代价是 Adapter 必须明确声明能力，例如能否导出工具事件、能否重置环境、能否报告实际模型版本。无法提供的能力应标为不可用，而不是伪造空字段。
+最干净的实现是依赖倒置：Eval Harness 只依赖 Target Adapter 协议，不依赖 Claude、Codex 或某个 RAG 框架的内部类——优点是同一 Dataset 和 Scorer 可以比较不同系统；代价是 Adapter 必须明确声明能力，例如能否导出工具事件、能否重置环境、能否报告实际模型版本。无法提供的能力应标为不可用，而不是伪造空字段。
 
-Inspect AI 的锁定源码把通用评测入口放在 [`_eval/eval.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py)，并把 Task 执行进一步下沉到 `_eval/task`。这是**上游源码事实**。本篇把它抽象成两层责任，是帮助比较多套实现的**机制解释**，不是说所有项目使用相同类名。
+Inspect AI 的锁定源码把通用评测入口放在 [`_eval/eval.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py)，并把 Task 执行进一步下沉到 `_eval/task`。这是**上游源码事实**。本篇把它抽象成两层责任，是帮助比较多套实现的**机制解释**；不是说所有项目使用相同类名。
 
 ## 失败语义
 
@@ -72,11 +72,11 @@ eval-harness-ref run reference/examples/shipping/eval.yaml --output output/shipp
 eval-harness-ref inspect output/shipping
 ```
 
-打开 `output/shipping/report.json`，找出 buggy Target 的运行状态、Score 状态和 Gate 状态。再看 `run.json`，确认错误答案没有触发第二个 Attempt。
+打开 `output/shipping/report.json`，找出 buggy Target 的运行状态、Score 状态和 Gate 状态；再看 `run.json`，确认错误答案没有触发第二个 Attempt。
 
 ## 预期输出与答案
 
-应看到 6 个计划 Trial：3 个样本乘 2 个 Target。buggy 在金额 100 上输出错误，但该 Trial 仍是 `completed`，对应 Score 为 `failed`，buggy Gate 为 `failed`；fixed 的三个 Score 均通过，Gate 为 `passed`。答案的关键不是“buggy 运行失败”，而是“运行完成且产品结果被独立判错”。
+应看到 6 个计划 Trial：3 个样本乘 2 个 Target；buggy 在金额 100 上输出错误，但该 Trial 仍是 `completed`，对应 Score 为 `failed`，buggy Gate 为 `failed`；fixed 的三个 Score 均通过，Gate 为 `passed`。答案的关键不是“buggy 运行失败”，而是“运行完成且产品结果被独立判错”。
 
 ## 常见误解
 

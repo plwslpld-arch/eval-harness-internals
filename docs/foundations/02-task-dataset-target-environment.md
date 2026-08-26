@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-“评测一下退款 Agent”不是可执行规格。它没有说要测退款资格判断、话术还是副作用；没有样本范围；没有标出被测版本；也没有说明账户、订单和工具状态。很多评测争论看似关于分数，实际是四个对象没有分开：Task 定义行为，Dataset 提供实例，Target 指定被测系统，Environment 提供可变世界。
+“评测一下退款 Agent”不是可执行规格，因为它没有说要测退款资格判断、话术还是副作用；没有样本范围；没有标出被测版本；也没有说明账户、订单和工具状态。很多评测争论看似关于分数，实际是四个对象没有分开：Task 定义行为，Dataset 提供实例，Target 指定被测系统，Environment 提供可变世界。
 
 ## 学完你能解释什么
 
@@ -15,13 +15,13 @@
 
 ## 贯穿案例
 
-运费案例的 Task 是“根据订单金额返回运费”，判定边界是金额大于等于 100 时费用为 0。Dataset 包含 99、100、101 三个 Sample。Target 有 buggy 与 fixed 两个本地脚本。Environment 在这个最小例子中只是 Python 3.12 子进程和只读输入；若换成退款 Agent，Environment 就必须包含订单余额、退款 API、权限和可复位数据库。
+运费案例的 Task 是“根据订单金额返回运费”，判定边界是金额大于等于 100 时费用为 0；Dataset 包含 99、100、101 三个 Sample，Target 有 buggy 与 fixed 两个本地脚本。Environment 在这个最小例子中只是 Python 3.12 子进程和只读输入；若换成退款 Agent，Environment 就必须包含订单余额、退款 API、权限和可复位数据库。
 
 ## 核心概念与边界
 
-**Task** 描述要观察的行为、输入输出契约和允许条件，不是某条样本。**Dataset** 是经过选择、版本化和分组的一组 Sample，不等于整个业务分布。**Target** 是被测系统的实际身份，至少包括 Adapter、模型或程序版本、有效配置与依赖。**Environment** 是运行行为能够读取或改变的外部状态，包含文件、容器、服务、账户、时钟和网络策略。
+**Task** 描述要观察的行为、输入输出契约和允许条件，不是某条样本；**Dataset** 是经过选择、版本化和分组的一组 Sample，不等于整个业务分布。**Target** 是被测系统的实际身份，至少包括 Adapter、模型或程序版本、有效配置与依赖；**Environment** 是运行行为能够读取或改变的外部状态，包含文件、容器、服务、账户、时钟和网络策略。
 
-四者组合后才能回答一个具体问题：“在环境 E 的冻结初态下，Target T 对 Dataset D 中代表 Task K 的样本表现怎样？”改变其中任何一个都可能改变结论。尤其不要把 Environment 藏进 Target 名称，也不要把 Reference 答案塞进 Agent 可见环境。
+四者组合后才能回答一个具体问题：“在环境 E 的冻结初态下，Target T 对 Dataset D 中代表 Task K 的样本表现怎样？”——改变其中任何一个都可能改变结论。尤其不要把 Environment 藏进 Target 名称。也不要把 Reference 答案塞进 Agent 可见环境。
 
 ## 机制图
 
@@ -52,11 +52,11 @@ scorer:
   field: fee
 ```
 
-这里 `target_id` 是计划内逻辑身份，`script` 是解析后执行入口。真实模型 Target 还应记录模型版本、系统提示摘要、工具集合和服务端返回的实际身份。Environment 则应有自己的镜像摘要、初态 Fixture 和重置结果，避免全部塞入一个无法审计的 `config` 字符串。
+这里 `target_id` 是计划内逻辑身份，`script` 是解析后执行入口；真实模型 Target 还应记录模型版本、系统提示摘要、工具集合和服务端返回的实际身份。Environment 则应有自己的镜像摘要、初态 Fixture 和重置结果，避免全部塞入一个无法审计的 `config` 字符串。
 
 ## 设计取舍
 
-Dataset 可以内联在配置，也可以外部版本化。外部 JSONL 更利于稳定 ID、Diff 和分片；代价是要管理文件血缘。Target 可以由构造函数直接创建，也可以 Registry 驱动；Registry 易复用但可能隐藏实际配置，因此运行报告必须保存解析后的身份。Environment 使用容器隔离更强，却不是所有任务都需要；纯函数评测应保持轻量，Agent 副作用任务则必须优先隔离和重置。
+Dataset 可以内联在配置，也可以外部版本化——外部 JSONL 更利于稳定 ID、Diff 和分片；代价是要管理文件血缘。Target 可以由构造函数直接创建，也可以 Registry 驱动；Registry 易复用但可能隐藏实际配置，因此运行报告必须保存解析后的身份。Environment 使用容器隔离更强，却不是所有任务都需要；纯函数评测应保持轻量，Agent 副作用任务则必须优先隔离和重置。
 
 lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L64-L103) 与 [`LM`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/model.py) 分别承载任务与模型适配，是**上游源码事实**。本篇的四对象模型是跨 Harness 的**机制解释**，并不要求上游采用 `Environment` 这个类名。
 
@@ -70,11 +70,11 @@ lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-h
 
 ## 动手实验
 
-复制 shipping 配置到临时目录，把 `repetitions` 改成 2，并保留 3 个 Sample、2 个 Target。运行 `eval-harness-ref run` 后查看 `evidence.json` 中的 `trials`，不要先看报告分数。
+复制 shipping 配置到临时目录，把 `repetitions` 改成 2，并保留 3 个 Sample、2 个 Target；然后运行 `eval-harness-ref run`，查看 `evidence.json` 中的 `trials`，不要先看报告分数。
 
 ## 预期输出与答案
 
-应得到 12 个 Trial：3 × 2 × 2。每个 Trial 都保存相同 Task 语义下的一个 Sample、一个 Target 和一个重复序号。重复次数改变的是实验设计，不会复制 Sample ID；Environment 若无法为每次 Trial 提供等价初态，则这 12 次不具有可直接比较的含义。
+应得到 12 个 Trial：3 × 2 × 2，每个 Trial 都保存相同 Task 语义下的一个 Sample、一个 Target 和一个重复序号。重复次数改变的是实验设计，不会复制 Sample ID；Environment 若无法为每次 Trial 提供等价初态，则这 12 次不具有可直接比较的含义。
 
 ## 常见误解
 

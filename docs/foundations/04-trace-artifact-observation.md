@@ -15,11 +15,11 @@
 
 ## 贯穿案例
 
-shipping Target 返回 `{"fee": 10}`。Runner 写两个事件：Trial 开始、Target 完成；后者的 payload 同时保存 output 与 expected。原始输出还作为内容寻址 Artifact 保存。Bundle 把事件、Artifact 摘要和 canonical Attempt 绑定起来。Scorer 并不再次调用 Target，而是只读取 Bundle。因此之后执行 `score` 可以在不重跑脚本的情况下得到同一结果。
+shipping Target 返回 `{"fee": 10}`：Runner 写两个事件：Trial 开始、Target 完成；后者的 payload 同时保存 output 与 expected，原始输出还作为内容寻址 Artifact 保存。Bundle 把事件、Artifact 摘要和 canonical Attempt 绑定起来；Scorer 并不再次调用 Target，而是只读取 Bundle，因此之后执行 `score` 可以在不重跑脚本的情况下得到同一结果。
 
 ## 核心概念与边界
 
-**TraceEvent** 是运行中可排序、可连接的事实，至少有稳定 event_id、sequence、type、parent_event_id 和 payload。**Artifact** 是不适合内联在事件里的字节对象，例如 Diff、日志、截图、测试报告或环境终态；它用 SHA-256 摘要和相对路径引用。**Observation Bundle** 是评分输入快照，声明“对这个 Trial 的这个 canonical Attempt，评分器被允许看到这些事件和产物”。
+**TraceEvent** 是运行中可排序、可连接的事实，至少有稳定 event_id、sequence、type、parent_event_id 和 payload。**Artifact** 是不适合内联在事件里的字节对象，例如 Diff、日志、截图、测试报告或环境终态——它用 SHA-256 摘要和相对路径引用。**Observation Bundle** 是评分输入快照，声明“对这个 Trial 的这个 canonical Attempt，评分器被允许看到这些事件和产物”。
 
 Trace 不等于隐藏思维链。Eval Harness 应记录外部可观察的模型消息、工具调用、状态变化和输出，不要求或假装获取模型内部推理。Artifact 也不等于任意附件：没有摘要、类型和来源关系的文件不能自动进入评分。
 
@@ -30,10 +30,10 @@ Trace 不等于隐藏思维链。Eval Harness 应记录外部可观察的模型�
 ## 调用链与状态变化
 
 1. Runner 为 canonical Attempt 产生有序事件；TraceWriter 拒绝重复 event_id 和先于父事件出现的子事件。
-2. 大对象进入 ArtifactStore。相同字节得到相同摘要并复用同一个内容地址。
+2. 大对象进入 ArtifactStore，相同字节得到相同摘要并复用同一个内容地址。
 3. Bundle Builder 验证 Trial 只有一个 canonical Attempt，再把事件和 ArtifactRef 规范化哈希。
 4. Scorer 读取 Bundle，ScoreRecord 保存 Bundle digest、canonical_attempt_id 和 scorer_id。
-5. Metric 保存参与聚合的 score_ids，Gate 保存 metric_ids。报告因此可以从决定逐层反查。
+5. Metric 保存参与聚合的 score_ids，Gate 保存 metric_ids；报告因此可以从决定逐层反查。
 
 Reference Harness 分别在 [`tracing.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/tracing.py)、[`artifacts.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/artifacts.py) 和 [`reporting.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/reporting.py) 实现这三段。
 
@@ -47,13 +47,13 @@ ObservationBundle(bundle_id, digest, trial_id,
 ScoreRecord(..., observation_bundle_digest, scorer_id)
 ```
 
-时间戳可用于性能分析，却不应代替 sequence 和 parent 关系，因为不同机器时钟可能漂移。`relative_path` 让报告可迁移；在公开文档和证据里写本机绝对路径既不可复现，也可能泄露用户名。digest 必须覆盖真正进入评分的内容，而不是只哈希文件名。
+时间戳可用于性能分析，却不应代替 sequence 和 parent 关系，因为不同机器时钟可能漂移；`relative_path` 让报告可迁移——在公开文档和证据里写本机绝对路径既不可复现，也可能泄露用户名；digest 必须覆盖真正进入评分的内容，而不是只哈希文件名。
 
 ## 设计取舍
 
-JSONL 适合追加事件、逐行恢复和命令行检查；代价是跨事件约束需要额外验证。把完整输出同时放事件和 Artifact 会有重复，但小型教学实现借此同时展示可读 payload 与内容寻址。生产系统可让事件只保存 ArtifactRef，但必须确保 Scorer 的实际读取被纳入 Bundle digest。
+JSONL 适合追加事件、逐行恢复和命令行检查，代价是跨事件约束需要额外验证。把完整输出同时放事件和 Artifact 会有重复，但小型教学实现借此同时展示可读 payload 与内容寻址；生产系统可让事件只保存 ArtifactRef，但必须确保 Scorer 的实际读取被纳入 Bundle digest。
 
-Inspect AI 的锁定 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py) 是 Eval Log 模型的**上游源码事实**；OpenAI Evals 的 [`record.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py) 展示另一种事件记录边界。把二者统一解释为证据血缘是本篇的**机制解释**。
+Inspect AI 的锁定 [`log/_log.py`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py) 是 Eval Log 模型的**上游源码事实**；OpenAI Evals 的 [`record.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py) 展示另一种事件记录边界；把二者统一解释为证据血缘是本篇的**机制解释**。
 
 ## 失败语义
 
@@ -72,7 +72,7 @@ eval-harness-ref inspect output/shipping
 eval-harness-ref score output/shipping
 ```
 
-查看 `evidence.json` 的第一个 Bundle，找到 Artifact digest 与文件相对路径。复制该 Artifact 的内容并计算 SHA-256，对比文件名。然后临时移动一个 Artifact，再运行 `inspect`，观察证据检查失败；完成后恢复文件。
+查看 `evidence.json` 的第一个 Bundle，找到 Artifact digest 与文件相对路径；复制该 Artifact 的内容并计算 SHA-256，对比文件名。然后临时移动一个 Artifact，再运行 `inspect`，观察证据检查失败；完成后恢复文件。
 
 ## 预期输出与答案
 
@@ -92,6 +92,6 @@ Promptfoo 常围绕测试结果和 Trace 类型组织应用评测；Inspect AI �
 
 ## 本篇不能证明什么
 
-完整血缘只能证明报告与已保存证据的一致性，不能证明 Dataset 正确、Reference 无偏或被测环境没有未记录的外部副作用。证据链解决“结论来自哪里”，不自动解决“问题问得是否正确”。
+完整血缘只能证明报告与已保存证据的一致性——不能证明 Dataset 正确、Reference 无偏或被测环境没有未记录的外部副作用。证据链解决“结论来自哪里”，不自动解决“问题问得是否正确”。
 
 [上一章](03-sample-trial-attempt.md) · [下一章](05-scorer-judge-score-metric.md)
