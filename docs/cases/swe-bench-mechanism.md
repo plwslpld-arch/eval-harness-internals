@@ -61,11 +61,11 @@ trial_id = hash(
 
 本案例基于锁定提交 `7a21e05772954cc81471ae19d56f436cecf43c54`。以下链接指向不可漂移的源码位置：
 
-1. [`run_evaluation.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/run_evaluation.py) 负责组织实例、镜像与运行过程；
-2. [`docker_utils.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/docker_utils.py) 承担容器相关操作；
-3. [`grading.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/grading.py) 把测试日志解释成实例级判定；
-4. [`infra_failure.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/infra_failure.py) 表达基础设施故障；
-5. [`reporting.py`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/reporting.py) 汇总运行结果。
+1. [`run_instances()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/run_evaluation.py#L432-L471) 负责组织实例、镜像与运行过程，单个实例的执行在 [`run_instance()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/run_evaluation.py#L229-L268)；
+2. [`exec_run_with_timeout()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/docker_utils.py#L109-L146) 承担容器内执行与超时，清理在 [`cleanup_container()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/docker_utils.py#L48-L87)；
+3. [`get_logs_eval()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/grading.py#L113-L152) 把测试日志解析成用例状态，[`get_eval_tests_report()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/grading.py#L179-L218) 再据此给出实例级判定；
+4. [`classify_logs()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/infra_failure.py#L79-L86) 表达基础设施故障——它把日志归到 [`TIER_ENVIRONMENT`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/infra_failure.py#L22-L25) 这类分层里，而不是简单标记失败；
+5. [`make_run_report()`](https://github.com/SWE-bench/SWE-bench/blob/7a21e05772954cc81471ae19d56f436cecf43c54/swebench/harness/reporting.py#L16-L55) 汇总运行结果。
 
 不要把这五个文件理解成互相独立的模块清单。它们组成的是一条证据链：运行器产生事实，基础设施层标记运行有效性，评分层解释测试结果，报告层只能聚合已经成立的实例级判定。
 

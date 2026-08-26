@@ -8,7 +8,7 @@
 
 ## 先建立源码地图
 
-逐样本处理和 aggregation 配置位于锁定 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py)。核心循环把结果加入 raw_metrics 的代码位于 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py)。Task 与 Group 聚合、stderr、结果容器位于 [`evaluator_utils.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py)。
+逐样本处理由 [`Task.process_results()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L403-L442) 承担，aggregation 配置也在同一个类里。核心循环把结果加入 raw_metrics 的代码在 [`evaluate()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429-L468)。Task 与 Group 聚合、stderr 和结果容器则分散在 `evaluator_utils.py` 的四个函数中——下一节会按顺序走一遍。
 
 源码中的 `process_results` 名字容易误导：它处理的是一个 doc 的结果，不是整次运行报告。返回字典里的 value 才逐条积累，随后 aggregation 才产生 Task metric。
 
@@ -60,7 +60,7 @@ T1=0.5，T2=0.75。按样本数加权为 `(2×0.5 + 4×0.75)/6 = 2/3`；Task 等
 
 ## 如何核对
 
-从 [`evaluator_utils.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L173-L212) 依次阅读 `_compute_task_aggregations`、`_collect_results`、`aggregate_groups` 和 `_process_results`。特别核对 fallback mean、bootstrap 上限特例、sample_len TODO 与 post-order traversal。再回到 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py) 查看 ConfigurableTask 怎样注册 aggregation 和 higher_is_better。
+依次阅读 [`_compute_task_aggregations`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L173-L212)、[`_collect_results`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L222-L261)、[`aggregate_groups`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L275-L299) 和 [`_process_results`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L349-L387)。特别核对 fallback mean、bootstrap 上限特例、sample_len TODO 与 post-order traversal。再回到 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py) 查看 ConfigurableTask 怎样注册 aggregation 和 higher_is_better。
 
 ## 本篇不能证明什么
 
