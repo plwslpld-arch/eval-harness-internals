@@ -4,17 +4,17 @@
 
 ## 本篇要解决什么问题
 
-即使知识助手给出的答案完全正确，只要它引用了用户无权访问的财务文档，这次回答就不能算成功。RAG 评测至少要同时检查检索召回、答案事实性、引用和访问控制，因为只看普通答案准确率，少量严重泄漏很容易被大量正确回答平均掉。本案例用 public/finance ACL 的三条确定性 Fixture 展示权限 Gate，同时说明真实 RAG 应当怎样记录 query、retrieved document IDs、ACL 决策和生成答案。
+知识助手即使答对了，只要引用了用户无权查看的财务文档，这次回答就不能算成功。评测 RAG（检索增强生成）时，至少要一起检查检索有没有找对资料、答案是否符合事实、引用能否支撑答案，以及 ACL（访问控制列表）有没有拦住越权访问。只看普通答案的准确率，少量严重泄漏很容易淹没在大量正确回答里。这个案例用 public/finance ACL 的三条确定性 Fixture 演示权限 Gate，同时说明真实 RAG 需要怎样记下 query、retrieved document IDs、ACL 的判断结果和最终答案。
 
-Buggy Target 忽略用户角色，拿到文档事实后便直接返回。Fixed Target 只有在文档属于 public，或者 role 与 document_acl 相同时才返回内容，否则就会「拒绝访问」。
+Buggy Target 不看用户是什么角色，拿到文档里的事实就直接返回。Fixed Target 会先检查文档是否属于 public，或者 role 是否与 document_acl 相同，条件都不满足就返回「拒绝访问」。
 
 ## 核心机制
 
 ![知识助手的检索、ACL 与回答链](../assets/diagrams/cases/knowledge.svg)
 
-正确的处理顺序是身份认证 → ACL 过滤 → 检索 → 生成 → 引用，因为如果系统先取回秘密，再要求模型不要说，秘密实际上已经越过了最小权限边界。EvaluationDataset 必须同时包含 authorized 与 unauthorized 对照样本，Environment/Target Trace 则要保存检索候选和过滤结果。Scorer 分别检查 ACL 泄漏、回答正确性、引用支持度与拒答质量，其中 ACL 属于非补偿关键指标。
+这条链路应当按身份认证 → ACL 过滤 → 检索 → 生成 → 引用的顺序运行，因为系统若先把秘密取回来，再叮嘱模型别说，秘密其实已经越过最小权限边界。EvaluationDataset 必须同时放入 authorized 和 unauthorized 两组对照样本，Environment/Target Trace（轨迹）则要记下系统找到了哪些候选文档，又过滤掉了哪些。Scorer（评分器）分别检查 ACL 有没有泄漏、答案对不对、引用能否支撑答案，以及系统该拒答时答得是否合适，其中 ACL 是不能用其他高分补偿的关键指标。
 
-为了避免 Scorer 自己成为泄漏源，unauthorized Sample 的 expected 可以只保存「拒绝访问」，秘密 fact 则放进受保护的 Fixture/Verifier。报告需要公开时，检索内容必须先做脱敏，并且只保留 document ID、digest 和访问决定。
+Scorer 自己也可能泄密，所以 unauthorized Sample 的 expected 只需保存「拒绝访问」，秘密 fact 要留在受保护的 Fixture/Verifier 里。报告若要公开，得先把检索内容脱敏，最终只留下 document ID、digest 和系统是否允许访问的判断。
 
 ## 完整流程
 
@@ -29,7 +29,7 @@ Buggy Target 忽略用户角色，拿到文档事实后便直接返回。Fixed T
 
 ## 关键数据与不变量
 
-Sample identity 要包含 query、role、tenant 和 corpus version，而 Target identity 要标明 embedding、retriever、reranker、generator 与 ACL service。retrieval_context 记录系统实际取回的内容，expected context 保存参考上下文，两者承担的证据角色不同，不能混写。用户和租户既是统计 cluster，也是安全边界，因此秘密正文不得进入公开报告或 Judge provider，除非合同明确允许这样处理。
+Sample identity 要把 query、role、tenant 和 corpus version 都带上，Target identity 则要说明实际用了哪个 embedding、retriever、reranker、generator 和 ACL service。系统真正取回了什么，记在 retrieval_context 里，作为答案参照的上下文则放进 expected context。这两份内容证明的是不同事情，不能混着写。用户和租户既决定统计时怎样聚类，也划出了安全边界，所以秘密正文不能送进公开报告或 Judge provider，除非合同明确允许。
 
 ## 动手实验
 
@@ -38,20 +38,20 @@ uv run eval-harness-ref run reference/examples/knowledge-assistant/eval.yaml --o
 uv run pytest tests/test_case_examples.py -k knowledge -q
 ```
 
-先手算 public employee、finance employee、finance finance 三条样本，再增加一条「用户直接在 query 中猜测秘密」的样本，并说明 Scorer 如何区分模型复述用户输入与检索泄漏。随后为真实 Trace 设计 `acl_checked`、`documents_retrieved`、`answer_generated` 三个事件，同时给出它们之间的 parent 关系。
+先手算 public employee、finance employee、finance finance 三条样本，再补一条「用户直接在 query 中猜测秘密」的样本，并说明 Scorer 怎样判断模型只是在复述用户输入，还是确实泄漏了检索结果。随后给真实 Trace 设计 `acl_checked`、`documents_retrieved`、`answer_generated` 三个事件，并把三个事件之间的 parent 关系标出来。
 
 ## 预期输出与答案
 
-当普通员工查询 finance 文档时，Buggy 会泄漏受保护内容并失败，而 Fixed 能够正确拒绝，因此三条样本都会通过。即使敏感文本由用户自己提供，系统仍然不应确认它是否真实。判定泄漏时要检查回答有没有引入受保护的新信息或无授权引用——不能只比较字符串是否重合。
+普通员工查询 finance 文档时，Buggy 会泄漏受保护内容，因此评测失败，Fixed 则会正确拒绝，让三条样本全部通过。即使敏感文本是用户自己写进 query 的，系统也不该替他确认真假。判断是否泄漏时，你得看回答有没有带出受保护的新信息，或者给出用户无权访问的引用，不能只比较两段文字有没有重合。
 
-这三个事件应当形成一条清晰的因果链，证明 ACL 检查发生在检索和选择之前。如果 Trace 显示系统先取回秘密再过滤，那么即使最终回答选择了拒绝，也已经暴露出内部最小权限问题，需要单独评分。
+这三个事件要连成一条清楚的因果链，让人能够确认系统先检查 ACL，然后才检索和选择文档。如果 Trace 显示系统先取回秘密再过滤，那么最终即使拒绝回答，也说明内部已经违反最小权限原则，这个问题要单独评分。
 
 ## 如何核对
 
-阅读 [`knowledge-assistant/eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/knowledge-assistant/eval.yaml) 与 Target 脚本，然后运行测试，并检查 Artifact 是否只包含规定的输出而没有额外 secret。核对 context 与 retrieval_context 的区别时，可以对照 DeepEval 相关课程。
+阅读 [`knowledge-assistant/eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/knowledge-assistant/eval.yaml) 和 Target 脚本，然后运行测试，再打开 Artifact 看看里面是否只有规定的输出，有没有混入额外 secret。想确认 context 和 retrieval_context 各自该放什么，可以对照 DeepEval 相关课程。
 
 ## 本篇不能证明什么
 
-三条 Fixture 只能验证冻结案例中的规则，无法证明真实向量库 ACL、缓存隔离、多租户索引、prompt injection 和日志脱敏都安全。真实系统还需要在实际环境中完成验证，并接受针对访问边界的渗透测试。
+三条 Fixture 只能验证这个冻结案例里的规则，证明不了真实向量库里的 ACL、缓存隔离、多租户索引、prompt injection 和日志脱敏全都安全。你还得在实际环境里验证真实系统，并针对访问边界做渗透测试。
 
 [上一节](refund-agent.md) · [下一节](contract-review-agent.md)

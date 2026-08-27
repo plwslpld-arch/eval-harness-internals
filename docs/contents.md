@@ -1,6 +1,6 @@
 # Eval Harness 源码内核：完整目录
 
-第一次阅读时，建议从[学习入口](00-start-here.md)开始，先跟着运费案例跑完一条完整证据链，再决定后面需要深入哪一部分。本目录按「共同语言 → 最小实现 → 上游源码 → 工程专题 → 横向比较 → 案例与实验」组织——沿着这个顺序阅读，可以避免一开始就钻进工具名称，并把某个项目的内部命名误当成通用语义。
+第一次读这套教材，建议你从[学习入口](00-start-here.md) 开始，先跟着运费案例跑完整条证据链，再决定后面要往哪里深挖。目录依次安排了「共同语言 → 最小实现 → 上游源码 → 工程专题 → 横向比较 → 案例与实验」，按这个顺序读，你就不会一开始便钻进各种工具名称，更不会把某个项目自己的叫法当成通用语义。
 
 ## 入口
 
@@ -26,7 +26,7 @@
 - [`eval-harness-ref` 命令入口](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/cli.py)
 - [Reference Harness 自动化测试](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_shipping_e2e.py)
 
-Reference Harness 把 Trial/Attempt、Trace、内容寻址 Artifact、Observation、Score、Metric、Comparison、Gate 和离线报告串成一份最小合同，你可以用它验证教材讲到的机制，但不能据此声称它复刻了任何一套上游工具。
+Reference Harness 用一份最小合同把 Trial/Attempt、Trace、按内容寻址的 Artifact、Observation、Score、Metric、Comparison、Gate 和离线报告串了起来。你可以拿它检验教材里讲的机制，但不能因此宣称它复刻了某套上游工具。这条边界不能越过。
 
 ## 第三部分：上游源码课程
 
@@ -37,7 +37,7 @@ Reference Harness 把 Trial/Attempt、Trace、内容寻址 Artifact、Observatio
 5. [DeepEval：Golden、TestCase、Metric 与执行策略](harnesses/deepeval/README.md)
 6. [Harbor 与 Terminal-Bench 1：环境、Agent、Verifier 与 Trial](harnesses/harbor-terminal-bench/README.md)
 
-每条课程都从导读进入三篇深入章节，正文会沿着锁定提交依次找到源码入口、调用链、关键数据结构与失败传播，再用实验、预期输出和参考答案检查读者是否真正理解了设计取舍。
+每条源码课程都先用导读带你进门，再分三篇往深处讲。正文会对着锁定的提交，依次找到源码从哪里进入、调用怎样往下走、哪些数据结构最关键，以及失败如何一层层传出来，然后再让你用实验、预期输出和参考答案检验自己是否真的看懂了这些设计取舍。别只记名词。
 
 ## 第四部分：工程篇
 
@@ -69,7 +69,7 @@ Reference Harness 把 Trial/Attempt、Trace、内容寻址 Artifact、Observatio
 - [合同审查 Agent](cases/contract-review-agent.md)
 - [SWE-bench 补丁评测机制](cases/swe-bench-mechanism.md)
 
-前四个案例都提供确定性的 buggy/fixed Target 和可运行门禁，而 SWE-bench 采用环境型机制案例的写法，用来解释补丁、隔离环境、测试证据和实例级判定怎样彼此约束。
+前四个案例都准备了结果确定的 buggy/fixed Target，你也可以直接把门禁跑起来。SWE-bench 则把重心放在环境怎样影响机制，你会看到补丁、隔离环境、测试证据和实例级判定如何互相约束。
 
 ## 第七部分：实验
 
@@ -88,4 +88,4 @@ Reference Harness 把 Trial/Attempt、Trace、内容寻址 Artifact、Observatio
 
 ## 怎样读一篇源码课
 
-读一篇源码课时，先确认锁定版本与入口，再沿调用链逐站回答谁在调用、输入是什么、状态在哪里改变、返回什么、失败怎样传播，以及哪组测试锁住了行为。最后运行本仓库的确定性实验，用实际输出检验自己是否理解了机制，而不只是在记 API。
+读源码课时，先查清课程锁定了哪个版本，并找到入口，然后顺着调用链逐站追问：谁发起调用，传进来什么，状态在哪里变了，结果怎样返回，失败又怎样传出去，以及哪组测试锁住了这些行为。读完再跑一遍本仓库的确定性实验，拿实际输出检验自己是否看懂了机制，别只记住 API。
