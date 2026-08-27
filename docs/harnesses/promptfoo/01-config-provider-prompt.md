@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-看到 `providers: [openai:gpt-4o-mini]` 时，很容易以为 Evaluator 会直接用字符串调用 SDK，但实现还要处理短名、带 config 对象、JavaScript 函数、模块文件及多 Provider 配置。prompt 还可能带标签、模板和配置，测试也能覆盖 Provider。如果这些形式没有先归一化，执行层就会堆满类型分支，运行身份也难以准确记录，所以本篇追踪 Provider 解析及 prompt/provider/test 的组合边界。
+看到 `providers: [openai:gpt-4o-mini]` 时，你可能以为 Evaluator 拿这个字符串直接调 SDK 就行，但实际代码还得识别短名、带 config 的对象、JavaScript 函数、模块文件和多 Provider（提供方）配置。prompt 自己可以带标签、模板和配置，测试还能换掉默认 Provider。如果不先把这些写法归一，执行层就得到处判断输入类型，也很难准确记下这次究竟调了谁。这一篇就来看 Provider 如何解析，prompt、provider 和 test 又是在哪里组合起来的。
 
-锁定源码让解析路径可以逐段核对，但本篇不承诺列出 Promptfoo 支持的全部 Provider。由于同一短名将来可能映射到另一种实现，教材会以锁定 commit 以及解析后的 `id()`、配置与输入为核对单位。
+源码版本锁定之后，你可以逐段核对每条解析路径，但这一篇不会穷举 Promptfoo 支持的所有 Provider。同一个短名将来可能指向另一种实现，所以核对时要同时看锁定 commit，以及解析后的 `id()`、配置和输入，不能只看那个短名。
 
 ## 先建立源码地图
 
@@ -29,19 +29,19 @@
 
 ## 关键数据结构
 
-`ApiProvider` 的核心不是厂商名称，而是稳定身份与调用能力，其中 `id()` 用于结果归属，`callApi()` 划出目标边界，label/config/transform/delay/inputs 描述额外行为。`Prompt` 同时保留 raw、label 与 config，避免报告只显示长模板而无法区分候选。`TestSuite` 是未展开的配置集合，`AtomicTestCase` 是合并 default/scenario 后的测试，只有 `RunEvalOptions` 才对应某个 provider × prompt × test × vars 的执行单位。
+`ApiProvider` 关心的不只是厂商名称，还要给出稳定身份和调用能力。它用 `id()` 标明结果归谁，用 `callApi()` 圈出目标调用边界，再用 label/config/transform/delay/inputs 说明额外行为。`Prompt` 会把 raw、label 和 config 一起留下，否则报告里只有一大段模板，你根本分不清它属于哪个候选。`TestSuite` 收着尚未展开的配置，`AtomicTestCase` 则是合并 default/scenario 后的测试，直到 `RunEvalOptions` 出现，程序才真正得到某个 provider × prompt × test × vars 的执行单位。
 
-复现清单至少要有锁定 commit、解析后的 Provider ID 与 label、非敏感配置摘要、prompt 摘要、变量值、测试断言、输入文件摘要和运行选项。环境变量中的密钥只记录名称或来源，不能写入证据包。
+想复现这次运行，清单里至少要记下锁定 commit、解析后的 Provider ID 与 label、非敏感配置摘要、prompt 摘要、变量值、测试断言、输入文件摘要和运行选项。环境变量里若有密钥，只记它的名称或来源，别把密钥本身写进证据包。
 
 ## 实现取舍与失败语义
 
-多种输入形式让用户可以从简单 YAML 逐步扩展到自定义函数——代价是配置解析本身也成了可信计算的一部分。当一个文件导出多个 Provider 时，解析器拒绝隐式挑选，从而用显式失败换取可预测性。动态配置要等到调用时才渲染，这样才能支持 per-test 变量，也说明 Provider 在加载时看起来相同，并不代表每个测试发出的实际请求相同。
+输入既可以是简单 YAML，也可以一路扩展到自定义函数，用起来很灵活，但配置解析也因此进入了可信计算范围。如果一个文件导出多个 Provider，解析器会拒绝暗中挑选，直接报错，以此保证你能预料它会调谁。动态配置则等到真正调用时才渲染，因为只有那时才拿得到 per-test 变量。于是，两个 Provider 加载时看起来一样，各自测试真正发出的请求却可能不同。
 
-Provider 解析失败属于装配错误，应该在目标调用前暴露，而 `callApi` 返回 error 属于目标执行结果，transform 或 prompt 渲染失败则属于输入或适配层错误。如果三者全被压成 `success: false`，使用者就会失去修复方向。缓存命中只是一次执行的来源属性。它不等于新增独立观察。
+如果 Provider 没能解析，说明装配就出了错，系统应该在调用目标前就报出来。`callApi` 返回 error，说明错误落在 Provider 调用这条路径上，不能单凭这个字段断定目标已经真正执行。transform 或 prompt 渲染失败，问题则在输入或适配层。这三种情况要是都被压成 `success: false`，用户便无法判断应该修哪一层。还要注意，缓存命中只是在说这次执行的结果从哪里来，它没有新增一条独立观察。
 
 ## 动手实验
 
-设计短名、内联函数和模块文件三种逻辑相同的 Provider，写出各自的 identity 字段，并说明只留展示 label 为何不足以复现。随后构造一个 test 级 Provider override，画出它与 suite 默认 Provider 的优先级，最后给 prompt 配置加入 `temperature`，说明它应该在哪一层合并，以及怎样进入审计信息。
+设计三个逻辑相同的 Provider，分别用短名、内联函数和模块文件来实现，再写出它们各自的 identity 字段，说明为什么只留展示 label 无法复现。随后加入一个 test 级 Provider override，画出它与 suite 默认 Provider 谁优先，最后给 prompt 配置加入 `temperature`，并指出程序应该在哪一层合并它、又该怎样把它写进审计信息。
 
 离线核对命令：
 
@@ -52,9 +52,9 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-短名至少要记录解析后的实现 ID 和配置，函数要记录模块或代码摘要与稳定 label，文件则要记录规范化相对路径、文件摘要和导出对象 ID。展示 label 可能重复，也可能被用户修改。它不能单独充当身份。测试级 override 只影响由该测试生成的步骤，其他测试仍然使用 suite providers。创建调用上下文时，prompt config 应按明确优先级与 Provider/prompt 配置合并，并随结果或运行清单保存非敏感快照。
+短名至少要留下解析后的实现 ID 和配置，函数要留下模块或代码摘要以及稳定 label，文件则要留下规范化相对路径、文件摘要和导出对象 ID。展示 label 可能重复，也可能被用户修改，所以它不能单独证明身份。测试级 override 只会改变该测试生成的步骤，其他测试仍然调用 suite providers。创建调用上下文时，程序应该按明确优先级合并 prompt config 与 Provider/prompt 配置，再把非敏感快照随结果或运行清单一起保存。
 
-如果一个文件导出多个 Provider，却通过单 Provider API 加载，预期行为应该是给出明确错误，而不是默默选中一个。如果配置包含每测试模板变量，则应在运行时根据当前 vars 渲染。
+如果一个文件导出了多个 Provider，你却用单 Provider API 去加载，程序应该给出明确错误，不能暗中挑选其中一个。如果配置里有每个测试自己的模板变量，就等运行到当前测试时，再根据当时的 vars 渲染。
 
 ## 如何核对
 
@@ -62,6 +62,6 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 本篇不能证明什么
 
-Provider 成功加载以后，仍然不能证明凭据有效、模型版本固定、外部 API 可用，或请求确实被服务端按声明参数执行。配置摘要也替代不了完整的供应链锁定，而自定义函数的安全性与沙箱边界还需要单独审计。
+即便 Provider 已经加载成功，你仍然不知道凭据是否有效、模型版本是否固定、外部 API 能否访问，也无法确认服务端真的按所声明的参数执行了请求。配置摘要替代不了完整的供应链锁定，自定义函数是否安全、沙箱是否圈住了它，也都要另外审计。
 
 [上一节](README.md) · [下一节](02-test-case-runtime.md)

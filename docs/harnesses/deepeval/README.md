@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-DeepEval 经常被介绍成「像 pytest 一样测试大模型应用」，但源码里的核心远不止一个 `assert score >= threshold`——输入可能是已经包含 actual_output 的 `LLMTestCase`，也可能是等待用户代码执行的 Golden，而指标既可以同步或异步运行，也可以面向单轮、对话或 trace。再把缓存、忽略错误、并发和测试运行管理器放进来，执行方式与记录方式都会随之变化，所以本课程会追踪这些对象怎样汇合成 `TestResult`、`MetricData` 与一次 TestRun。
+人们常把 DeepEval 说成「像 pytest 一样测试大模型应用」，可源码做的事远不止检查一次 `assert score >= threshold`。输入可以是已经带有 actual_output 的 `LLMTestCase`（大语言模型测试用例），也可以是等着用户代码去执行的 Golden（黄金样本），指标既能同步或异步运行，也能测单轮、对话或 trace。再加上缓存、忽略错误、并发和测试运行管理器，程序怎样执行、结果怎样记录都会跟着变化，所以这组课程会沿着调用链，看这些对象最后怎样组成 `TestResult`、`MetricData` 和一次 TestRun。
 
-课程锁定版本为 `a2e0d4cfd3118352d321c1c84bdeba17d4a201bc`。DeepEval 项目还包含大量具体指标、追踪、平台集成和 Agentic 入口，这里只解释锁定范围内能够直接核对的执行骨架，并把它映射到统一的 Dataset → Sample → Target → Scorer → Result 模型，同时保留 DeepEval 自己使用的 Golden、TestCase 与 Metric 命名。
+课程锁定版本为 `a2e0d4cfd3118352d321c1c84bdeba17d4a201bc`，DeepEval 还提供许多具体指标、追踪功能、平台集成和 Agentic 入口，这里只讲锁定源码里能够直接核对的执行骨架，再把各环节对应到统一的 Dataset → Sample → Target → Scorer → Result 模型。遇到 Golden、TestCase 与 Metric 时，正文仍沿用 DeepEval 自己的叫法。
 
 ## 先建立源码地图
 
@@ -32,19 +32,19 @@ DeepEval 经常被介绍成「像 pytest 一样测试大模型应用」，但源
 
 ## 关键数据结构
 
-`Golden` 更接近等待执行的样本，它保存输入、期望与上下文，但通常没有被测应用产生的 actual_output。`LLMTestCase` 则是一条可评分观测，其中包含 input、actual_output、expected_output、context、retrieval_context、tools_called、expected_tools、metadata 等内容。两者不能互换。`BaseMetric` 是有状态的 Scorer 实例，测量后会持有 score、threshold、reason、error、success、verbose_logs 和 evaluation_cost，而 `MetricData` 负责把这些状态冻结进结果，最后由 `EvaluationResult` 汇总 TestResults、confident link 与 run identity。
+`Golden` 更像一份等着执行的样本规格，它存着输入、期望和上下文，通常还没有被测应用生成的 actual_output。`LLMTestCase` 记录的则是一次可以评分的观测，里面会放 input、actual_output、expected_output、context、retrieval_context、tools_called、expected_tools、metadata 等内容，这两种对象不能互换。`BaseMetric` 是有状态的 Scorer，测量过后，score、threshold、reason、error、success、verbose_logs 和 evaluation_cost 都留在实例上，`MetricData` 再把这些状态写死到结果里，最后交给 `EvaluationResult` 汇总 TestResults、confident link 和 run identity。
 
-一旦进入多测试和并发场景，同一个 Metric 实例怎样重置状态就会变得关键，因为对象字段虽然方便实现具体指标，却要求执行器在每次运行前清理 error 等旧值，还要避免不同协程相互污染。结果证据也应保存 metric 名称、实现与模型版本、threshold、strict mode 和单次输出，而不能只留下最终布尔值。
+一旦同时跑多个测试，同一个 Metric 实例怎样重置状态就很关键。把结果留在对象字段里，确实方便实现具体指标，可执行器每次测量前都得清掉 error 等旧值，还得防止不同协程互相覆盖。保存结果时也要留下 metric 名称、实现版本、模型版本、threshold、strict mode 和这次测量的输出，不能只留最后那个布尔值。
 
 ## 实现取舍与失败语义
 
-允许用户直接提交 TestCase 后，DeepEval 就能评测任意外部系统输出，而 agentic iterator 还能进一步把被测代码执行纳入 trace。两条路径的证据强度并不相同——前者需要信任调用者填入的 actual_output，后者虽然可以关联运行 trace，却仍然要锁定用户代码与执行环境。
+用户可以直接提交 TestCase，于是 DeepEval 能拿任意外部系统的输出做评测，agentic iterator 还能把被测代码怎样运行一并记进 trace。两条路径留下的证据强弱不同：前一条要相信调用者填入的 actual_output，后一条虽然能关联运行 trace，仍然必须锁定用户代码和执行环境。
 
-Metric 失败表示已经得到有效测量，只是结果低于阈值，而 metric.error 表示根本没有取得可信测量。`ignore_errors=True` 可以让批量运行继续，但错误项不能在统计中静默消失。分母规则必须预先约定。缓存确实能节省 Judge 调用，不过它的 key 必须覆盖测试、指标配置、模型和依赖版本，否则命中结果无法解释。异步并发能够提高吞吐，也会同时暴露有状态 Metric、事件循环与全局 TestRun 管理的隔离要求。
+Metric 判定失败，说明测量已经有效完成，只是分数没有达到阈值，metric.error 则表示这次根本没拿到可信的测量结果。`ignore_errors=True` 可以让批量任务继续往下跑，但统计时不能让报错项悄悄消失，分母怎么算必须提前约定。缓存确实能少调几次 Judge，可 key 必须覆盖测试内容、指标配置、模型和依赖版本，否则你无法解释为什么会命中。异步并发能提高吞吐，也会逼着你处理好有状态 Metric、事件循环和全局 TestRun 管理之间的隔离。
 
 ## 动手实验
 
-为问答系统设计一个 Golden 和对应的 LLMTestCase，分别填写 input、actual_output、expected_output、context 与 retrieval_context，并说明每个字段由谁产生。接着设计两个 Metric，一个负责确定性格式检查，另一个使用模型 Judge，再列出 score、threshold、reason、error 和 cost 应当怎样记录。最后比较 Judge 超时时 `evaluate(..., ignore_errors=True)` 与 `assert_test` 各自应该产生什么外部行为。
+给问答系统设计一个 Golden 和相应的 LLMTestCase，分别填好 input、actual_output、expected_output、context 与 retrieval_context，并说明每个字段是谁写进去的。接着设计两个 Metric，一个检查确定性格式，另一个调用模型 Judge，再列出 score、threshold、reason、error 和 cost 应该怎样落盘。最后让 Judge 模拟超时，比较 `evaluate(..., ignore_errors=True)` 与 `assert_test` 各自在调用方看来会发生什么。
 
 ```bash
 python scripts/sources.py verify
@@ -53,16 +53,16 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-Golden 的 input、expected 和 context 属于数据集定义，actual_output 来自 Target 执行，而 retrieval_context 是本次系统观测，并不是预先准备的答案。格式 Metric 可以离线给出确定分数，Judge Metric 则还要记录评分模型、prompt/config 和成本。忽略错误模式应保留 error 并继续运行其他测试，而 `assert_test` 应在失败指标字符串中显示 score、threshold、strict、error 与 reason，随后再抛出异常。
+Golden 里的 input、expected 和 context 由数据集预先定义，actual_output 要等 Target 跑完后写入，retrieval_context 记的则是系统这次真正检索到了什么，并非事先准备好的答案。格式 Metric 可以离线算出确定分数，Judge Metric 还得记下评分模型、prompt/config 和成本。开启忽略错误后，程序应该保留 error，再继续跑其他测试，`assert_test` 则应把 score、threshold、strict、error 和 reason 写进失败信息，然后抛出异常。
 
-课程门禁不需要 API key，因为它只验证源码锁定、教学结构和本仓库离线实验，并不声称自己运行过具体的 DeepEval Judge。
+课程门禁不需要 API key，因为它只检查源码有没有锁定、教学结构是否完整，以及本仓库的离线实验能不能通过，并没有声称它真的运行过某个 DeepEval Judge。
 
 ## 如何核对
 
-先从 [`deepeval/evaluate/evaluate.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/evaluate.py) 比较 `evaluate` 与 `assert_test`，再进入 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py) 检查同步、异步与 agentic 路径，最后使用 [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py) 核对 success 的具体语义。
+先到 [`deepeval/evaluate/evaluate.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/evaluate.py) 比较 `evaluate` 与 `assert_test` 分别做了什么，再进 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py) 检查同步、异步和 agentic 三条路径怎样执行。最后对照 [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py)，确认 success 到底按什么规则得出。
 
 ## 本篇不能证明什么
 
-API 易用、指标设置了阈值，或 pytest 能在条件不满足时失败，都不能证明指标有效、Judge 无偏、数据集代表线上分布、运行能够复现，或当前版本可以发布。它们只是评测机制，不是发布授权。
+API 好用、指标设了阈值，或者 pytest 能在条件不满足时报错，都证明不了指标真的有效、Judge 没有偏差、数据集代表线上分布，或这次运行能够复现，更不能据此批准当前版本发布。它们只提供评测机制，不提供发布授权。
 
 [上一节](../promptfoo/03-assertion-results-ci.md) · [下一节](01-dataset-golden-test-case.md)

@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-CompletionFn 这个名字听起来像是「完成一次评测」，但它实际只负责根据给定 prompt 产生 CompletionResult，而数据怎样遍历、prompt 怎样构造、Reference 怎样比较以及 metric 怎样聚合，都由 Eval 决定。把两者分清之后，模型重试、Sample 重复和 Scorer 判断就不会被塞进同一个 callback，SolverEval 为何构成另一种执行边界也更容易理解。
+CompletionFn（补全函数）这个名字容易让人以为它要「完成一次评测」，其实它只接收给定的 prompt，再返回 CompletionResult。这条边界很窄。至于怎样遍历数据、组装 prompt、对照 Reference 以及聚合 metric，都是 Eval 在做。你先把这两层分开，就不会把模型重试、Sample 重复和 Scorer 判断全塞进同一个 callback，也更容易看懂 SolverEval 为什么另立了一条执行边界。
 
 ## 先建立源码地图
 
-[`CompletionFn` Protocol](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L23-L40)、[`CompletionResult`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L16-L19) 与匹配 helper 都在锁定 `api.py` 中，整个文件只有一百多行，而 Eval ABC、Sample 迭代 helper、CompletionFn 包装和 SolverEval 则集中在 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85)，要追 CompletionFn 的解析入口还需继续看到 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L120-L151)。
+锁定的 `api.py` 只有一百多行，却把 [`CompletionFn` Protocol](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L23-L40)、[`CompletionResult`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L16-L19) 和匹配 helper 都放在了一起。Eval ABC、遍历 Sample 的 helper、CompletionFn 包装以及 SolverEval 则集中在 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85)，如果还想看 CompletionFn 从哪里开始解析，就顺着调用走到 [`registry.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/registry.py#L120-L151)。
 
-`Eval` 接收的是 CompletionFn 列表，`completion_fn` property 只是为了方便访问其中的单项，而 `SolverEval` 要求恰好传入一个 completion_fn，并把它包装成 Solver，因此两者的扩展语义并不相同，不能只看名称作判断。
+`Eval` 接收一组 CompletionFn，`completion_fn` property 只是让代码取其中的单项时更方便。`SolverEval` 则要求你恰好传入一个 completion_fn，然后将它包成 Solver，因此两者留给扩展代码的含义不同，不能只凭名字判断。
 
 ## 完整调用链
 
@@ -26,27 +26,27 @@ CompletionFn 这个名字听起来像是「完成一次评测」，但它实际�
 
 ## 关键数据结构
 
-`CompletionFn(prompt, **kwargs) -> CompletionResult` 划出了模型调用边界，CompletionResult 会暴露 completion 或相关响应信息，而 Sample 通常只是 JSONL dict，其结构交给具体 Eval class 解释，因此这种设计比统一 Sample 模型灵活，但跨 Eval 复用和 schema 检查也会更弱。
+`CompletionFn(prompt, **kwargs) -> CompletionResult` 把模型调用的边界圈了出来：CompletionFn 吃进 prompt，CompletionResult 向外给出 completion 或其他响应信息。Sample 通常只是一个 JSONL dict，具体 Eval class 自己解释其中结构，这比强制所有 Eval 共用一种 Sample 模型更灵活，但也削弱了跨 Eval 复用和 schema 检查。
 
-Recorder Event 会把 sample_id 与 sampling、match 等 data 绑定起来，却没有统一的 Trial ID、Target resolved identity 或 Attempt ordinal。接入本仓库时，需要由 Adapter 补充计划 Trial 和基础设施恢复记录，否则多次 sampling event 很容易被误算成多个 Trial。
+Recorder 写 Event 时会把 sample_id 与 sampling、match 等 data 连在一起，但它没有统一记录 Trial ID、Target resolved identity 或 Attempt ordinal。所以把这些事件接入本仓库时，Adapter（适配器）要补上事先规划的 Trial 和基础设施恢复记录，否则很容易把多次 sampling event 错算成多个 Trial。
 
 ## 实现取舍与失败语义
 
-CompletionFn Protocol 很小，因此多种模型和 Solver 都容易接入，Eval class 也能保留较大的自由度。不过，batching、重试、缓存、身份调和和错误分类会因此散落在不同实现中——自由度的代价就在这里，而 Eval 子类直接写事件虽然便于快速开发，却很难静态证明每条 Score 都绑定了相同的证据字段。
+CompletionFn Protocol 很小，各类模型和 Solver 因此容易接进来，Eval class 也可以自行安排大部分逻辑。代价也很具体：batching、重试、缓存、身份调和和错误分类会散到不同实现中。Eval 子类直接写事件固然开发得快，可你很难只靠静态代码确认每条 Score 都连到了同一组证据字段。
 
-模型 API 超时可能会在 CompletionFn 内部重试，但核心接口没有显式 Attempt，而 CompletionFn 正常返回了错误答案时，仍然属于产品结果，应由 Eval 的 match 或 scorer 判错。遇到 Sample schema 错误、Reference 缺失或 Eval class 异常时，则应记录 error 并明确它是否进入最终分母，而 Solver 的自我尝试属于被测算法，外层不能把它当成基础设施恢复。
+模型 API 超时之后，CompletionFn 内部可能会重试，但核心接口没有把 Attempt 明确记下来。如果 CompletionFn 正常返回了一个错误答案，这仍然是有效的产品结果，应该让 Eval 的 match 或 scorer 来判错。可要是 Sample schema 写错、Reference 缺失，或者 Eval class 抛出异常，系统就应记下 error，并说清它会不会进入最终分母。此外，Solver 自己发起的尝试属于被测算法，外层不能拿它当基础设施恢复。
 
 ## 动手实验
 
-用伪代码写一个确定性 CompletionFn，让它接收金额并返回 shipping fee，同时保证相同输入总会得到相同结果。然后再写一个 Eval，依次加载 99、100、101，调用 CompletionFn，记录 expected/picked/match 并返回 accuracy，同时标出哪些代码属于 Target Adapter、Scorer 和 Metric。
+用伪代码写一个确定性 CompletionFn，让它接收金额、返回 shipping fee，并保证相同输入总会得到相同结果。然后再写一个 Eval，依次读入 99、100、101，将它们交给 CompletionFn，记下 expected/picked/match 并算出 accuracy，同时标明哪段代码在做 Target Adapter、Scorer 和 Metric 各自的事。
 
 把金额 100 的 buggy 返回当作正常 CompletionResult，并说明为什么 CompletionFn 外层不应该反复重试，直到得到 fixed 答案。
 
 ## 预期输出与答案
 
-CompletionFn 是 Target Adapter，expected/picked 比较属于 Scorer，三条 match 的 mean 才是 Metric。buggy 结果应产生 match=false，但它仍是一条已经完成的 Sample。一旦外层继续调用直至 match=true，Eval 就会泄露 Reference 并改变被测策略。分数也就失去意义。
+CompletionFn 在做 Target Adapter 的工作，Scorer 负责比较 expected 和 picked，而把三条 match 取 mean 之后才得到 Metric。buggy 结果应该记为 match=false，但这条 Sample 已经完整跑完了。如果外层一直重新调用，直到 match=true 才停，Eval 就把 Reference 泄露给了被测策略，最后算出的分数也就没有意义了。
 
-正确的报告还应保留三条 Sample 事件，并把分母固定为 3，不能让它随着错误类型变化。如果某条记录因基础设施错误而没有结果，就应显式标为 unscored/blocked，不能直接从 mean 列表中删掉。
+报告还要保留三条 Sample 事件，并把分母固定为 3，不能因错误类型不同就改变分母。如果某条记录因基础设施错误而没有产生结果，就把它明确标成 unscored/blocked，别从 mean 列表里直接删掉。
 
 ## 如何核对
 
@@ -54,6 +54,6 @@ CompletionFn 是 Target Adapter，expected/picked 比较属于 Scorer，三条 m
 
 ## 本篇不能证明什么
 
-协议分层只能给出扩展接缝，既不能证明具体 Eval 子类正确处理了缺失、并发或网络重试，也不能证明模型响应确实来自声明版本。证据质量最终取决于实现细节和运行记录。
+协议把扩展代码从哪里接进来说清了，却不能证明具体 Eval 子类已经正确处理缺失、并发和网络重试，也不能保证响应真的来自所声明的模型版本。最后能不能信这份证据，还得回到具体代码和实际运行记录上。
 
 [上一节](01-registry-eval-spec.md) · [下一节](03-recorder-metrics-boundaries.md)
