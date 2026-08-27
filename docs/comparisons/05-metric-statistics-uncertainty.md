@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-这些工具通常都能输出 accuracy、mean score 或 pass rate，但它们未必使用相同的 denominator、聚类方式与缺失规则。lm-eval 聚合 request-level metric，Promptfoo 汇总测试与断言，DeepEval 把 Metric 阈值应用到 TestCase，而 Terminal-Bench 计算 Trial accuracy 与 pass@k，因此把这些数字放进同一张榜单之前，必须先问清统计单位究竟是什么。
+这些工具通常都能给出 accuracy、mean score 或 pass rate，但计算时采用的 denominator、聚类方式和缺失规则未必相同。lm-eval 汇总 request-level metric，Promptfoo 汇总测试与断言，DeepEval 用 Metric 阈值判断 TestCase，Terminal-Bench 则计算 Trial accuracy 与 pass@k，所以你把这些数字排进同一张榜单之前，得先弄清各自按什么单位统计。
 
 ## 核心机制
 
 ![Metric、比较与不确定性](../assets/diagrams/foundations/06-comparison-gate.svg)
 
-统一分析路径从 ScoreRecord 走到 MetricEstimate，再形成 ComparisonResult，其中 Metric 要预先声明 numerator、denominator、权重和 cluster，Comparison 则按照共享 Sample/Trial 完成配对。区间只反映有限样本带来的波动。错误与缺失必须另行报告，不能用 complete-case 平均悄悄替代计划分母。
+统一分析时，先把手里的 ScoreRecord 汇成 MetricEstimate，再用它生成 ComparisonResult。Metric 要预先写清 numerator、denominator、权重和 cluster，Comparison 则要按双方共有的 Sample/Trial 配对，免得比较对象错位。区间只能反映有限样本造成的波动，错误和缺失还得另报，不能悄悄用 complete-case 平均换掉计划分母。
 
 | 场景 | 推荐统计单位 | 常见错误 |
 | --- | --- | --- |
@@ -31,28 +31,28 @@
 
 ## 关键数据与不变量
 
-Metric ID 需要绑定 Scorer、Dataset split 与聚合规则，而且无论成功执行多少项，计划 denominator 都不能随之变化。重复 Trial 可以用来估计随机性，但同一 Sample 内的结果彼此相关，而 pass@k 回答的是允许 k 次尝试时至少成功一次的概率，并不等于单次线上成功率。区间算法和 seed 也属于分析身份。
+Metric ID 要同时绑定 Scorer、Dataset split 和聚合规则，而且不管最后成功跑完多少项，计划好的 denominator 都不能跟着结果增减。重复运行 Trial 可以估计随机性，但同一 Sample 里的结果会彼此相关，不会变成相互独立的样本。pass@k 算的是允许尝试 k 次时至少成功一次的概率，不能拿它代替单次线上成功率。所用的区间算法和 seed 也得记进分析身份。
 
 ## 动手实验
 
-假设计划中共有 10 个 Trial，其中 7 个 pass、1 个 fail、1 个 target error、1 个 Judge error，请分别计算完成项通过率、全计划已证实通过率和错误率：
+假设计划里共有 10 个 Trial，其中 7 个 pass、1 个 fail、1 个 target error、1 个 Judge error，请你分别算出已完成项的通过率、整个计划中已经证实的通过率以及错误率：
 
 ```bash
 uv run pytest tests/test_metrics.py -q
 ```
 
-算完之后，再解释为什么不能删掉两个错误，只留下看似更漂亮的 7/8。
+算完再想一想：为什么不能删掉两个错误，只留下看起来更漂亮的 7/8？
 
 ## 预期输出与答案
 
-在已经完成且获得有效 Score 的 Trial 中，通过率是 7/8=87.5%，而全计划已证实通过率只有 7/10=70%，Harness/Judge error 合计占 20%。这三个数字回答的是不同问题，所以必须一起报告。若只留下 7/8，非随机缺失就会被掩盖，Gate 也无法按错误预算正确处理。
+只看已经跑完并拿到有效 Score 的 Trial，通过率是 7/8=87.5%。回到整个计划，已经证实的通过率只有 7/10=70%，target/Judge error 合计占 20%。这三个数字回答的问题不同，报告时一个都不能少。要是只留下 7/8，报告就藏住了非随机缺失，Gate 也没法按错误预算判断该怎么办。
 
 ## 如何核对
 
-先阅读 [`metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/metrics.py)、[`comparison.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/comparison.py)，弄清计划分母如何进入统计结果，再对照 Terminal-Bench pass@k 与 lm-eval aggregation 课程。
+先读 [`metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/metrics.py) 和 [`comparison.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/comparison.py)，看代码怎样把计划分母带进统计结果，再对照 Terminal-Bench pass@k 与 lm-eval aggregation 课程检查一遍。
 
 ## 本篇不能证明什么
 
-即便 denominator 与区间都计算正确，也无法修复 Dataset 缺乏代表性、标签错误、构念偏差或分布漂移——统计精确不等于业务有效。
+就算 denominator 和区间都算对了，也补不上 Dataset 缺乏代表性、标签错误、构念偏差或分布漂移这些缺口。统计结果精确，业务结论也未必有效。
 
 [上一节](04-scorer-judge-outcomes.md) · [下一节](06-agent-environment-final-state.md)

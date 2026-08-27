@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-OpenAI Evals 使用 Recorder Event，Inspect 保存 EvalLog/SampleLog，Promptfoo 提供 EvaluateResult 与 trace-aware assertions，DeepEval 记录 TestRun/trace，Harbor 则留下 trajectory、logs 和 Trial 目录。它们看起来都在「记录运行」，但字段范围、完整程度和使用目的并不相同，因此本篇会比较这些记录怎样回连 Sample、Target、评分与产物，并从中整理出最小 Observation Bundle。
+OpenAI Evals 用 Recorder Event 记运行过程，Inspect 保存 EvalLog/SampleLog，Promptfoo 给出 EvaluateResult 与 trace-aware assertions，DeepEval 记录 TestRun/trace，Harbor 则留下 trajectory、logs 和 Trial 目录。它们看起来都在「记录运行」，实际记下的字段、完整程度和用途却不一样，所以这一篇要看各家怎样用这些记录找回对应的 Sample、Target、评分与 Artifact（产物），再从中整理出最小 Observation Bundle。
 
 ## 核心机制
 
 ![Trace、Artifact、Observation 与 Score 血缘](../assets/diagrams/foundations/04-lineage.svg)
 
-Trace 按时间与因果关系记录事件，Artifact 保存可能很大的不可变 bytes，ObservationBundle 则冻结 Scorer 被允许看到的视图，而 Score 只引用对应的 Bundle digest。把四者分开之后，系统既能持续追加日志而不用把所有内容塞进事件，也能限制评分输入并核验摘要——证据链因此更清楚。
+Trace（轨迹）按时间和因果关系记下事件，Artifact 保存体积可能很大的不可变 bytes，ObservationBundle（观测包）则固定 Scorer 可以读取哪些内容，Score 只引用对应的 Bundle digest。把四者分开以后，系统既能继续追加日志，不必把所有内容都塞进事件，也能管住评分输入并核验摘要，证据怎样一路传到分数就清楚了。
 
 | Harness | 主要运行记录 | 强项 | 需额外补齐 |
 | --- | --- | --- | --- |
@@ -32,7 +32,7 @@ Trace 按时间与因果关系记录事件，Artifact 保存可能很大的不�
 
 ## 关键数据与不变量
 
-事件 ID 必须在 Trace 内唯一并保持 sequence 连续，而且 parent 要先于子事件出现，Artifact path 不能越界，digest 也必须与 bytes 匹配。Bundle 只能绑定 canonical Attempt，而 Score 不能引用不存在的 Bundle。秘密与隐藏 chain-of-thought 不应进入 Trace，敏感输出还要经过最小化处理，并设置分级规则与保留期限。
+每个事件 ID 在同一条 Trace 里都要唯一，sequence 不能断，parent 还得先于子事件出现。Artifact path 不能越界，digest 必须和实际 bytes 对得上。Bundle 只能绑定 canonical Attempt，Score 也不能引用一个并不存在的 Bundle。秘密和隐藏的 chain-of-thought 不该写进 Trace，系统还要尽量缩减敏感输出，并为它们规定级别和保留期限。
 
 ## 动手实验
 
@@ -42,18 +42,18 @@ Trace 按时间与因果关系记录事件，Artifact 保存可能很大的不�
 uv run pytest tests/test_lineage.py tests/test_runtime_extensions.py -k "trace or artifact" -q
 ```
 
-依次把一个 parent 改成未知 ID，把 Artifact path 改成 `../secret`，再篡改实际 bytes，并分别指出每种改动会在哪一层被拒绝。
+依次把一个 parent 改成未知 ID，把 Artifact path 改成 `../secret`，然后篡改实际 bytes，并分别找出系统会在哪一层拒绝这三种改动。
 
 ## 预期输出与答案
 
-未知 parent 会在 Trace 写入或导入时失败，路径越界会被 ArtifactRef 验证拦下，而 bytes 篡改会在 inspect 重算 digest 时暴露。三种情况都会让证据失效，因此此时不应继续评分，更不能给产品记 0 分。
+写入或导入 Trace 时，系统会拒绝未知 parent。ArtifactRef 验证会拦下越界路径，inspect 重算 digest 时则会发现 bytes 已被篡改。这三种情况都会让证据失效，此时应当停止评分，更不能把产品记成 0 分。
 
 ## 如何核对
 
-先对照 OpenAI Evals Recorder、Inspect EvalLog 与 Harbor Result 课程，辨认三套记录各自能覆盖到哪里，再阅读 [`tracing.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/tracing.py)、[`artifacts.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/artifacts.py) 和 lineage 测试。
+先对照 OpenAI Evals Recorder、Inspect EvalLog 与 Harbor Result 课程，看三套记录各自能记到哪一步，再阅读 [`tracing.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/tracing.py)、[`artifacts.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/artifacts.py) 和 lineage 测试。
 
 ## 本篇不能证明什么
 
-结构完整且 digest 正确，只能说明现有证据彼此对应，不能证明事件来自可信采集器、时间戳准确，或者环境里没有隐藏副作用。血缘只能提供一条可供事后检查的对应关系，它并不等于对采集环境作出了远程证明。
+结构完整、digest 正确，只能说明手里的证据彼此对得上，不能证明事件来自可信的采集器、时间戳准确，也不能证明环境里没有藏着别的副作用。血缘只把这些对象的对应关系留下来，方便你事后复查，它无法远程证明采集环境可信。
 
 [上一节](02-runner-concurrency-cache-retry.md) · [下一节](04-scorer-judge-outcomes.md)

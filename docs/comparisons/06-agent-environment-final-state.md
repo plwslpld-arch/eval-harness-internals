@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-模型 benchmark 主要观察生成文本，而 Agent Eval 还必须看到运行过程对环境造成的副作用。Inspect Sandbox、Promptfoo trace assertions、DeepEval agentic trace 与 Harbor container verifier 都能触达 Agent 行为，但它们的隔离能力、终态证据与验证强度并不相同，因此本篇要比较「能够执行工具」与「能够可信验证终态」之间究竟隔着什么。
+模型 benchmark 主要看生成的文本，Agent Eval 却还得检查运行过程给环境留下了哪些副作用。Inspect Sandbox、Promptfoo trace assertions、DeepEval agentic trace 和 Harbor container Verifier（验证器）都能看到 Agent 的行为，但各自能隔离什么、拿什么证明终态、验证能做到多严并不相同，所以这一篇要说清楚：Agent 能执行工具以后，还缺哪些条件才能让人相信终态。
 
 ## 核心机制
 
 ![Agent 环境与验证阶段](../assets/diagrams/harnesses/harbor-terminal-bench/environment-lifecycle.svg)
 
-统一 Environment Harness 会依次经历五个阶段：create/reset → agent setup/run → collect trace/artifacts → independent verify → cleanup。Target Adapter 只负责接通 Agent 运行，而 Scorer/Verifier 不能信任 Agent 的自我报告，因为环境身份、网络与资源限制本来就是实验条件的一部分。
+统一的 Environment Harness 先执行 create/reset 来准备环境，再进入 agent setup/run，随后 collect trace/artifacts，并在 independent verify 结束后 cleanup。Target Adapter 只把 Agent 接进来运行，Scorer/Verifier 还得自己核对结果，不能听信 Agent 的自我报告，因为用的是哪个环境、能否联网以及拿到多少资源，本来就是实验条件。
 
 | Harness | 环境能力 | 终态证据 | 主要边界 |
 | --- | --- | --- | --- |
@@ -31,26 +31,26 @@
 
 ## 关键数据与不变量
 
-在同一环境里验证，虽然容易看到进程状态，却也更容易受到被测程序篡改，而分离环境能提供更强隔离，复制过程中却可能丢失状态。Final state 必须落在机器可检查的事实上，例如文件摘要、测试结果、数据库记录或服务响应。Agent final message 只是一条 TraceEvent，网络 disabled 的声明也必须有底层 enforcement 证据支撑。
+Verifier 留在原环境里时更容易看到进程状态，但被测程序也更容易干扰验证。把验证环境分开可以加强隔离，复制状态时却可能漏掉信息。Final state 要落到机器能够检查的事实上，例如文件摘要、测试结果、数据库记录或服务响应。Agent final message 只算一条 TraceEvent，至于网络是否真的 disabled，也得拿出底层 enforcement 的证据。
 
 ## 动手实验
 
-为退款 Agent 与代码修复 Agent 各列三项终态断言：
+请给退款 Agent 和代码修复 Agent 各列三项能够检查的终态断言：
 
 ```text
 退款：ledger entry、approval id、idempotency key
 代码：git diff、隐藏测试、工作树允许范围
 ```
 
-然后把其中一项改成只由 Agent 文本声明，并说明这种自报为什么不足以支撑终态判断。
+然后把其中一项改成只让 Agent 在文本里声明，再说明为什么这种自报撑不起终态判断。
 
 ## 预期输出与答案
 
-退款任务必须查询实际交易或 ledger，不能只相信「已退款」的文字，代码任务也必须运行隐藏测试并检查 diff，不能把「测试通过」当成终态证据——如果 Scorer 无法访问环境，就应记为 unscorable/blocked，而不是因为文本看起来合理便判定成功。
+退款任务要查询实际交易或 ledger，不能只相信「已退款」几个字。代码任务也要运行隐藏测试并检查 diff，不能把 Agent 自称「测试通过」当成终态证据。如果 Scorer 访问不了环境，就该记为 unscorable/blocked，不能因为文字看起来合理就判定成功。
 
 ## 如何核对
 
-先对照 [Inspect Sandbox](../harnesses/inspect-ai/02-sandbox-sample-run.md)、[Harbor 生命周期](../harnesses/harbor-terminal-bench/02-environment-agent-lifecycle.md) 和 Trace Import 测试，分别确认环境创建、Agent 执行与独立验证由哪一层负责。
+先对照 [Inspect Sandbox](../harnesses/inspect-ai/02-sandbox-sample-run.md)、[Harbor 生命周期](../harnesses/harbor-terminal-bench/02-environment-agent-lifecycle.md) 和 Trace Import 测试，逐项确认哪一层创建环境、哪一层运行 Agent、哪一层独立验证。
 
 ```bash
 uv run pytest tests/test_runtime_extensions.py -k trace -q
@@ -58,6 +58,6 @@ uv run pytest tests/test_runtime_extensions.py -k trace -q
 
 ## 本篇不能证明什么
 
-终态测试通过只说明检查到的最终事实符合预期，不能证明中途没有发生越权、侧信道或不可见副作用，因此仍需要 Trace、安全策略与生产补偿机制共同覆盖这些风险。
+终态测试通过，只能说明检查到的最终事实符合预期，证明不了中途没有越权、侧信道或看不见的副作用，所以还得用 Trace、安全策略和生产补偿机制一起兜住这些风险。
 
 [上一节](05-metric-statistics-uncertainty.md) · [下一节](07-report-ci-release-gate.md)
