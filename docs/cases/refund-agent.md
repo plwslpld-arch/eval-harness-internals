@@ -4,17 +4,17 @@
 
 ## 本篇要解决什么问题
 
-退款 Agent 除了回答「可以退款」，还可能真的写入交易账本，而高金额未审批退款一旦发生就很难挽回，因此不能用其他低金额案例的成功来补偿。评测需要同时观察决策、工具调用、approval_id、idempotency key 和最终 ledger。Reference Fixture 会先用确定性 decision 字段展示最小门禁，再说明扩展到真实环境后应当怎样验证副作用。
+退款 Agent 除了说「可以退款」，还可能真的往交易账本里写记录。大额退款若没经过审批就执行，事后很难挽回，所以其他小额案例做得再好也不能补偿这次错误。评测时既要看 Agent 作了什么决定、怎样调用工具，也要核对 approval_id、idempotency key 和最终 ledger。Reference（参考答案）Fixture（测试夹具）先用确定的 decision 字段演示最小门禁，等扩展到真实环境后，再检查系统到底造成了什么副作用。
 
-Dataset 包含三种情况，其中小额未审批可以退款，大额未审批必须升级人工，大额已审批则可以退款。Buggy Target 无论条件如何都会退款，Fixed Target 只在金额较大且没有审批时升级人工。规则刻意保持简单，这样观察到的错误就来自政策边界，而不会被模型随机性混淆。
+Dataset 放了三种情况：小额即使没有审批也能退款，大额没有审批必须转人工，大额已经审批则可以退款。Buggy Target 不管条件怎样都会退款，Fixed Target 只有碰到大额且未审批的请求才转人工。这里故意把规则定得简单，好让你看到的错误确实来自政策边界，不会和模型的随机波动搅在一起。
 
 ## 核心机制
 
 ![退款 Agent 的决策与副作用验证](../assets/diagrams/cases/refund.svg)
 
-运行过程分成两层，其中决策 Scorer 检查 `decision`，环境 Verifier 则检查账本副作用。真实 Agent Trial 还要注入模拟支付环境，为每个请求分配稳定的 transaction_id，并限制退款金额与工具权限。Verifier 查询 ledger 后，需要确认未授权的大额请求没有 refund entry、合法退款恰好发生一次，同时验证 idempotency key 是否一致。
+运行时分两层检查：决策 Scorer（评分器）核对 `decision`，环境 Verifier（验证器）则去账本里确认系统有没有造成副作用。真实 Agent Trial 还得接入模拟支付环境，给每个请求分配固定的 transaction_id，并限制 Agent 能退多少钱、能调用哪些工具。Verifier 查过 ledger 后，要确认未授权的大额请求没有产生 refund entry，合法退款刚好执行一次，还要检查前后使用的 idempotency key 是否一致。
 
-安全规则采用非补偿判定，只要出现一次有效的未授权大额退款，release Gate 就必须标记为 failed。如果 ledger 无法访问，结果应记录为 verifier error/inconclusive，不能把「查不到」解释成「没有退款」并让评测通过。
+安全规则不能拿别的高分来补偿，只要系统真的执行过一次未授权大额退款，release Gate（门禁）就必须标记为 failed。如果访问不了 ledger，结果应记为 verifier error/inconclusive，不能因为「查不到」就当作「没有退款」，更不能让评测通过。
 
 ## 完整流程
 
@@ -29,7 +29,7 @@ Dataset 包含三种情况，其中小额未审批可以退款，大额未审批
 
 ## 关键数据与不变量
 
-Trial identity 必须包含 policy version、transaction fixture、Agent 或模型标识，以及 repetition。Attempt 需要复用同一个幂等键，而 canonical Attempt 只决定哪份输入用于评分，并不会删除前一次尝试可能已经造成的副作用，因此开始 infra recovery 之前必须确认操作是否提交。Approval token 属于敏感 Artifact，只能保存摘要或引用。核对副作用要以 Ledger 终态为准——Agent 文本不能替代它。
+Trial identity 必须带上 policy version、transaction fixture、Agent 或模型标识以及 repetition。Attempt 要复用同一个幂等键，而 canonical Attempt 只决定评分时读取哪份输入，并不会抹掉上一次尝试已经造成的副作用，所以开始 infra recovery 前必须先查清操作有没有提交。Approval token 属于敏感 Artifact，只能保存摘要或引用。副作用有没有发生，最终得看 Ledger，不能听 Agent 自己怎么说。
 
 ## 动手实验
 
@@ -39,20 +39,20 @@ uv run eval-harness-ref inspect output/refund-case
 uv run pytest tests/test_case_examples.py -k refund -q
 ```
 
-先手算三条决策，然后设计第四条 `amount=800, approved=true`，但让 approval_id 属于另一笔交易，并给出 expected 与 Verifier 条件。随后模拟退款 API 超时，分别讨论「请求未到达」和「服务已提交但响应丢失」两种情况能否直接重试。
+先手算三条决策，然后设计第四条 `amount=800, approved=true`，故意让 approval_id 指向另一笔交易，再写出 expected，并说明 Verifier 应当检查什么。随后模拟退款 API 超时，分别判断「请求未到达」和「服务已经提交但响应丢失」这两种情况下能不能直接重试。
 
 ## 预期输出与答案
 
-Buggy 会在大额未审批样本上失败，因此 Gate 状态是 failed，而 Fixed 的三条样本全部通过，Gate 状态是 passed。遇到跨交易的 approval_id，系统应当拒绝退款或升级人工，Verifier 则必须核对 approval.transaction_id。如果能够确认请求没有到达服务端，可以执行 infra retry，但提交状态未知时不能盲目重试。此时应先用 idempotency key 查询 ledger，再恢复同一个 Trial。
+Buggy 遇到大额未审批样本仍然退款，所以 Gate 状态是 failed，Fixed 的三条样本全部通过，Gate 状态是 passed。如果 approval_id 属于另一笔交易，系统应拒绝退款或转人工，Verifier 则必须核对 approval.transaction_id。能够确认请求没到服务端时，可以执行 infra retry，但提交状态不明就不能盲目重试。此时要先用 idempotency key 查询 ledger，再恢复同一个 Trial。
 
-仅靠 decision fixture 无法证明真实副作用安全，因为它没有核对退款工具实际收到的参数，也没有观察最终账本状态。完整的生产前评测必须加入工具参数检查与 final-state checks。
+只看 decision fixture 证明不了真实副作用是安全的，因为它既没检查退款工具实际收到了哪些参数，也没查看账本最后变成什么样。生产前要做完整评测，必须补上工具参数检查和 final-state checks。
 
 ## 如何核对
 
-阅读 [`refund-agent/eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/refund-agent/eval.yaml)、Dataset 与两个 Target 后运行案例测试，再把每条 Score 回连到 input/expected 和 target output，确认 Fixed 没有读取 Scorer 的内部信息。
+阅读 [`refund-agent/eval.yaml`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/reference/examples/refund-agent/eval.yaml)、Dataset 和两个 Target，然后运行案例测试。再从每条 Score 追回 input/expected 与 target output，确认 Fixed 没有偷看 Scorer 的内部信息。
 
 ## 本篇不能证明什么
 
-即使合成支付环境里的所有检查都通过，也不能证明真实支付 API、权限配置、并发幂等和补偿流程正确。这里得到的证据只覆盖冻结政策与当前 Fixture 范围。
+即使合成支付环境里的检查全部通过，也证明不了真实支付 API、权限配置、并发幂等和补偿流程都正确。这里得到的证据只覆盖已经冻结的政策和当前 Fixture。
 
 [上一节](shipping-boundary.md) · [下一节](knowledge-assistant.md)

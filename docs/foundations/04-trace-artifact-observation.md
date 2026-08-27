@@ -4,7 +4,9 @@
 
 ## 本篇要解决什么问题
 
-报告写着「通过 92%」，仍然不足以让结果可核对。读者还需要知道每个 Score 依据哪次执行、看了哪些事件、读取了哪个文件、文件后来是否被改写，以及评分完成后能否沿引用回到原始观察。Trace、Artifact 与 Observation Bundle 提供了三层结构，它们把「日志很多」转成一条能够反查的证据血缘。
+报告里就算写着「通过 92%」，你也没法立刻核对这个结果，因为还得查清每个 Score 来自哪次执行、看过哪些事件和文件，以及评分之后这些文件有没有被改写。Trace（轨迹）负责串起事件，Artifact（产物）负责保存大对象，两者先把执行证据留住。
+
+到了评分前，Observation Bundle（观测包）再冻结 Scorer 能读取的内容，让你从一个分数一路查回当时真正观察到的证据。
 
 ## 学完你能解释什么
 
@@ -15,13 +17,13 @@
 
 ## 贯穿案例
 
-shipping Target 返回 `{"fee": 10}` 时，Runner 会写入 Trial 开始和 Target 完成两个事件，而后一个事件的 payload 同时保存 output 与 expected，原始输出还会作为内容寻址 Artifact 保存。Bundle 随后把事件、Artifact 摘要和 canonical Attempt 绑定起来，因为 Scorer 只读取 Bundle，不再调用 Target，所以后续执行 `score` 时无需重跑脚本也能得到同一结果。
+shipping Target 返回 `{"fee": 10}` 时，Runner 先后写下 Trial 开始和 Target 完成两个事件，并在后一个事件的 payload 里同时留下 output 与 expected，同时把原始输出按内容地址存成 Artifact。Bundle 随后把这些事件、Artifact 摘要和 canonical Attempt 绑在一起，Scorer 只读这份 Bundle，不再调用 Target，因此以后执行 `score` 时不必重跑脚本，也能按同一份证据得到结果。
 
 ## 核心概念与边界
 
-**TraceEvent** 记录运行中可排序、可连接的事实，至少需要稳定的 event_id、sequence、type、parent_event_id 和 payload。**Artifact** 用来保存不适合直接内联在事件中的字节对象，例如 Diff、日志、截图、测试报告或环境终态，它们通过 SHA-256 摘要和相对路径被引用。**Observation Bundle** 是评分输入的快照，它声明「针对这个 Trial 的这个 canonical Attempt，评分器可以看哪些事件和产物」。
+**TraceEvent** 记下运行中能够排序并相互连接的事实，至少要带稳定的 event_id、sequence、type、parent_event_id 和 payload。事件里不适合直接塞入的字节内容，例如 Diff、日志、截图、测试报告或环境终态，则交给 **Artifact** 保存，其他对象通过 SHA-256 摘要和相对路径引用它。到了评分前，**Observation Bundle** 再把允许 Scorer 读取的事件和产物冻结下来，并明确它们属于这个 Trial 的哪一个 canonical Attempt。
 
-Trace 的范围不包括隐藏思维链，因此 Eval Harness 应记录外部可观察的模型消息、工具调用、状态变化和输出，但它不需要求、也不应假装获取模型的内部推理。Artifact 也有明确边界——只有同时带着摘要、类型和来源关系，附件才有资格进入评分。
+Trace 不包括隐藏思维链，因此 Eval Harness 应该记录外部看得见的模型消息、工具调用、状态变化和输出，却不能要求模型交出内部推理，更不能假装自己拿到了。Artifact 也有边界，附件只有带上摘要、类型和来源关系，才能进入评分。
 
 ## 机制图
 
@@ -47,13 +49,13 @@ ObservationBundle(bundle_id, digest, trial_id,
 ScoreRecord(..., observation_bundle_digest, scorer_id)
 ```
 
-时间戳可用于性能分析，但不应代替 sequence 和 parent 关系，因为不同机器的时钟可能漂移。`relative_path` 让报告能够迁移——如果在公开文档和证据里写本机绝对路径，结果既难以复现，也可能泄露用户名。digest 必须覆盖真正进入评分的内容，因为只哈希文件名并不能检测文件内容的替换。
+时间戳可以拿来分析性能，却不能代替 sequence 和 parent 关系，因为不同机器的时钟可能并不一致。`relative_path` 让报告换到另一台机器后仍能找到文件。如果公开文档和证据写的是本机绝对路径，别人既难复现，还可能从中看到用户名。digest 则必须覆盖 Scorer 真正读到的内容，只对文件名做哈希，发现不了文件内容已经被换掉。
 
 ## 设计取舍
 
-JSONL 适合追加事件、逐行恢复和命令行检查，代价是跨事件约束需要另外验证。完整输出如果同时放进事件和 Artifact，存储上会有重复，但小型教学实现可以借此同时展示可读 payload 与内容寻址。生产系统可以让事件只保存 ArtifactRef，但必须确保 Scorer 实际读取的内容已纳入 Bundle digest。
+JSONL 很适合逐条追加事件，也方便逐行恢复和用命令行检查，不过它不会替你验证跨事件约束。把完整输出同时放进事件和 Artifact 会多存一份数据，但教学实现借此既能展示便于阅读的 payload，也能演示怎样按内容寻址。生产系统可以只在事件里保存 ArtifactRef，不过必须把 Scorer 实际读取的内容算进 Bundle digest。
 
-Inspect AI 的锁定 [`EvalLog`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L1141-L1181) 属于 Eval Log 模型的**上游源码事实**。OpenAI Evals 的 [`RecorderBase`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L54-L93) 与 [`Event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L44-L51) 展示了另一种事件记录边界，这也是**上游源码事实**。本篇把两者放在证据血缘下统一解释，这一步才属于**机制解释**。
+Inspect AI 锁定提交里的 [`EvalLog`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/log/_log.py#L1141-L1181) 怎样组织 Eval Log，属于**上游源码事实**。OpenAI Evals 的 [`RecorderBase`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L54-L93) 和 [`Event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L44-L51) 怎样划定事件记录的范围，同样属于**上游源码事实**。本篇把这两套做法放到一条证据血缘里讲，才是我们的**机制解释**。
 
 ## 失败语义
 
@@ -72,26 +74,26 @@ eval-harness-ref inspect output/shipping
 eval-harness-ref score output/shipping
 ```
 
-查看 `evidence.json` 的第一个 Bundle，找到 Artifact digest 与文件相对路径。复制该 Artifact 的内容并计算 SHA-256，再将结果与文件名对比。然后临时移动一个 Artifact，再运行 `inspect` 观察证据检查失败，实验完成后要把文件恢复原位。
+打开 `evidence.json` 的第一个 Bundle，顺着 Artifact digest 找到对应的相对路径，然后复制文件内容并计算 SHA-256，看看结果是否与文件名一致。接着临时移动一个 Artifact，再运行 `inspect`，确认检查会因为找不到证据而失败。实验结束后记得把文件放回原位。
 
 ## 预期输出与答案
 
-正常时，`inspect` 会报告 6 个 Trial、6 个 Bundle 和 6 条 Score，其中 Artifact 文件名应当等于 `sha256:` 后面的 64 位十六进制摘要。只要缺少任意一个已引用 Artifact，`inspect` 就应以非零状态退出并显示「运行证据无效」，而不能继续打印原 Gate。`score` 会从冻结 Bundle 重算 6 条评分，整个过程不会产生新的 Attempt。
+正常情况下，`inspect` 会报告 6 个 Trial、6 个 Bundle 和 6 条 Score，每个 Artifact 文件名都应等于 `sha256:` 后面的 64 位十六进制摘要。只要少了一个已经被引用的 Artifact，`inspect` 就应以非零状态退出并显示「运行证据无效」，不能再把原来的 Gate 打印出来。`score` 则从冻结的 Bundle 重算 6 条评分，不会产生新的 Attempt。
 
 ## 常见误解
 
-「日志存在就能审计」遗漏了身份和因果关系，而「数据库记录不可变所以不用摘要」也没有考虑管理员、迁移和导出边界。只用最终回答评分，工具副作用与环境终态就会消失。如果试图通过保存全部内部推理来换取透明，又会引入隐私、安全和来源无法验证等问题。
+「有日志就能审计」忽略了身份和因果关系，「数据库记录不会变，所以不用摘要」也没把管理员操作、迁移和导出算进去。如果只拿最终回答评分，你就看不到工具造成的副作用和环境终态。反过来，把全部内部推理存下来也换不来可靠透明，只会带来隐私、安全和来源无法核对等新问题。
 
 ## 如何核对
 
-运行 `python -m pytest tests/test_lineage.py tests/test_cli.py -q`。检查测试是否覆盖父子顺序、事件去重、Artifact 去重、canonical Attempt 绑定和缺失文件。再从 `report.json` 的 Gate 找 metric_id，从 Metric 找 score_ids，从 Score 找 observation_bundle_digest，确认链条可逆。
+运行 `python -m pytest tests/test_lineage.py tests/test_cli.py -q`，看看测试有没有覆盖父子顺序、事件去重、Artifact 去重、canonical Attempt 绑定和文件缺失。然后从 `report.json` 的 Gate 找到 metric_id，再从 Metric 找 score_ids，最后从 Score 找 observation_bundle_digest，确认你确实能沿这条链查回去。
 
 ## 与其他 Harness 的关系
 
-Promptfoo 常围绕测试结果和 Trace 类型组织应用评测，Inspect AI 的 Eval Log 更完整地承载样本与事件，Agent Environment Harness 还需保存容器日志、补丁和终态。它们的实现密度差别很大，却都要回答同样的最小问题：Scorer 究竟看见了什么，证据属于哪次运行，内容在评分后又是否发生变化。
+Promptfoo 常围绕测试结果和 Trace 类型来组织应用评测，Inspect AI 用 Eval Log 更完整地保存样本与事件，Agent Environment Harness 还得留下容器日志、补丁和终态。它们写得详略不同，但都绕不开三个问题：Scorer 当时究竟看见了什么，这些证据属于哪次运行，评分以后内容有没有变化。
 
 ## 本篇不能证明什么
 
-完整血缘能够证明报告与已保存证据之间的一致性，也能在评分规则变化后确认重算仍然读取了同一份已冻结的内容，并核对证据引用在重算期间没有发生漂移，但它无法继续证明 Dataset 正确、Reference 无偏，或被测环境没有未记录的外部副作用。证据链回答的是「结论来自哪里」，至于「这个问题问得是否正确」，还需要从评测设计中另外找证据。
+完整血缘能帮你核对报告是否忠实反映已保存的证据，也能在评分规则改动后确认重算读的仍是同一份冻结内容，而且引用没有在重算途中漂移。不过，它证明不了 Dataset 选得正确、Reference 没有偏差，也证明不了环境里不存在尚未记录的外部副作用。证据链回答的是「结论从哪里来」，至于「问题问得对不对」，还得回到评测设计里找答案。
 
 [上一章](03-sample-trial-attempt.md) · [下一章](05-scorer-judge-score-metric.md)

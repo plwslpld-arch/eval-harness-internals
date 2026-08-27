@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-第一次动手先不接模型 API，而是完整跑通 Dataset → Trial → Attempt → Artifact → Score → Metric → Gate。这样一旦出现失败，就能在本地稳定复现，不会被网络、额度或模型漂移掩盖。你会先运行运费案例，再从生成的报告出发，反向追踪一条完整的失败证据链。
+第一次动手先不接模型 API，你要从 Dataset（数据集）一直跑到 Trial（试验）、Attempt、Artifact、Score、Metric 和 Gate，把整条路走通。这样哪一步出错，你都能在本地稳定复现，不会让网络、额度或模型漂移把问题盖住。先跑运费案例，然后打开报告，从结论倒着查回产生这次失败的整条证据链。
 
 ## 核心机制
 
 ![确定性 Eval 的最小闭环](../assets/diagrams/foundations/02-eval-spec-flow.svg)
 
-配置会先固定两个 Target 和三个 Sample，随后 Planner 生成六个 Trial，本地脚本为每个 Trial 输出 fee，再由 Scorer 与 expected 比较。Gate 的要求是 100%。输出目录保存着一次 Run 的全部根证据，后续 inspect/score/gate 都只消费这份目录，因此每个结论都能沿着同一条证据链回查。
+配置先把两个 Target 和三个 Sample 定下来，Planner 再据此建出六个 Trial，本地脚本逐个算出 fee，最后由 Scorer（评分器）拿它和 expected 比较。Gate 要求所有样本都通过。一次 Run 用到的根证据全部放在输出目录里，后面跑 inspect、score 或 gate 时都只读这份目录，所以你能沿同一条证据链把每个结论查回去。
 
 ## 完整流程
 
@@ -29,7 +29,7 @@ uv run eval-harness-ref inspect output/lab-01
 
 ## 关键数据与不变量
 
-计划 Trial 数必须是 6，每个完成的 Trial 只能拥有一个 canonical Attempt，而且 Artifact digest 必须与 bytes 匹配。两个 Target 的 Metric denominator 各自为 3。Score failed 与 Attempt succeeded 可以同时成立——前者描述产品结果，后者只说明执行过程顺利完成。
+计划里必须有 6 个 Trial，每个完成的 Trial 只能选定一个 canonical Attempt，Artifact（产物）的 digest 也必须和实际 bytes 对得上。两个 Target 各有 3 个 Metric denominator。Score failed 和 Attempt succeeded 可以同时出现：前者说产品结果没过关，后者只说程序顺利跑完了。这两件事不能混。
 
 ## 动手实验
 
@@ -39,11 +39,11 @@ uv run eval-harness-ref inspect output/lab-01
 uv run eval-harness-ref inspect output/lab-01
 ```
 
-不要修报告。先解释失败发生在证据、评分还是 Gate 层。
+先别修报告，你要先说清楚问题究竟出在证据、评分还是 Gate 这一层。
 
 ## 预期输出与答案
 
-首次运行会打印报告路径和两个 Target 的结论，输出如下。
+第一次运行时，程序会打印报告路径，同时告诉你两个 Target 分别得到了什么结论。
 
 ```text
 评测报告：output/lab-01/report.html
@@ -51,7 +51,7 @@ buggy-release：failed
 fixed-release：passed
 ```
 
-`inspect` 读的是同一份证据目录，因此下面的数字必须与其中的证据逐项对上。
+`inspect` 仍然读同一份证据目录，所以下面每个数字都必须能在目录里找到对应的证据。
 
 ```text
 评测：shipping-boundary
@@ -62,7 +62,7 @@ buggy-release：failed
 fixed-release：passed
 ```
 
-计划中有 6 个 Trial，最终也得到 6 个 Bundle 和 6 条 Score。三个数字相等，说明每个 Trial 都留下了一份可以被 Scorer 复核的证据，中途没有丢失。金额 100 的 buggy Trial 虽然是 succeeded/canonical，但对应 Score 仍为 failed，因为执行成功只描述程序完成了工作，产品结果却没有达到规则要求。报告会始终把执行状态与产品判断这两层分开记录。
+计划里有 6 个 Trial，最后也收到 6 个 Bundle 和 6 条 Score。这三个数字对得上，说明每个 Trial 都留下了一份供 Scorer 复核的证据，中间没丢。金额为 100 的 buggy Trial 已经跑成 succeeded/canonical，对应的 Score 却仍是 failed，因为程序跑完只能说执行没出问题，不能说计算结果符合规则。报告会把这两层分开记。
 
 篡改 Artifact 后再 `inspect`，会直接拒绝出结论。
 
@@ -70,7 +70,7 @@ fixed-release：passed
 错误：运行证据无效：Artifact 摘要不一致：artifacts/ae82e58adceaf5a6…
 ```
 
-这里报告的是「运行证据无效」，而非「评分失败」，因为问题出在证据层，此时流程还没有走到评分。旧的 report.html 虽然仍留在原来的输出目录里，却已经不能支撑任何有效结论。报告由证据推导而来，所以底层证据一旦改变，原有报告也就随之失效。
+这里程序报的是「运行证据无效」，不是「评分失败」，因为它在证据层就发现了问题，还根本没有进入评分。旧的 report.html 虽然还在原输出目录里，但它已经撑不起任何有效结论，因为报告是从证据推出来的，底层证据一改，原报告也就失效了。
 
 ## 如何核对
 
@@ -78,10 +78,10 @@ fixed-release：passed
 uv run pytest tests/test_shipping_e2e.py tests/test_cli.py -q
 ```
 
-检查测试对 Gate、分母、报告和 Trace 文件数量的断言。
+检查测试里的断言，看它们怎么核对 Gate、分母、报告和 Trace 文件的数量。
 
 ## 本篇不能证明什么
 
-本实验不运行真实模型、容器或生产计价服务，只证明本地 Fixture 和 Reference Harness 的声明行为。
+本实验没有运行真实模型、容器或生产计价服务，所以它只能证明本地 Fixture（测试夹具）和 Reference Harness 按声明的方式运行。
 
 [上一节](../cases/contract-review-agent.md) · [下一节](02-add-a-target-adapter.md)

@@ -4,9 +4,9 @@
 
 ## 这套教材回答什么
 
-你可能已经会调用模型、写几条测试样本，甚至能得到一个准确率，但一个可信 Eval Harness 还要继续追问：测的是哪个系统版本，哪些 Sample 在运行前进入计划，超时重试有没有把失败洗掉，Scorer 看了什么证据，分母为什么是这个数，Candidate 相对 Baseline 的差异有多稳定，缺证据时 Gate 为什么没有通过？
+你可能已经会调模型、写测试样本，甚至跑出了一个准确率，但要让 Eval Harness 产生可信的结果，你还得追问：到底测了哪个系统版本，运行前把哪些 Sample 排进了计划，超时重试是否掩盖了失败，Scorer 看到了哪些证据，分母怎么算出来，Candidate 和 Baseline 的差异稳不稳定，以及证据不够时 Gate 为什么不能放行？
 
-为了让这些问题都能落到可检查的记录上，本仓库把一次评测拆成下面这条对象链，每个对象只承担一段明确的责任。
+为了把这些问题逐一落到可检查的记录上，本仓库把一次评测拆成下面这条对象链，并规定每个对象管哪一段、留什么记录。
 
 ```text
 EvaluationSpec
@@ -20,17 +20,17 @@ EvaluationSpec
   → GateDecision / Report
 ```
 
-先不要急着背类名，因为读到任何一个对象时，你都可以沿着三个问题往下追：它为哪种错误负责，身份在何处固定，后续又怎样反向核对。
+先别急着背类名。读到任何一个对象时，你都可以顺着三个问题往下查：它要处理哪类错误，身份在哪里定下来，后面的环节又怎样倒查回来。
 
 ## 贯穿全书的第一个问题
 
-规则规定订单金额达到 100 元时免运费，而 buggy 程序写成 `amount > 100`，fixed 程序写成 `amount >= 100`，再把金额 99、100、101 三个 Sample 分别交给两个 Target 执行一次，运行前就能确定一共有 6 个 Trial。
+规则说订单满 100 元就免运费，buggy 程序却写成 `amount > 100`，fixed 程序则写成 `amount >= 100`。把 99、100、101 元这三个 Sample 分别交给两个 Target 跑一遍，你在运行前就能确定会产生 6 个 Trial。
 
-金额 100 的 buggy Trial 虽然正常完成了进程，却返回了错误答案，因此它会留下 Trial completed、Attempt succeeded/canonical、Score failed、Metric 2/3 和 Gate failed 这一串彼此不冲突的状态。先把这个分层立住，后面的证据链才不会混在一起。
+金额为 100 元的 buggy Trial 虽然把进程正常跑完了，答案却是错的，所以记录中会同时出现 Trial completed、Attempt succeeded/canonical、Score failed、Metric 2/3 和 Gate failed。这些状态并不冲突。你先把它们分清，后面查证据链时才不会搅在一起。
 
 ## 第一次运行
 
-准备好 Python 3.12 和 `uv` 以后，直接执行下面这组命令，就能得到一份不依赖模型凭据的确定性运行结果。
+准备好 Python 3.12 和 `uv` 以后，直接执行下面这组命令，不用提供模型凭据，也能稳定地复现同一份运行结果。
 
 ```bash
 uv sync --frozen
@@ -46,7 +46,7 @@ uv run eval-harness-ref inspect output/shipping
 4. `output/shipping/evidence.json`：Observation Bundle 怎样冻结评分输入；
 5. `output/shipping/report.json`：Score、Metric 和 Gate 怎样保留引用。
 
-再运行 `score` 和 `gate` 时，程序不会重跑 Target，而会从冻结证据重新计算，并分别写出 `rescore.json` 与 `regate.json`。如果重算后的结果发生变化，就应先检查证据或 Scorer 身份——不要从几份报告里挑一个更好看的数字。
+后面再跑 `score` 和 `gate` 时，程序不会重跑 Target，只会读取已经冻结的证据并重新计算，然后分别写出 `rescore.json` 和 `regate.json`。如果重算后的结果变了，先去核对证据和 Scorer 的身份，别从几份报告里挑一个更好看的数字。
 
 ## 阅读约定
 
@@ -59,4 +59,4 @@ uv run eval-harness-ref inspect output/shipping
 
 ## 接下来怎么走
 
-如果你是第一次系统学习，可以从[Agent Harness 与 Eval Harness](foundations/01-agent-vs-eval-harness.md)开始，按顺序读完七篇基础课。已经做过评测工程的读者可以直接去[学习路线](learning-paths.md)，根据手头的问题选择源码、Agent 环境或 Eval-to-RL 路径。
+如果你是第一次系统学评测，可以从[Agent Harness 与 Eval Harness](foundations/01-agent-vs-eval-harness.md) 起步，按顺序读完七篇基础课。如果你已经做过评测工程，就直接打开[学习路线](learning-paths.md)，按手头遇到的问题选源码、Agent 环境或 Eval-to-RL 路径。

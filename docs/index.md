@@ -4,7 +4,7 @@
 
 > 从一个样本到一次发布决定，读懂评测系统如何运行。
 
-这套面向开发者的中文 Eval Harness 源码教材，配有一个可离线运行的 Python Reference Harness，你会从 Task、Dataset、Trial、Attempt 和 Trace 开始，再沿六套真实开源实现读懂执行、评分、统计比较与发布 Gate。先跑通，再拆开看。
+这是一套写给开发者的中文 Eval Harness 源码教材，仓库里还配了一个可以离线运行的 Python Reference Harness。你会先分清 Task、Dataset、Trial、Attempt 和 Trace，然后对照六套真实的开源实现，看懂系统怎样执行、评分和做统计比较，最后又如何作出发布 Gate 决定。先跑通，再拆开看。
 
 [开始学习](00-start-here.md){ .md-button .md-button--primary }
 [选择学习路线](learning-paths.md){ .md-button }
@@ -12,11 +12,11 @@
 
 ## 姊妹项目
 
-这套教材从「一次运行留下了什么证据」开始，回答的是判定问题。那些证据本身是怎样被产生的，
-也就是模型给出下一步意图之后由谁把它变成可控制、可恢复的真实动作，写在
+这套教材从「一次运行留下了什么证据」问起，重点是怎样根据证据作出判定。如果你还想知道这些证据是怎样产生的，
+也就是模型给出下一步意图后，到底由谁把它变成可以控制、能够恢复的真实动作，可以去看
 [Agent Harness 源码内核](https://plwslpld-arch.github.io/agent-harness-internals/) 里，
-那边会沿六套编程智能体的锁定源码追配置怎样成形、工具循环怎样推进、权限在哪几层拦截、
-以及会话状态怎样恢复。两套教材共用同一种读法，都从锁定源码的行号锚点出发。
+那套教材对着六套编程智能体的锁定源码，一路追查配置怎样组出来、工具循环如何往下走、权限在哪几层拦住操作，
+以及会话中断后怎样恢复状态。两套教材用的是同一种读法：找到已经锁定的源码，再从精确行号一步步往下追。
 
 ## 三条主线
 
@@ -35,4 +35,4 @@ uv run eval-harness-ref inspect output/shipping
 uv run eval-harness-ref compare output/shipping --candidate-target fixed --baseline-target buggy
 ```
 
-完整目录把案例、实验和验证方法放在同一条学习路径上，具体入口见[文档总目录](contents.md)。
+完整目录已经把案例、实验和验证方法按学习顺序排好，你可以从[文档总目录](contents.md) 进入。

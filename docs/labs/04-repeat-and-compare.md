@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-「Candidate 高于 Baseline」听起来像一句简单结论，但只有把两边共享的 Sample/repetition 对齐后计算配对差值，这个结论才有明确的统计对象。本实验会运行 shipping、执行 compare 并核对三个 pair，同时解释重复 Trial 与基础设施 Attempt 为什么必须分开计数。
+「Candidate（候选版本）高于 Baseline（基线版本）」听起来很简单，但你必须先把两边共享的 Sample/repetition 一一对齐，再计算每对的差值，这句话才有明确的统计对象。这个实验会跑一遍 shipping，然后用 compare 算出并核对三个 pair，你也会看到为什么重复 Trial 和基础设施 Attempt 必须分开数。
 
 ## 核心机制
 
 ![配对比较与 Bootstrap](../assets/diagrams/foundations/06-comparison-gate.svg)
 
-Planner 每增加一次 repetition，就会创建一个身份独立的随机 Trial，虽然这个确定性案例会输出相同结果，但身份仍然不能合并，而 compare 使用 sample_id + repetition 对齐 candidate/baseline，基础设施 retry 则只为原 Trial 增加 Attempt，因此不会产生新的 pair——差别就在这里。Bootstrap 重采样的是这些 pair 的差值，固定 seed 是为了让教学结果能够稳定复现。
+Planner 每多跑一次 repetition，都会新建一个身份独立的随机 Trial，就算这个确定性案例每次给出同样的结果，这些 Trial 也不能合并。compare 按 sample_id + repetition 把 candidate 和 baseline 配成对，而基础设施 retry 只会给原 Trial 多加一个 Attempt，不会新增 pair。这就是两者的差别。Bootstrap（自助法）会对这些 pair 的差值重采样，而固定 seed 能让教学结果稳定复现。
 
 ## 完整流程
 
@@ -28,11 +28,11 @@ uv run eval-harness-ref compare output/lab-04 --candidate-target fixed --baselin
 
 ## 关键数据与不变量
 
-计划 pair 数来自 Dataset × repetitions，哪怕部分结果缺失，有效 pair 的交集也不能静默替代原计划数。Candidate/Baseline 必须使用相同的 Scorer 与环境，seed、iterations 和 pair key 共同标识这次分析，而多个 repetition 在同一 Sample 内通常相关，所以数据结构更复杂时，应采用 cluster 方法处理这种相关性。
+计划要配出多少个 pair，由 Dataset 的样本数乘以 repetitions 得出，哪怕后来丢了部分结果，你也不能悄悄用剩下的有效 pair 交集代替原计划数。Candidate 和 Baseline 必须使用同一个 Scorer，也要跑在相同环境里，而 seed、iterations 和 pair key 一起标明了这次分析的身份。同一个 Sample 里的多个 repetition 通常会彼此相关，所以数据结构一旦变得更复杂，就要用 cluster 方法处理这种相关性。
 
 ## 动手实验
 
-先手算 99/100/101 三个样本的 Score 对和差值，再把配置中的 repetitions 改为 2 并运行到新目录，提前预测 Trial、Metric denominator 与 pair_count。最后加入一次假设的 infra retry，说明这三个数量中哪些会变化，以及为什么。
+先手算 99、100、101 三个样本的 Score 对和它们之间的差值，再把配置中的 repetitions 改成 2，然后跑到一个新目录里，并在动手前预测 Trial、Metric denominator 和 pair_count 分别会变成多少。最后假设其中发生了一次 infra retry，判断这三个数量中哪些会变，再说明原因。
 
 ## 预期输出与答案
 
@@ -44,11 +44,11 @@ uv run eval-harness-ref compare output/lab-04 --candidate-target fixed --baselin
 95% Bootstrap 区间：[0.0000, 1.0000]
 ```
 
-这三个数字要放在一起读。pair_count=3 是因为每个 Target 各运行 3 个 Sample，并按照相同身份配成 3 对，而平均差值 0.3333 来自差值序列 `[0,1,0]`，其中只有金额 100 对应的那一对分出了胜负。
+这三个数字必须放在一起看。每个 Target 都跑了 3 个 Sample，而 compare 又按相同身份把它们配成 3 对，所以 pair_count=3。平均差值 0.3333 则是从差值序列 `[0,1,0]` 算出来的，只有金额为 100 的那一对分出了胜负。
 
-真正该停下来看的，是 **[0.0000, 1.0000] 跨过了 0** 这个区间，因为根据三个已知样本的机制，fixed 确实优于 buggy，但这么少的数据还撑不起「差异显著」的统计结论。样本量不足时，Bootstrap 会如实给出宽区间，提醒读者别把一个好看的均值当成充分证据。
+你真正该停下来看的，是 **[0.0000, 1.0000] 这个区间跨过了 0**，因为对这三个已知样本来说，fixed 的确优于 buggy，但这么少的数据还撑不起「差异显著」这个统计结论。样本太少时，Bootstrap 会如实给出一个很宽的区间，你也就不会把好看的均值当成充分证据。
 
-把 repetition 改成两次后，Trial 会变成十二个，每个 Target 的 denominator 与 pair_count 都会变成 6，而 Infra retry 只增加某个 Trial 的 Attempt 数，既不改变计划分母，也不增加 pair_count。这正是「重试不改变统计对象」在结果数据里的含义，统计对象没有变。
+把 repetition 改成两次以后，计划会建出十二个 Trial，每个 Target 的 denominator 和 pair_count 都会变成 6。Infra retry 只会给某个 Trial 增加 Attempt，它既不改计划分母，也不增加 pair_count。这就是「重试不改变统计对象」：Attempt 变多了，但计划里的统计对象一个也没多。
 
 ## 如何核对
 
@@ -60,6 +60,6 @@ uv run pytest tests/test_metrics.py tests/test_cli.py -k "bootstrap or compare" 
 
 ## 本篇不能证明什么
 
-三个边界样本加上基础 Bootstrap，仍不足以支持对更广泛场景的泛化判断。配对过程即使完全正确，也无法修复 Dataset 偏差或无效 Scorer，因为这两类问题发生在统计计算之前。
+三个边界样本再加上基础 Bootstrap，还是撑不起对更广泛场景的泛化判断。就算每一对都配得完全正确，统计计算也修不好有偏差的 Dataset 或无效的 Scorer，因为这两类问题在开始计算之前就已经出现了。
 
 [上一节](03-write-a-scorer.md) · [下一节](05-evaluate-an-agent-trace.md)
