@@ -26,7 +26,7 @@ Inspect AI 的 `eval()` 参数很多，模型、Task、Sandbox、Solver、epochs
 
 ## 关键数据结构
 
-`ResolvedTask` 表示 Registry、File 或对象解析后的 Task 及其来源，而 `TaskRunOptions` 是一次 Task 执行所需的冻结装配结果，其中包含 Task、Model、Sandbox、EvalConfig、Solver、Scorer、Logger、SampleSource 和运行限制。`Plan` 是 Solver steps 的有序列表。每个 step 都会记录为 EvalPlanStep，以便日志重放“实际运行了哪些 Solver”。
+`ResolvedTask` 表示 Registry、File 或对象解析后的 Task 及其来源，而 `TaskRunOptions` 是一次 Task 执行所需的冻结装配结果，其中包含 Task、Model、Sandbox、EvalConfig、Solver、Scorer、Logger、SampleSource 和运行限制。`Plan` 是 Solver steps 的有序列表。每个 step 都会记录为 EvalPlanStep，以便日志重放「实际运行了哪些 Solver」。
 
 Task 的 Dataset 与 Sample 是评测输入，Solver 改变 TaskState，包括 messages、output、tools 与 store，而 Scorer 在 Solver 结束后读取 state 与 Target。这个切分比把 prompt、模型调用和评分全塞进一个 callback 更容易审计，但 Task 对象仍是多项配置的聚合根。
 

@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-每套 Harness 都提供了与吞吐有关的功能，但 lm-eval 批量发送请求，Inspect 按 task/sample 并发并管理 retry，Promptfoo 展开矩阵后还要检查哪些特性必须串行，DeepEval 使用 asyncio semaphore，而 Harbor 并发执行 Trial 并负责恢复目录，它们解决的其实不是同一个问题。缓存也一样，有的只保存模型响应，有的保存评分甚至完整 Trial。只比较“是否支持并发或重试”，会把最要紧的正确性风险藏起来。
+每套 Harness 都提供了与吞吐有关的功能，但 lm-eval 批量发送请求，Inspect 按 task/sample 并发并管理 retry，Promptfoo 展开矩阵后还要检查哪些特性必须串行，DeepEval 使用 asyncio semaphore，而 Harbor 并发执行 Trial 并负责恢复目录，它们解决的其实不是同一个问题。缓存也一样，有的只保存模型响应，有的保存评分甚至完整 Trial。只比较「是否支持并发或重试」，会把最要紧的正确性风险藏起来。
 
 ## 核心机制
 
@@ -25,7 +25,7 @@
 
 1. 从计划全集计算工作项，固定 Trial denominator。
 2. 标注状态依赖、速率限制和资源约束，决定 batch/并发上限。
-3. 为 Target 与 Judge 分别定义 timeout、retry 和预算，不要共享一个“retries”。
+3. 为 Target 与 Judge 分别定义 timeout、retry 和预算，不要共享一个「retries」。
 4. 缓存 key 覆盖输入、Target/Scorer identity、配置与代码版本，缓存命中写入证据来源。
 5. 持久化每个完成项，恢复时核对 config/digest 和完整结果，清理不完整 artifact。
 6. 报告 pass/fail/infra_error/metric_error/cancelled，不因 continue-on-error 缩小分母。

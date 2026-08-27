@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-CompletionFn 这个名字听起来像是“完成一次评测”，但它实际只负责根据给定 prompt 产生 CompletionResult，而数据怎样遍历、prompt 怎样构造、Reference 怎样比较以及 metric 怎样聚合，都由 Eval 决定。把两者分清之后，模型重试、Sample 重复和 Scorer 判断就不会被塞进同一个 callback，SolverEval 为何构成另一种执行边界也更容易理解。
+CompletionFn 这个名字听起来像是「完成一次评测」，但它实际只负责根据给定 prompt 产生 CompletionResult，而数据怎样遍历、prompt 怎样构造、Reference 怎样比较以及 metric 怎样聚合，都由 Eval 决定。把两者分清之后，模型重试、Sample 重复和 Scorer 判断就不会被塞进同一个 callback，SolverEval 为何构成另一种执行边界也更容易理解。
 
 ## 先建立源码地图
 

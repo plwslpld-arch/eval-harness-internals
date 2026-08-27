@@ -1,4 +1,4 @@
-# 01｜Agent Harness 与 Eval Harness：先分清“执行”与“评测”
+# 01｜Agent Harness 与 Eval Harness：先分清「执行」与「评测」
 
 [上一章](../00-start-here.md) · [下一章](02-task-dataset-target-environment.md)
 
@@ -12,7 +12,7 @@
 
 - 为什么 Agent Loop 的停止条件属于被测系统，而 Trial 的停止、取消和预算属于评测协议；
 - 为什么 Trace 是两个仓库的接口，却不能因此把两套 Harness 合并；
-- 为什么一个 Agent 自己声称“任务完成”只是观察值，不是独立 Score；
+- 为什么一个 Agent 自己声称「任务完成」只是观察值，不是独立 Score；
 - 怎样判断一项能力应该写进 Agent Harness 课程还是 Eval Harness 课程。
 
 ## 贯穿案例

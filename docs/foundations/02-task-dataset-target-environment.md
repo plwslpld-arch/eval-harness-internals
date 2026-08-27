@@ -66,7 +66,7 @@ lm-evaluation-harness 的 [`Task`](https://github.com/EleutherAI/lm-evaluation-h
 - Target 声明模型 A，服务实际返回模型 B：身份调和失败，证据应标为 `invalid`。
 - Environment 创建失败：Trial `blocked`，可在基础设施预算内恢复；不能当作产品零分。
 - Environment 未成功重置：后续 Trial 可能互相污染，应阻断而非继续累计分数。
-- Task 只写“效果好”：Scorer 无法知道观察边界，评测设计尚未完成。
+- Task 只写「效果好」：Scorer 无法知道观察边界，评测设计尚未完成。
 
 ## 动手实验
 

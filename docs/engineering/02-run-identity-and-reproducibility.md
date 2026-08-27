@@ -1,12 +1,12 @@
-# Run Identity 与可复现性：保存“实际运行了什么”
+# Run Identity 与可复现性：保存「实际运行了什么」
 
 [上一节](01-minimal-eval-loop.md) · [下一节](03-retries-and-recovery.md)
 
 ## 本篇要解决什么问题
 
-“使用 model-x 在 dataset-v2 上运行”还算不上可复现身份，因为模型别名会漂移，Dataset 可能被覆盖，脚本也可能依赖当前目录。环境变量、Scorer prompt 与阈值同样会变，所以两个名称无法还原运行条件。Eval Harness 必须先把声明身份解析为实际身份，再用摘要连接配置、输入、代码与产物——本篇围绕 `canonical_digest`、安全相对路径、Trial ID 和 Artifact digest，说明身份链最少需要什么。
+「使用 model-x 在 dataset-v2 上运行」还算不上可复现身份，因为模型别名会漂移，Dataset 可能被覆盖，脚本也可能依赖当前目录。环境变量、Scorer prompt 与阈值同样会变，所以两个名称无法还原运行条件。Eval Harness 必须先把声明身份解析为实际身份，再用摘要连接配置、输入、代码与产物——本篇围绕 `canonical_digest`、安全相对路径、Trial ID 和 Artifact digest，说明身份链最少需要什么。
 
-读完后，你应能设计 RunManifest，区分 logical name、resolved identity 和 content digest，并判断两份报告能否直接配对比较。这里的“可复现”不保证远程 API 将来返回相同文本，只保证读者能确认当时使用了什么，并在可控组件上重构条件。
+读完后，你应能设计 RunManifest，区分 logical name、resolved identity 和 content digest，并判断两份报告能否直接配对比较。这里的「可复现」不保证远程 API 将来返回相同文本，只保证读者能确认当时使用了什么，并在可控组件上重构条件。
 
 ## 核心机制
 
@@ -14,7 +14,7 @@
 
 Reference Harness 先按键排序并固定分隔符与 UTF-8，再对规范 JSON 计算 SHA-256，因此键顺序不会改变语义相同映射的 digest。Planner 把 EvaluationSpec digest 的一部分写进 run_id，再用 target_id、sample_id 与 repetition 组成 Trial ID。ArtifactStore 对真实 bytes 求摘要，而 Bundle digest 继续覆盖 Artifact 引用和 Trace 事件，让产物回到同一条身份链。
 
-身份不能只靠摘要，因为摘要回答“内容是否相同”，字段才说明“内容扮演什么角色”。因此 RunManifest 应保存 evaluation_id、源码 commit、Python/依赖版本、Dataset digest、Target Adapter identity、实际模型或镜像、Scorer identity、Gate policy、随机种子和时间。秘密只记来源，不记值。
+身份不能只靠摘要，因为摘要回答「内容是否相同」，字段才说明「内容扮演什么角色」。因此 RunManifest 应保存 evaluation_id、源码 commit、Python/依赖版本、Dataset digest、Target Adapter identity、实际模型或镜像、Scorer identity、Gate policy、随机种子和时间。秘密只记来源，不记值。
 
 ## 完整流程
 
@@ -42,7 +42,7 @@ uv run pytest tests/test_identity.py tests/test_models.py tests/test_runtime_ext
 uv run eval-harness-ref run reference/examples/shipping/eval.yaml --output output/identity-demo
 ```
 
-先把 `evidence.json` 中某个 Artifact relative_path 改为 `../README.md` 并执行 inspect，观察路径越界如何被拦截。恢复后再改动 Artifact bytes，这次检查内容摘要校验。最后复制 shipping 配置，只改 target_id 而不改脚本，再判断两次运行是“内容相同”“逻辑身份相同”，还是“可直接比较”。
+先把 `evidence.json` 中某个 Artifact relative_path 改为 `../README.md` 并执行 inspect，观察路径越界如何被拦截。恢复后再改动 Artifact bytes，这次检查内容摘要校验。最后复制 shipping 配置，只改 target_id 而不改脚本，再判断两次运行是「内容相同」「逻辑身份相同」，还是「可直接比较」。
 
 ## 预期输出与答案
 

@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-六套 Harness 都会谈到“任务、数据、模型”，可是这些相同名词背后的对象边界并不相同：lm-evaluation-harness 的 Task 同时知道文档、请求和 metric，Inspect Task 把 dataset、solver、scorer 与 sandbox 组合起来，OpenAI Evals 通过 Registry 中的 EvalSpec 实例化 Eval，而 Promptfoo 会从 config 展开 prompt/provider/test。DeepEval 可以直接接收已经执行完的 TestCase，Harbor Task 则连环境与 verifier 一并携带。只盯着 API 名字看，很容易把它们错当成同一种结构——本篇要做的，就是把这些职责放回同一套坐标里比较。
+六套 Harness 都会谈到「任务、数据、模型」，可是这些相同名词背后的对象边界并不相同：lm-evaluation-harness 的 Task 同时知道文档、请求和 metric，Inspect Task 把 dataset、solver、scorer 与 sandbox 组合起来，OpenAI Evals 通过 Registry 中的 EvalSpec 实例化 Eval，而 Promptfoo 会从 config 展开 prompt/provider/test。DeepEval 可以直接接收已经执行完的 TestCase，Harbor Task 则连环境与 verifier 一并携带。只盯着 API 名字看，很容易把它们错当成同一种结构——本篇要做的，就是把这些职责放回同一套坐标里比较。
 
 ## 核心机制
 

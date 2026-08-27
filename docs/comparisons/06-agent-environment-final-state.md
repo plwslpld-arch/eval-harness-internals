@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-模型 benchmark 主要观察生成文本，而 Agent Eval 还必须看到运行过程对环境造成的副作用。Inspect Sandbox、Promptfoo trace assertions、DeepEval agentic trace 与 Harbor container verifier 都能触达 Agent 行为，但它们的隔离能力、终态证据与验证强度并不相同，因此本篇要比较“能够执行工具”与“能够可信验证终态”之间究竟隔着什么。
+模型 benchmark 主要观察生成文本，而 Agent Eval 还必须看到运行过程对环境造成的副作用。Inspect Sandbox、Promptfoo trace assertions、DeepEval agentic trace 与 Harbor container verifier 都能触达 Agent 行为，但它们的隔离能力、终态证据与验证强度并不相同，因此本篇要比较「能够执行工具」与「能够可信验证终态」之间究竟隔着什么。
 
 ## 核心机制
 
@@ -46,7 +46,7 @@
 
 ## 预期输出与答案
 
-退款任务必须查询实际交易或 ledger，不能只相信“已退款”的文字，代码任务也必须运行隐藏测试并检查 diff，不能把“测试通过”当成终态证据——如果 Scorer 无法访问环境，就应记为 unscorable/blocked，而不是因为文本看起来合理便判定成功。
+退款任务必须查询实际交易或 ledger，不能只相信「已退款」的文字，代码任务也必须运行隐藏测试并检查 diff，不能把「测试通过」当成终态证据——如果 Scorer 无法访问环境，就应记为 unscorable/blocked，而不是因为文本看起来合理便判定成功。
 
 ## 如何核对
 

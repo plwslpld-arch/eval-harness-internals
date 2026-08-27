@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-DeepEval 经常被介绍成“像 pytest 一样测试大模型应用”，但源码里的核心远不止一个 `assert score >= threshold`——输入可能是已经包含 actual_output 的 `LLMTestCase`，也可能是等待用户代码执行的 Golden，而指标既可以同步或异步运行，也可以面向单轮、对话或 trace。再把缓存、忽略错误、并发和测试运行管理器放进来，执行方式与记录方式都会随之变化，所以本课程会追踪这些对象怎样汇合成 `TestResult`、`MetricData` 与一次 TestRun。
+DeepEval 经常被介绍成「像 pytest 一样测试大模型应用」，但源码里的核心远不止一个 `assert score >= threshold`——输入可能是已经包含 actual_output 的 `LLMTestCase`，也可能是等待用户代码执行的 Golden，而指标既可以同步或异步运行，也可以面向单轮、对话或 trace。再把缓存、忽略错误、并发和测试运行管理器放进来，执行方式与记录方式都会随之变化，所以本课程会追踪这些对象怎样汇合成 `TestResult`、`MetricData` 与一次 TestRun。
 
 课程锁定版本为 `a2e0d4cfd3118352d321c1c84bdeba17d4a201bc`。DeepEval 项目还包含大量具体指标、追踪、平台集成和 Agentic 入口，这里只解释锁定范围内能够直接核对的执行骨架，并把它映射到统一的 Dataset → Sample → Target → Scorer → Result 模型，同时保留 DeepEval 自己使用的 Golden、TestCase 与 Metric 命名。
 

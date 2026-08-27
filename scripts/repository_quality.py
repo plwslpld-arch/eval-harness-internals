@@ -240,6 +240,26 @@ def _repository_metadata_violations(root: Path) -> list[str]:
     return out
 
 
+def _quote_style_violations(root: Path) -> list[str]:
+    """中文正文统一用「」。
+
+    ASCII 的弯引号在中文里既不是标准用法，也和代码里的字符串引号混淆。
+    姊妹仓库早有这条门禁，本仓库一直没有，实测积累了 202 处。
+    代码块与行内代码保持原样，英文原文里的引号不受影响。
+    """
+    out: list[str] = []
+    for path in sorted(root.joinpath("docs").rglob("*.md")):
+        if "assets" in str(path):
+            continue
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(r"```.*?```", "", text, flags=re.S)
+        text = re.sub(r"`[^`\n]*`", "", text)
+        hits = text.count("\u201c") + text.count("\u201d")
+        if hits:
+            out.append(f"{path.relative_to(root)}: {hits} 处 ASCII 引号，中文正文请用「」")
+    return out
+
+
 def collect_repository_violations(root: Path) -> list[str]:
     root = root.resolve()
     violations: list[str] = []
@@ -260,6 +280,7 @@ def collect_repository_violations(root: Path) -> list[str]:
     violations.extend(_public_text_violations(root))
     violations.extend(_mkdocs_navigation_violations(root))
     violations.extend(_repository_metadata_violations(root))
+    violations.extend(_quote_style_violations(root))
     return sorted(set(violations))
 
 

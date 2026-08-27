@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-CI 常把“平均分大于阈值”直接当成 release gate，但这个平均值可能来自不完整的分母或无效 Judge，也可能掩盖关键安全项失败，甚至根本无法与 Baseline 比较。因此，Gate 的责任不是再算一次分，而是验证证据资格、应用预声明政策，并给出可追溯的决定。本篇会解释 passed、failed、blocked、inconclusive 四种状态，也会说明为什么其他项目分数再高，也不能补偿 critical risk。
+CI 常把「平均分大于阈值」直接当成 release gate，但这个平均值可能来自不完整的分母或无效 Judge，也可能掩盖关键安全项失败，甚至根本无法与 Baseline 比较。因此，Gate 的责任不是再算一次分，而是验证证据资格、应用预声明政策，并给出可追溯的决定。本篇会解释 passed、failed、blocked、inconclusive 四种状态，也会说明为什么其他项目分数再高，也不能补偿 critical risk。
 
 读完后，你应该能够从 Score/Metric/Comparison 出发设计 Gate DAG，分清产品失败、评测阻断和证据不足，并让 CI 退出码保留比红绿灯更丰富的机器可读原因。
 

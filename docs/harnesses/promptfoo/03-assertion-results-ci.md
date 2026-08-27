@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-一个响应可同时接受 contains、JSON schema、自定义脚本和模型判分，断言还可带权重、阈值、命名指标、否定前缀与嵌套集合。因此，“pass”并不是 Provider 自带的属性，而是某组判据对某次响应作出的聚合结论。本篇会追踪 `runAssertions` 怎样产生 `GradingResult`，Evaluator 怎样把它并入结果和 metrics——然后再解释为什么这些统计还构不成完整的发布 Gate。
+一个响应可同时接受 contains、JSON schema、自定义脚本和模型判分，断言还可带权重、阈值、命名指标、否定前缀与嵌套集合。因此，「pass」并不是 Provider 自带的属性，而是某组判据对某次响应作出的聚合结论。本篇会追踪 `runAssertions` 怎样产生 `GradingResult`，Evaluator 怎样把它并入结果和 metrics——然后再解释为什么这些统计还构不成完整的发布 Gate。
 
 读完后，应能区分单断言失败与执行错误，说明模型判分的 token 成本、断言集合的组件结果和比较型断言的延迟判分，并确定 CI 阈值读取的稳定字段。
 

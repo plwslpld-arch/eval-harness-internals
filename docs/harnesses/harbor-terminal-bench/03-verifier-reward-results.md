@@ -38,7 +38,7 @@ BenchmarkResults 计算 pass@k 时，输入的是每个 task 的成功计数，�
 
 文件协议让任意语言编写的 tests 都能与 Python Harness 解耦，同时也形成清晰的 artifact——不过路径、格式和写入原子性必须严格遵守约定。优先读取 JSON 可以支持多个 reward，文本格式则兼容简单任务，而专门异常能够避免基础设施故障被误记成 Agent 失败，从而守住证据边界。
 
-regrade 可以在不重复昂贵 Agent 执行的前提下修复 Verifier 或应用新标准，但它会改变 Scorer identity，所以报告必须并列保留原 verifier result，不能直接覆盖旧结果。覆盖会切断证据链。pass@k 适合回答“允许多次尝试时能否成功”这类产品问题，可如果线上只有一次机会，只展示 pass@10 就会误导读者。发布 Gate 还必须处理环境错误、缺失 Trial、任务权重和关键任务非补偿规则。
+regrade 可以在不重复昂贵 Agent 执行的前提下修复 Verifier 或应用新标准，但它会改变 Scorer identity，所以报告必须并列保留原 verifier result，不能直接覆盖旧结果。覆盖会切断证据链。pass@k 适合回答「允许多次尝试时能否成功」这类产品问题，可如果线上只有一次机会，只展示 pass@10 就会误导读者。发布 Gate 还必须处理环境错误、缺失 Trial、任务权重和关键任务非补偿规则。
 
 ## 动手实验
 
@@ -51,7 +51,7 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-测试合法运行却断言失败时，可以写入 reward 0，而其余三种情况分别属于 verifier、解析或传输错误，不应该伪造成 0。总 Trial accuracy 是 2/6，如果把 resolved task 定义为“至少成功一次”，结果就是 1/2。pass@2 会高于或等于 pass@1，但任务 B 仍然是 0，具体估计则应使用锁定公式计算，并报告每个 task 的 n/c。
+测试合法运行却断言失败时，可以写入 reward 0，而其余三种情况分别属于 verifier、解析或传输错误，不应该伪造成 0。总 Trial accuracy 是 2/6，如果把 resolved task 定义为「至少成功一次」，结果就是 1/2。pass@2 会高于或等于 pass@1，但任务 B 仍然是 0，具体估计则应使用锁定公式计算，并报告每个 task 的 n/c。
 
 Regrade 至少要保存 source trial id 与 artifact digest、新旧 verifier commit/tests digest、环境 identity、regrade 时间、旧新 rewards 和差异原因，因为它只是重新评分，并不会产生新的 Agent Trial。这不是新的 Trial。
 

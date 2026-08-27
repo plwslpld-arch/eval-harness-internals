@@ -45,7 +45,7 @@ uv run pytest tests/test_runtime_extensions.py -k trace -q
 
 ## 预期输出与答案
 
-合法 Trace 的导入结果应包含 trace_event_count=2、两个 type 和 final_output，而 parent 一旦断裂，就应按 Trace 无效处理并停止，不能继续产生正常评分。代码修复任务的 Scorer 需要先在干净 verifier 环境中应用 diff 或检查工作树，再运行隐藏 tests，不能只读取 Agent 末尾那句“已修复”。
+合法 Trace 的导入结果应包含 trace_event_count=2、两个 type 和 final_output，而 parent 一旦断裂，就应按 Trace 无效处理并停止，不能继续产生正常评分。代码修复任务的 Scorer 需要先在干净 verifier 环境中应用 diff 或检查工作树，再运行隐藏 tests，不能只读取 Agent 末尾那句「已修复」。
 
 如果环境启动失败，可以由 Harness Attempt 受控恢复，而隐藏 tests 的合法失败属于产品失败，tests 本身缺失则属于 verifier error。即使清理失败发生在结果产生之后，也要附加诊断并阻断环境复用。
 
