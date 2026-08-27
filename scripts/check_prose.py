@@ -33,7 +33,11 @@ import sys
 
 GATES = {
     "句长中位":   (26, "字",   lambda v: v >= 26),        # 对标语料 35（分号计句末后的真值）
-    "破折号":     (8,  "/万字", lambda v: 8 <= v <= 55),  # 现状 0  → 对标 33。上限防过量
+    # 只封上限，不设下限。下限试过，是个坏门禁：它规定的是一种修辞手段而不是
+    # 一个结果，而本仓库另一条规则又给破折号封了上限。上下一夹，写作方就在随便
+    # 什么位置塞够最小数量——实测收到「目录名称——不会被直接当成架构结论」
+    # 「这些产物——必须来自同一次运行」这类插在主谓之间的病句。节奏交给句长三项去量。
+    "破折号":     (55, "/万字", lambda v: v <= 55),
     "分号":       (60, "/万字", lambda v: v <= 60),        # 对标 21。不封顶就会拿「；」焊句子刷中位数
     "冒号定义句": (25, "/万字", lambda v: v <= 25),        # 抓「X：说明」堆砌的篇
     "AI套话":     (0,  "处",   lambda v: v == 0),         # 现状已是 0，守住
@@ -93,13 +97,20 @@ def changed_docs():
                           text=True).stdout.strip() or "HEAD"
     out = subprocess.run(["git", "diff", "--name-only", base, "HEAD"],
                          capture_output=True, text=True).stdout
-    return [p for p in out.split("\n") if p.endswith(".md") and p.startswith("docs/")]
+    return [p for p in out.split("\n") if p.endswith(".md") and p.startswith("docs/")
+            and not any(d in p for d in SKIP_DIRS)]
+
+
+# 资产目录里的 README 是 SVG 清单，不是给人读的正文，别按散文节奏体检。
+SKIP_DIRS = ("docs/assets/",)
 
 
 def main(paths):
     failed = 0
     checked = 0
     for path in paths:
+        if any(d in path.replace("\\", "/") for d in SKIP_DIRS):
+            continue
         try:
             text = open(path, encoding="utf-8").read()
         except OSError:
