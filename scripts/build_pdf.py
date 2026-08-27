@@ -58,6 +58,11 @@ def font_candidates() -> list[tuple[Path, Path]]:
             Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
             Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"),
         ),
+        # macOS：让本地也能在推送前把 PDF 构出来核对，不必只靠 CI。
+        (
+            Path("/System/Library/Fonts/STHeiti Light.ttc"),
+            Path("/System/Library/Fonts/STHeiti Medium.ttc"),
+        ),
     ]
 
 
