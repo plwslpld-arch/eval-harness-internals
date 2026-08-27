@@ -60,7 +60,7 @@ Trial 不保存「最终分数」，因为 Harness 要先完成执行，再把�
 
 ## 设计取舍
 
-最简单的本地 Harness 可以同步执行，再从内存里的结果选出 canonical。分布式系统还得处理 Lease（租约）、Fencing Token（隔离令牌）和幂等提交，否则旧 Worker 超时后，新 Worker 虽然已经接管，旧 Worker 仍可能迟到并写入结果。首版 Reference Harness 没有声称已经解决分布式一致性，它只规定「一个 Trial 最多有一个 canonical」，这样既把语义说清楚，也不会让复杂基础设施遮住真正的统计问题。
+最简单的本地 Harness 可以同步执行，再从内存里的结果选出 canonical。分布式系统还得处理 Lease、Fencing Token 和幂等提交，否则旧 Worker 超时后，新 Worker 虽然已经接管，旧 Worker 仍可能迟到并写入结果。首版 Reference Harness 没有声称已经解决分布式一致性，它只规定「一个 Trial 最多有一个 canonical」，这样既把语义说清楚，也不会让复杂基础设施遮住真正的统计问题。
 
 Harbor 锁定版本里的 [`Trial` 抽象基类](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py#L86-L125) 展示了 Agent Trial 从创建到结束怎样变化，这是**上游源码事实**。Reference Harness 单独划出 Attempt 这一层，是本仓库的**教学实现**，不能把其中字段逐项套到 Harbor 的内部结构上。
 

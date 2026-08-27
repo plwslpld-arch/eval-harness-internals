@@ -17,7 +17,7 @@
 
 ## 贯穿案例
 
-shipping Target 返回 `{"fee": 10}` 时，Runner 先后写下 Trial 开始和 Target 完成两个事件，并在后一个事件的 payload 里同时留下 output 与 expected，同时把原始输出按内容地址存成 Artifact。Bundle 随后把这些事件、Artifact 摘要和 canonical Attempt 绑在一起，Scorer 只读这份 Bundle，不再调用 Target，因此以后执行 `score` 时不必重跑脚本，也能按同一份证据得到结果。
+shipping Target 返回 `{"fee": 10}` 时，Runner 先后写下 Trial 开始和 Target 完成两个事件，在后一个事件的 payload 里留下 output 与 expected，再把原始输出按内容地址存成 Artifact。Bundle 随后把这些事件、Artifact 摘要和 canonical Attempt 绑在一起，Scorer 只读这份 Bundle，不再调用 Target，因此以后执行 `score` 时不必重跑脚本，也能按同一份证据得到结果。
 
 ## 核心概念与边界
 

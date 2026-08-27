@@ -36,7 +36,7 @@ uv run pytest tests/test_runtime_extensions.py -k trace -q
 
 ## 预期输出与答案
 
-导入器应该在导入阶段拦住这三种结构错误，所以它们都不会产生正常 Score；合法的 Trace 则会输出 event_count=2、types 列表和 final_output.answer=42。即使 Scorer 最后只核对 answer，你也要保留整份导入 Trace 的 digest，因为用来评分的字段少，不代表证据血缘可以省掉。
+导入器应该在导入阶段拦住这三种结构错误，所以它们都不会产生正常 Score。合法的 Trace 则会输出 event_count=2、types 列表和 final_output.answer=42。即使 Scorer 最后只核对 answer，你也要保留整份导入 Trace 的 digest，因为用来评分的字段少，不代表证据血缘可以省掉。
 
 ## 如何核对
 

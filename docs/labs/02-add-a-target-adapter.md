@@ -35,7 +35,7 @@ uv run pytest tests/test_subprocess_target.py tests/test_runner.py -q
 
 ## 预期输出与答案
 
-函数返回 dict 时，Adapter 应该交回 completed；函数返回 list 时，它则要交回 product_failure 或者明确的 contract error。如果业务异常说明被测代码自身失败了，就把它记成 product_failure，只有明确的基础设施异常才能触发新 Attempt。还有，Callable 的身份必须带上模块、qualname 和代码 digest，只写 `function` 根本分不出两段不同的实现。
+函数返回 dict 时，Adapter 应该交回 completed。函数返回 list 时，它则要交回 product_failure 或者明确的 contract error。如果业务异常说明被测代码自身失败了，就把它记成 product_failure，只有明确的基础设施异常才能触发新 Attempt。还有，Callable 的身份必须带上模块、qualname 和代码 digest，只写 `function` 根本分不出两段不同的实现。
 
 ## 如何核对
 

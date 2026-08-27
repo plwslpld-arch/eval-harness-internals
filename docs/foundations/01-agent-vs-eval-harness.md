@@ -21,7 +21,7 @@ Agent 和评测系统都会调用模型、执行工具，也都会保存 Trace�
 
 ## 核心概念与边界
 
-**Agent Harness** 管理模型上下文、Agent Loop、工具暴露、权限、Session、压缩和恢复，所以它通常要判断「这次任务还能不能继续，什么时候可以结束」。**Eval Harness** 管理 EvaluationSpec（评测规格）、Dataset、Trial Plan、Target Adapter（被测对象适配器）、Observation、Scorer、Metric、比较和 Gate，但这些环节各有自己的状态：一次运行可以正常完成，评分却可能失败，即使一组评分全部通过，整体 Gate 仍可能因为缺少样本而无法判断。
+**Agent Harness** 管理模型上下文、Agent Loop、工具暴露、权限、Session、压缩和恢复，所以它通常要判断「这次任务还能不能继续，什么时候可以结束」。**Eval Harness** 管理 EvaluationSpec、Dataset、Trial Plan、Target Adapter（被测对象适配器）、Observation、Scorer、Metric、比较和 Gate，但这些环节各有自己的状态：一次运行可以正常完成，评分却可能失败，即使一组评分全部通过，整体 Gate 仍可能因为缺少样本而无法判断。
 
 Target Adapter 把两边明确隔开：它接收 Trial 和运行约束，调用被测系统，再把系统行为和可观察证据交回来。你可以用它接普通函数、RAG 服务、Coding Agent 或多智能体系统，却不能让它替这些系统重新做内部决策。Agent Harness 产出带有明确语义的 Trace，Eval Harness 则检查 Trace 是否完整、是否确实来自指定 Target，并决定哪些字段可以交给评分环节。
 
@@ -51,7 +51,7 @@ Target Adapter 把两边明确隔开：它接收 Trial 和运行约束，调用�
 
 ## 设计取舍
 
-这里适合倒置依赖，让 Eval Harness 只认 Target Adapter 协议，不去绑定 Claude、Codex 或某个 RAG 框架的内部类。这样一来，同一份 Dataset 和同一个 Scorer 就能拿来比较不同系统，不过 Adapter 必须说清楚它能不能导出工具事件、重置环境，以及报告实际模型版本。做不到的能力就直接标成不可用。填一个假的空字段，只会把证据缺口藏起来。
+这里适合用依赖倒置，让 Eval Harness 只认 Target Adapter 协议，不去绑定 Claude、Codex 或某个 RAG 框架的内部类。这样一来，同一份 Dataset 和同一个 Scorer 就能拿来比较不同系统，不过 Adapter 必须说清楚它能不能导出工具事件、重置环境，以及报告实际模型版本。做不到的能力就直接标成不可用。填一个假的空字段，只会把证据缺口藏起来。
 
 Inspect AI 的锁定源码把通用评测入口放在 [`eval()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L118-L157) 和 [`eval_async()`](https://github.com/UKGovernmentBEIS/inspect_ai/blob/ebf4815ee260afcc8c34ad9d66e6f8d98a89e905/src/inspect_ai/_eval/eval.py#L413-L452)，再把 Task 的执行逻辑下沉到 `_eval/task`。这是**上游源码事实**。为了比较多套实现，本篇把这套分工归纳成两层责任，这属于**机制解释**，不要求各个项目使用相同的类名或目录结构。
 
@@ -88,7 +88,7 @@ eval-harness-ref inspect output/shipping
 
 ## 与其他 Harness 的关系
 
-lm-evaluation-harness 主要围绕 Task、Model Adapter 和批量请求组织代码，Promptfoo 更强调 Provider、Test Case 与 Assertion，Harbor 则给 Agent 和环境的整个生命周期留出了更多位置。它们切分代码的方式各不相同，但你仍然可以沿着「被测执行、证据、评分、聚合」四个环节来比较。Agent Harness 仓库研究 Claude、Codex、Gemini、DeepSeek Harness、pi、OpenCode 等运行时内部怎样工作，本仓库关心的是如何把这些运行时当作 Target，公平地执行并评分。
+lm-evaluation-harness 主要围绕 Task、Model Adapter 和批量请求组织代码，Promptfoo 更强调 Provider、Test Case 与 Assertion，Harbor 则更重视怎样管理 Agent 和环境的整个生命周期。它们切分代码的方式各不相同，但你仍然可以沿着「被测执行、证据、评分、聚合」四个环节来比较。Agent Harness 仓库研究 Claude、Codex、Gemini、DeepSeek Harness、pi、OpenCode 等运行时内部怎样工作，本仓库关心的是如何把这些运行时当作 Target，公平地执行并评分。
 
 ## 本篇不能证明什么
 

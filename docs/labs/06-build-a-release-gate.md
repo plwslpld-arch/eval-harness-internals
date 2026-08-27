@@ -10,7 +10,7 @@
 
 ![Gate 的资格检查与政策检查](../assets/diagrams/foundations/06-comparison-gate.svg)
 
-Gate 在比较 threshold 之前，先要检查 evidence admissibility（证据资格）：Trial 是不是完整，Artifact 是不是有效，Score 里有没有 invalid、unscorable 或 uncertain，错误率又是否还在预算内。只有证据有资格支撑判断，再去比阈值才有意义。passed、failed、blocked 和 inconclusive 各自说明一种状态，如果你把它们全压成布尔值 success，就再也分不清究竟是缺证还是不达标。这一步不能省。
+Gate 在比较 threshold 之前，先要检查 evidence admissibility：Trial 是不是完整，Artifact 是不是有效，Score 里有没有 invalid、unscorable 或 uncertain，错误率又是否还在预算内。只有证据有资格支撑判断，再去比阈值才有意义。passed、failed、blocked 和 inconclusive 各自说明一种状态，如果你把它们全压成布尔值 success，就再也分不清究竟是缺证还是不达标。这一步不能省。
 
 ## 完整流程
 
@@ -49,7 +49,7 @@ buggy-release：failed
 fixed-release：passed
 ```
 
-先看 buggy 的 2/3。minimum=0.6 时，0.667 确实超过了阈值，总体 Metric 便会给出「通过」，但它漏掉的恰好是金额为 100 的样本，也就是整个案例里最该守住的边界。**总体阈值达标和关键行为正确是两回事**，所以真实政策要把这个 Sample 或规则设成 critical，让它可以单独否决发布。Ledger 缺失时，前两个节点会进入 blocked 或 inconclusive；发现越权退款时，critical node 和 release 都会 failed；只有证据全部有效且满足阈值，所有节点才会 passed。
+先看 buggy 的 2/3。minimum=0.6 时，0.667 确实超过了阈值，总体 Metric 便会给出「通过」，但它漏掉的恰好是金额为 100 的样本，也就是整个案例里最该守住的边界。**总体阈值达标和关键行为正确是两回事**，所以真实政策要把这个 Sample 或规则设成 critical，让它可以单独否决发布。Ledger 缺失时，前两个节点会进入 blocked 或 inconclusive。发现越权退款时，critical node 和 release 都会 failed。只有证据全部有效且满足阈值，所有节点才会 passed。
 
 ## 如何核对
 
@@ -57,6 +57,6 @@ fixed-release：passed
 
 ## 本篇不能证明什么
 
-Gate 按规则跑完，只能说当前版本的政策已经根据当前证据做出了判断。这份判断可以追溯，但它无法告诉你规则本身是否合理、组织是否已经批准部署，也不能保证生产配置和评测环境一致。这些都要另外核验。
+Gate 按规则跑完，只能说它已经根据当前证据执行了当前版本的政策。你能沿着记录查清它为什么这样判，却不能据此断定规则本身合理、组织已经批准部署，也不能保证生产配置和评测环境一致。这些都要另外核验。
 
 [上一节](05-evaluate-an-agent-trace.md) · [下一节](../appendices/glossary.md)

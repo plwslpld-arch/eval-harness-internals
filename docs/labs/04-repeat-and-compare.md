@@ -28,7 +28,7 @@ uv run eval-harness-ref compare output/lab-04 --candidate-target fixed --baselin
 
 ## 关键数据与不变量
 
-计划要配出多少个 pair，由 Dataset 的样本数乘以 repetitions 得出，哪怕后来丢了部分结果，你也不能悄悄用剩下的有效 pair 交集代替原计划数。Candidate 和 Baseline 必须使用同一个 Scorer，也要跑在相同环境里，而 seed、iterations 和 pair key 一起标明了这次分析的身份。同一个 Sample 里的多个 repetition 通常会彼此相关，所以数据结构一旦变得更复杂，就要用 cluster 方法处理这种相关性。
+计划要配出多少个 pair，由 Dataset 的样本数乘以 repetitions 得出，哪怕后来丢了部分结果，你也不能悄悄用剩下的有效 pair 交集代替原计划数。Candidate 和 Baseline 必须使用同一个 Scorer，并且跑在相同环境里，否则评分口径和运行条件都会变化。seed、iterations 和 pair key 一起标明了这次分析的身份，而同一个 Sample 里的多个 repetition 通常会彼此相关，所以数据结构一旦变得更复杂，就要用 cluster 方法处理这种相关性。
 
 ## 动手实验
 
@@ -44,7 +44,7 @@ uv run eval-harness-ref compare output/lab-04 --candidate-target fixed --baselin
 95% Bootstrap 区间：[0.0000, 1.0000]
 ```
 
-这三个数字必须放在一起看。每个 Target 都跑了 3 个 Sample，而 compare 又按相同身份把它们配成 3 对，所以 pair_count=3。平均差值 0.3333 则是从差值序列 `[0,1,0]` 算出来的，只有金额为 100 的那一对分出了胜负。
+这三个数字必须放在一起看。每个 Target 都跑了 3 个 Sample，而 compare 又按相同身份把它们配成 3 对，所以 pair_count=3。平均差值 0.3333 是从差值序列 `[0,1,0]` 算出来的。只有金额为 100 的那一对分出了胜负。
 
 你真正该停下来看的，是 **[0.0000, 1.0000] 这个区间跨过了 0**，因为对这三个已知样本来说，fixed 的确优于 buggy，但这么少的数据还撑不起「差异显著」这个统计结论。样本太少时，Bootstrap 会如实给出一个很宽的区间，你也就不会把好看的均值当成充分证据。
 
@@ -60,6 +60,6 @@ uv run pytest tests/test_metrics.py tests/test_cli.py -k "bootstrap or compare" 
 
 ## 本篇不能证明什么
 
-三个边界样本再加上基础 Bootstrap，还是撑不起对更广泛场景的泛化判断。就算每一对都配得完全正确，统计计算也修不好有偏差的 Dataset 或无效的 Scorer，因为这两类问题在开始计算之前就已经出现了。
+三个边界样本再加上基础 Bootstrap，还是撑不起对更广泛场景的泛化判断。就算每一对都配得完全正确，统计计算也修不好有偏差的 Dataset 或无效的 Scorer，因为这两类问题在开始计算之前就已经出现了。问题出在统计之前。
 
 [上一节](03-write-a-scorer.md) · [下一节](05-evaluate-an-agent-trace.md)
