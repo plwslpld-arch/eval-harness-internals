@@ -7,6 +7,10 @@
     <a href="docs/contents.md">完整目录</a> ·
     <a href="https://plwslpld-arch.github.io/eval-harness-internals/downloads/eval-harness-internals-cn.pdf">下载完整中文 PDF</a>
   </p>
+  <p>
+    姊妹项目：<a href="https://github.com/plwslpld-arch/agent-harness-internals">Agent Harness 源码内核</a>
+    —— 模型给出下一步意图之后，谁把它变成可控制的真实动作
+  </p>
 </div>
 
 ## 这是什么

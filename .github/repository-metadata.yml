@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "name": "eval-harness-internals",
+  "visibility": "public",
+  "defaultBranch": "main",
+  "about": "面向开发者的中文 Eval Harness 源码教材：解析 lm-evaluation-harness、Inspect AI、OpenAI Evals、Promptfoo、DeepEval 与 Harbor，覆盖任务、运行、评分、统计与发布门禁。",
+  "homepage": "https://plwslpld-arch.github.io/eval-harness-internals/",
+  "sibling": {
+    "repo": "plwslpld-arch/agent-harness-internals",
+    "name": "Agent Harness 源码内核",
+    "url": "https://github.com/plwslpld-arch/agent-harness-internals",
+    "site": "https://plwslpld-arch.github.io/agent-harness-internals/"
+  },
+  "topics": [
+    "eval-harness",
+    "benchmark",
+    "source-code-analysis",
+    "chinese",
+    "llm",
+    "lm-evaluation-harness",
+    "inspect-ai",
+    "openai-evals",
+    "promptfoo",
+    "deepeval",
+    "llm-as-a-judge"
+  ]
+}
