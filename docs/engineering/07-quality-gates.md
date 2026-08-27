@@ -4,17 +4,17 @@
 
 ## 本篇要解决什么问题
 
-CI 常把「平均分大于阈值」直接当成 release gate，但这个平均值可能来自不完整的分母或无效 Judge，也可能掩盖关键安全项失败，甚至根本无法与 Baseline 比较。因此，Gate 的责任不是再算一次分，而是验证证据资格、应用预声明政策，并给出可追溯的决定。本篇会解释 passed、failed、blocked、inconclusive 四种状态，也会说明为什么其他项目分数再高，也不能补偿 critical risk。
+CI 常把「平均分超过阈值」直接当成 release gate，但这个平均分可能漏了一部分应跑的样本，可能由无效 Judge 算出，还可能把关键安全失败藏在总体分数里，甚至根本对不上 Baseline。所以 Gate（门禁）不该再把分数重算一遍，它要先判断证据能不能用，再按预先声明的政策判断结果，而且每一步都得能追回原证据。本篇会分清 passed、failed、blocked 和 inconclusive 这四种状态，也会看看为什么其他项目得分再高，都不能抵消 critical risk。
 
-读完后，你应该能够从 Score/Metric/Comparison 出发设计 Gate DAG，分清产品失败、评测阻断和证据不足，并让 CI 退出码保留比红绿灯更丰富的机器可读原因。
+读完后，你应该能拿着 Score/Metric/Comparison 画出 Gate DAG，看懂产品何时确实失败、评测何时被条件阻断，以及现有证据何时还不足以下结论。不要只留红绿灯，CI 退出时还要把具体原因以机器可读的方式保留下来，供后面的系统继续判断。
 
 ## 核心机制
 
 ![从 Metric 与证据到 Gate Decision](../assets/diagrams/foundations/06-comparison-gate.svg)
 
-Gate 分为两个阶段，先做 admissibility checks，再做 policy checks。资格检查会核对计划完整性、身份一致、Artifact 摘要、Scorer 有效性、错误或缺失阈值以及比较配对，只要关键证据处于 invalid，就不能得到 passed。通过资格检查后，政策检查才会比较 minimum pass rate、non-inferiority margin、成本、延迟和关键场景，而 Reference Harness 的 `evaluate_gate` 给出了最小版本——只要 critical scores 包含 invalid/unscorable/uncertain，就返回 inconclusive，只有有效 Metric 才能继续与 threshold 比较。
+Gate 判断这批证据时分两步走，先做 admissibility checks 来检查证据资格，再做 policy checks，顺序不能反过来。第一步要查计划是否完整、身份能否对上、Artifact 有没有摘要、Scorer 是否有效、错误和缺失是否超过阈值，还要检查比较双方能不能配成对，只要关键证据是 invalid，就不能返回 passed。证据过关后，第二步才去比较 minimum pass rate、non-inferiority margin、成本、延迟和关键场景。Reference Harness 里的 `evaluate_gate` 只实现了最小规则：critical scores 只要出现 invalid/unscorable/uncertain，它就返回 inconclusive，只有效 Metric 才能拿去和 threshold 比较。
 
-真实 Gate 可以组织成一张 DAG，依次检查数据完整性、Harness 健康、核心质量、安全或隐私非补偿、Candidate vs Baseline 与发布范围，并让每个节点输出 status、reason 和 evidence IDs。只要上游处于 blocked，下游就不能手工把它改写成 passed。
+真正用于发布的 Gate 可以画成一张 DAG，让节点依次检查数据是否齐全、Harness 是否健康、核心质量是否过关、安全或隐私风险能否补偿、Candidate 和 Baseline 比起来怎样，最后再限定发布范围。每个节点都要输出 status、reason 和 evidence IDs。上游只要还是 blocked，下游就不得手工把它改成 passed。
 
 ## 完整流程
 
@@ -29,9 +29,9 @@ Gate 分为两个阶段，先做 admissibility checks，再做 policy checks。�
 
 ## 关键数据与不变量
 
-`GateStatus={passed, failed, blocked, inconclusive}`。其中 failed 表示有效证据违反了政策，blocked 表示预声明条件尚未满足，而 inconclusive 表示现有证据不足以支持任一方向。只有所有关键前置都有效，状态才能成为 passed，同时 GateDecision 必须引用 Metric/Score/Comparison，不能把散落的日志文本当作唯一证据。
+`GateStatus={passed, failed, blocked, inconclusive}` 中，failed 表示有效证据已经证明结果违反政策，blocked 表示预先声明的条件还没满足，inconclusive 则表示现有证据还支持不了任何一个方向。先把这三种分清。只有所有关键前置都有效时，状态才能成为 passed，而 GateDecision 必须引用 Metric/Score/Comparison，不能只拿几段散落的日志当证据。
 
-阈值属于特定政策版本，只要测量合同没有变化，重新 gate 时就可以复用冻结的 Score/Metric，但一旦 Dataset、Scorer 或 Sample 集发生改变，相关上游就必须重新运行。Waiver 需要保存 owner、理由、范围、到期时间和非豁免风险，而且不能删除原始失败记录。
+每个阈值都跟着某个具体政策版本，如果测量合同没变，重新执行 gate 时可以直接复用已经冻结的 Score/Metric，但 Dataset、Scorer 或 Sample 集只要变了，相关上游就必须重跑。别复用错了。Waiver 也要写明 owner、理由、范围、到期时间和不得豁免的风险，同时保留原始失败记录。
 
 ## 动手实验
 
@@ -43,18 +43,18 @@ uv run eval-harness-ref gate output/gate
 uv run pytest tests/test_gates.py -q
 ```
 
-把 minimum 从 1.0 改为 0.6 后，讨论 buggy 为什么可能在数学上通过，但业务边界错误仍然不该自动发布。接着构造一个 ScoreStatus.UNSCORABLE，观察 Gate 能否进入 passed，最后再为退款 Agent 写一条 critical policy，要求未授权大额退款必须为 0 次。
+先把 minimum 从 1.0 改成 0.6，然后解释 buggy 为什么能在数学上达标，但仍然不能带着业务边界错误自动发布。再构造一个 ScoreStatus.UNSCORABLE，看 Gate 还能不能进入 passed，最后给退款 Agent 写一条 critical policy，明确要求未授权大额退款必须保持 0 次。
 
 ## 预期输出与答案
 
-在原配置下，fixed 会 passed，buggy 会 failed。仅降低总体阈值会让取得 2/3 的 buggy 达标，但金额 100 的边界可能属于关键合同，所以应该把它单列为 noncompensatory check，不能让另外两条普通样本补偿。UNSCORABLE 的关键证据应让 Gate 进入 inconclusive，而退款 Agent 只要出现任一有效的未授权大额退款失败，critical gate 就应直接 failed。如果该样本的环境根本没有跑起来，结果只能是 blocked/inconclusive，而不是 passed。
+使用原配置时，fixed 会 passed，buggy 会 failed。只降低总体阈值，得到 2/3 的 buggy 就能达标，但金额 100 的边界可能是关键合同，所以你要把它单独列成 noncompensatory check，不让另两条普通样本抵消这一条失败。关键证据如果是 UNSCORABLE，Gate 应进入 inconclusive，而退款 Agent 只要确实发生一次有效的未授权大额退款，critical gate 就应直接 failed。可要是该样本的环境根本没跑起来，你只能得到 blocked/inconclusive，不能把它判成 passed。
 
 ## 如何核对
 
-先阅读 [`gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/gates.py)、[`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 中的 Gate 状态和 [`test_gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_gates.py)，然后打开报告，验证 gate.metric_ids 能否回到对应的 Metric 与 Score。
+先阅读 [`gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/gates.py)、[`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 里的 Gate 状态和 [`test_gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_gates.py)，再打开报告，从 gate.metric_ids 往回查，看每个 ID 能不能找到相应的 Metric 和 Score。
 
 ## 本篇不能证明什么
 
-即使 GatePolicy 执行正确，也不能证明阈值合理、指标会与业务长期一致，或组织已经授权发布，因为它自动化的只是已声明政策与证据检查。政策本身仍然需要治理、复审和生产反馈。
+就算 GatePolicy 一丝不差地执行了已声明的政策，它也证明不了阈值设得合理，证明不了指标会长期跟业务保持一致，更不代表组织已经授权发布。这不是发布指令。政策还得持续治理和复审，也要接受生产反馈。
 
 [上一节](06-agent-environments.md) · [下一节](08-eval-to-rl.md)

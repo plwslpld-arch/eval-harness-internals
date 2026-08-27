@@ -4,17 +4,17 @@
 
 ## 本篇要解决什么问题
 
-开放式回答、合同风险和多轮 Agent 轨迹很难用精确匹配评分，所以很多评测会直接加入 LLM-as-a-Judge。可是「让更强模型打 0 到 1 分」还不是完整方案，因为它没有交代 rubric、输入可见性、输出 schema、失败/弃权、位置偏差、校准数据和成本。Judge 是带有不确定性的测量器，不是事实裁判——本篇会从 Reference Harness 的离线 Judge Protocol 出发，设计一层既能替换实现、又能核对证据的适配层。
+开放式回答、合同风险和多轮 Agent 轨迹很难靠精确匹配来评分，所以不少评测会直接接入 LLM-as-a-Judge。可是，只说「让更强的模型打 0 到 1 分」还算不上完整方案，因为 rubric（评分标准）、输入能看见什么、输出 schema、失败与弃权、位置偏差、校准数据和成本，全都没有交代。Judge（裁判模型）会带来自己的不确定性，不能把它当成事实裁判。本篇从 Reference Harness 的离线 Judge Protocol 入手，看适配层怎样既允许替换具体实现，又让你能够核对证据。
 
-核心路线默认不访问网络。`JudgeScorer` 可以接受任何实现 `judge_id + judge(ObservationBundle)` 的对象，而离线 Stub 与真实 API 使用同一份结果合同。这样一来，测试既能锁住 lineage，又不会把模型凭据或漂移带进基础门禁。
+核心路线默认不访问网络。只要对象实现了 `judge_id + judge(ObservationBundle)`，`JudgeScorer` 就可以接收它，离线 Stub 和真实 API 也共用同一份结果合同。这样测试既能锁住 lineage，也不会把模型凭据和模型漂移带进基础门禁。
 
 ## 核心机制
 
 ![Judge 校准与人工对照](../assets/diagrams/foundations/05-scoring.svg)
 
-Judge 的输入应来自已经冻结的 ObservationBundle，并且明确选择 output、reference、trace、tools 和 artifacts，否则隐藏标签或候选名称就可能泄漏给评分器。JudgeResult 保存 value、passed 与 reason，JudgeScorer 在此基础上增加 scorer_id、judge_id、Bundle digest、canonical Attempt 和 ScoreStatus。如果评分模型调用需要 retry，恢复的也只是 Judge 基础设施，不能因此重新运行 Target。
+Judge 只能读取已经冻结的 ObservationBundle（观测包），而且你要明确规定它能看 output、reference、trace、tools 和 artifacts 里的哪些内容，否则隐藏标签或候选名称可能直接泄漏给评分器。JudgeResult 保存 value、passed 和 reason，JudgeScorer 再补上 scorer_id、judge_id、Bundle digest、canonical Attempt 与 ScoreStatus。调用评分模型时如果需要 retry，也只能恢复 Judge 这一侧的基础设施，不能顺手把 Target 重新跑一遍。
 
-可靠接入首先需要 Rubric 定义构念和可观察证据，然后由 Judge Adapter 固定模型、prompt、schema、参数和重试政策。Calibration 再用人工双标和仲裁数据测量一致率、偏差、稳定性与阈值，这三层合起来才是一份可检验的测量合同。Release Eval 需要使用冻结的 Judge 版本，而训练 reward 使用的 Judge 与独立发布 Judge 也必须隔离，否则训练优化会直接污染发布标准。
+要可靠地接入 Judge，先得用 Rubric 写清要测什么、哪些证据可以观察，再让 Judge Adapter 固定模型、prompt、schema、参数和重试政策。到了 Calibration 阶段，再拿人工双标和仲裁数据去测一致率、偏差、稳定性与阈值。三层都齐了，才构成一份可以检验的测量合同。Release Eval 要使用冻结的 Judge 版本，训练 reward 所用的 Judge 也必须与独立发布 Judge 隔离，否则训练过程会针对发布标准直接优化，最后污染这把尺子。
 
 ## 完整流程
 
@@ -29,9 +29,9 @@ Judge 的输入应来自已经冻结的 ObservationBundle，并且明确选择 o
 
 ## 关键数据与不变量
 
-Judge identity 与 Scorer identity 都必须版本化，因为 Rubric 改一个词、模型别名漂移或输出解析器改变，都可能改写测量合同。`reason` 不应包含隐藏 chain-of-thought，只需给出可审计的判定依据、引用证据和 rubric 条目。如果 Judge 可以 abstain，ScoreStatus 就应表达 uncertain/unscorable。不能把它压成 failed。
+Judge identity 和 Scorer identity 都必须带版本，因为 Rubric 哪怕只改一个词，模型别名发生漂移，或输出解析器换了实现，都可能改变测量合同。`reason` 不该保存隐藏的 chain-of-thought，只要给出能够审计的判定依据、所引证据和 rubric 条目就够了。如果 Judge 允许 abstain，ScoreStatus 就应该保留 uncertain 或 unscorable，不能一律压成 failed。
 
-成对 Judge 需要保存 pair key 和展示顺序，而把 A/B 交换后再评一次，可以帮助检测位置偏差。即使多个 Judge 同时投票，统计单位仍然是原来的 Trial，不能把 Judge 数量当成样本量。人工仲裁结果应独立存储。原始分歧不能被覆盖。
+做成对 Judge 时，系统要保存 pair key 和展示顺序，再交换 A/B 评一次，这样你才有机会查出位置偏差。即使多个 Judge 一起投票，统计单位仍然是原来的 Trial，不能把 Judge 的数量冒充样本量。人工仲裁结果要单独保存。原始分歧也得留下。
 
 ## 动手实验
 
@@ -45,9 +45,9 @@ uv run pytest tests/test_runtime_extensions.py -k judge -q
 
 ## 预期输出与答案
 
-离线测试不调用网络，但 Score 仍应保留 value=0.8、reason「满足离线规则」以及完整 lineage。换成真实配置后，至少还要增加 judge_id、provider/model version、prompt/rubric digest、schema、参数、重试/超时、cache policy、成本和校准数据版本。
+离线测试不会访问网络，但 Score 仍然要保存 value=0.8、reason「满足离线规则」和完整 lineage。换成真实配置以后，你至少还得补上 judge_id、provider/model version、prompt/rubric digest、schema、参数、重试与超时、cache policy、成本，以及校准数据版本。
 
-如果 Judge 超时，系统应产生 Judge error/不可评分，而不是把产品记为 0 分。如果两位人工存在分歧且仲裁尚未完成，结果就应是 uncertain，因为测量还没有收敛。如果 Judge 与人工在关键高风险条目上系统性漏判，那么即使整体一致率很高，它也不能用于 release gate。
+如果 Judge 超时，系统应该记录 Judge error 或不可评分，不能把产品直接记成 0 分。如果两位人工标注者意见不同，仲裁又没有完成，结果就应该是 uncertain，因为测量结论还没定下来。要是 Judge 在关键的高风险条目上持续漏判，那么整体一致率再高，也不能把它接到 release gate 上。
 
 ## 如何核对
 
@@ -55,6 +55,6 @@ uv run pytest tests/test_runtime_extensions.py -k judge -q
 
 ## 本篇不能证明什么
 
-结构化输出、reason、多人投票或高总体一致率，都不能证明 Judge 没有偏差，也不能证明它真正理解业务并适合高风险发布。校准结论只适用于当时的数据分布、rubric 和模型版本，任何一项发生变化后，都需要重新验证。
+结构化输出、reason、多人投票和很高的总体一致率，都证明不了 Judge 没有偏差，也不能说明它真正理解业务，足以判断高风险发布。校准结论只适用于当时的数据分布、rubric 和模型版本，其中任何一项发生变化，都要重新验证。
 
 [上一节](03-retries-and-recovery.md) · [下一节](05-statistical-comparison.md)

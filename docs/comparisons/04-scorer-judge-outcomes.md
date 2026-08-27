@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-lm-eval 的 process_results、Inspect Scorer、OpenAI Evals match record、Promptfoo Assertion、DeepEval Metric 和 Harbor Verifier 都会把运行观察转成结果，不过它们输出的可能是 exact match、连续 score 或 reward map，语义并不相同。真正容易出错的地方，是把「评分失败」与「评分器失败」混为一谈，因此本篇会用统一 Outcome 状态比较确定性规则、模型 Judge 和环境 Verifier。
+lm-eval 的 process_results、Inspect Scorer（评分器）、OpenAI Evals match record、Promptfoo Assertion、DeepEval Metric 和 Harbor Verifier（验证器）都会读取运行中观察到的内容，再给出结果，可这些结果可能是 exact match、连续 score，也可能是 reward map，表达的意思并不相同。这里最容易犯的错，是把「产品没通过评分」和「评分器自己没跑成」混在一起，所以这一篇会先把结果归到统一的 Outcome 状态，再比较确定性规则、模型 Judge 和环境 Verifier 怎样判断。
 
 ## 核心机制
 
 ![Scorer 与 Gate 的分层状态](../assets/diagrams/foundations/05-scoring.svg)
 
-Scorer 接收 Observation 与冻结参考后返回 ScoreRecord，Judge 是它可以调用的测量依赖，而 Metric 负责聚合多个 Score，Gate 再把政策应用到聚合结果上。ScoreStatus 至少要区分 passed、failed、uncertain、unscorable 和 invalid，因为数值 0 只能表示一次有效测量得到 0，不能拿来代替 error 或缺失。
+Scorer 读入 Observation 和已经冻结的参考，再返回 ScoreRecord。它可以调用 Judge（裁判模型）完成开放式判断，Metric 随后汇总多个 Score，Gate 最后按照政策检查汇总结果。ScoreStatus 至少要分清 passed、failed、uncertain、unscorable 和 invalid，因为数值 0 只能说明一次有效测量确实得到 0，不能拿来顶替 error 或缺失。
 
 | Harness | 评分对象 | 典型输出 | 错误边界 |
 | --- | --- | --- | --- |
@@ -32,11 +32,11 @@ Scorer 接收 Observation 与冻结参考后返回 ScoreRecord，Judge 是它可
 
 ## 关键数据与不变量
 
-Scorer identity 一旦改变，测量合同也随之改变，而 Threshold 属于政策或 Metric 配置，不能覆盖原始 score。多组件 reward 未经说明不能直接相加，critical component 还可以采用非补偿规则，同时 Judge 的投票次数不能增加 Trial 分母。Verifier reward 文件缺失也不等于 reward=0。
+Scorer identity 一旦变化，系统实际采用的测量合同也就变了。Threshold 归政策或 Metric 配置管理，不能回头覆盖原始 score。多个组件给出的 reward 没有预先说明就不能直接相加，critical component 还可以执行非补偿规则，而 Judge 多投几次票也不能增加 Trial 分母。Verifier reward 文件缺失时，同样不能写成 reward=0。
 
 ## 动手实验
 
-针对同一份退款输出，分别设计三种 Scorer：用确定性 `decision` 做精确匹配，让 Judge 评估解释质量，再由环境 Verifier 检查退款数据库，并写出三者各自允许读取的 Observation、可能错误和 ScoreStatus：
+针对同一份退款输出，分别设计三种 Scorer：先用确定性的 `decision` 做精确匹配，再让 Judge 评估解释质量，最后由环境 Verifier 检查退款数据库，同时写明三者各自可以读取哪些 Observation、可能遇到什么错误，以及应该返回哪种 ScoreStatus：
 
 ```bash
 uv run pytest tests/test_scoring.py tests/test_gates.py -q
@@ -44,14 +44,14 @@ uv run pytest tests/test_scoring.py tests/test_gates.py -q
 
 ## 预期输出与答案
 
-精确匹配遇到字段缺失时应记为 unscorable，Judge 超时属于 Judge error/unscorable，数据库明确显示未授权退款才是有效 failed，而数据库不可访问属于 verifier error——只有有效 failed 才能成为产品负样本，其他状态要么阻断评测，要么降低证据资格。
+精确匹配找不到所需字段时，应当记为 unscorable。Judge 超时属于 Judge error/unscorable，只有数据库明确显示发生了未授权退款，才能算有效的 failed，数据库无法访问则属于 verifier error。只有有效 failed 才能成为产品负样本，其他状态要么阻断评测，要么让这份证据失去资格。
 
 ## 如何核对
 
-回看 Promptfoo 断言、DeepEval Metric 和 Harbor Verifier 课程，先辨认产品失败与测量失败如何落盘，再核对 [`scorers/rules.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/rules.py) 与 [`scorers/judge.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/judge.py)。
+回看 Promptfoo 断言、DeepEval Metric 和 Harbor Verifier 课程，先查清产品失败与测量失败分别怎样写入记录，再核对 [`scorers/rules.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/rules.py) 与 [`scorers/judge.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/scorers/judge.py)。
 
 ## 本篇不能证明什么
 
-统一状态只能让差异显露出来，既不能证明不同工具的分数处在同一量纲，也不能让主观 Judge 自动变得客观。效度还得单独验证。
+统一状态只能把差异摆到明面上，既不能证明不同工具给出的分数处在同一量纲，也不能让主观 Judge 自动变得客观。效度还得另行验证。
 
 [上一节](03-trace-artifact-lineage.md) · [下一节](05-metric-statistics-uncertainty.md)

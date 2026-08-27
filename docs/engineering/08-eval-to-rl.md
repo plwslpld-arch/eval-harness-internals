@@ -4,17 +4,19 @@
 
 ## 本篇要解决什么问题
 
-Eval Harness 产出的 Score、preference、failure trace 和人工反馈可以转化为 Best-of-N、DPO、GRPO 或 RFT 数据，但一旦反复使用发布集和 Judge 来优化模型，原来的评测就失去了独立性。训练 reward、checkpoint 选择与 release eval 分别承担不同责任，如果三者共享同一套未隔离数据，就不能再声称结果能够泛化。本篇将建立 `Evaluator → RewardAdapter → 训练 → 独立 Release Eval` 的闭环。
+Eval Harness 算出 Score，收下 preference、failure trace 和人工反馈后，你可以把这些记录转成 Best-of-N、DPO（直接偏好优化）或 GRPO（组相对策略优化）所用的数据。
 
-在继续之前，你需要了解 Scorer、Metric、Gate 和 Judge，而读完本篇后，应该能够判断 Harness 输出能否直接转成 reward、还缺少哪些 adapter 语义，并设计用于防止数据泄漏与 Goodhart 的 holdout。
+RFT（强化微调）同样可以使用评测器给出的奖励信号，但如果反复拿发布集和 Judge 去调模型，原来那次评测就不再独立。这条界线很硬。训练阶段要提供 reward，checkpoint 选择要挑出候选模型，Release Eval（发布评测）则要独立检验最终候选版本，如果三个环节共用一套未隔离的数据，你就不能再声称结果能够泛化。本篇会把 Release Eval 放在最后，再沿着 `Evaluator → RewardAdapter → 训练 → 独立 Release Eval` 一步步把链路接起来，并说清每一层把什么交给下一层。
+
+继续往下读之前，你要先知道 Scorer、Metric、Gate 和 Judge 各自管什么，然后再判断 Harness 输出能不能直接变成 reward，以及 adapter 还必须补上哪些语义。读完本篇后，你还应该能够设计 holdout，让数据泄漏和 Goodhart 不容易混进最终结论。
 
 ## 核心机制
 
 ![Eval-to-RL 与独立发布评测](../assets/diagrams/foundations/07-eval-to-rl.svg)
 
-Evaluator 会产生带完整 lineage 的 ObservationBundle 与 ScoreRecord，而 RewardAdapter 不能只是取出 `score.value`，它还要声明哪些状态可用、怎样处理 unscorable/uncertain、值域与方向、组件权重、pair preference、版本和防泄漏标签。训练系统消费 adapter 输出并执行 SFT/DPO/GRPO/RFT，训练期间可以用 development evaluator 提供 reward 和完成 checkpoint selection，但最终 candidate 必须回到从未参与优化的 release split 与独立 Gate 上接受评测。
+Evaluator 产生 ObservationBundle 和 ScoreRecord 时会带上完整 lineage，RewardAdapter（奖励适配器）不能只从里面抽出 `score.value`，还必须说清哪些状态可用、unscorable/uncertain 怎样处理、值域和方向是什么、组件怎样加权、pair preference 怎样表示，并记下版本和防泄漏标签。训练系统拿到 adapter 输出后执行 SFT/DPO/GRPO/RFT，期间可以让 development evaluator 提供 reward，也可以用它选 checkpoint，但最终 candidate 必须回到从未参与调优的 release split，交给独立的 Release Eval 重新评测，再让 Gate 根据这次评测的证据判断能不能过。
 
-不同算法需要的信号并不相同，因为 Best-of-N 只需要给同一 prompt 的多个候选排序，而 DPO 需要 chosen/rejected 对与偏好可信度，GRPO/RFT 则常常依赖可验证 reward 和同组采样。开放式 Judge reward 还需要更强的抗投机能力和校准。如果某项能力缺失，就应标记为 partial/unavailable——Adapter 不能凭空编造它。
+不同算法吃的信号并不一样：Best-of-N 只要把同一 prompt 的多个候选排好序，DPO 则需要 chosen/rejected 成对出现，还要知道这个偏好有多可信，GRPO/RFT 通常还依赖可验证 reward 和同组采样。开放式 Judge reward 更容易被投机，所以还要加强校准和抗投机能力。缺了就要直说。某项能力如果还不具备，就标成 partial/unavailable，Adapter 不能凭空补出一份信号。
 
 ## 完整流程
 
@@ -29,13 +31,13 @@ Evaluator 会产生带完整 lineage 的 ObservationBundle 与 ScoreRecord，而
 
 ## 关键数据与不变量
 
-RewardRecord 至少要引用 trial_id、bundle digest、score_id、scorer/reward adapter version、值、状态、split 和用途。训练可以消费 `passed/failed` 或连续 value，但 invalid/unscorable 不能默认转换为 0，同时 Release Sample ID 也不能出现在训练与 prompt 调优日志里。如果根据 release 失败样本调整 Judge prompt，同样会造成污染。
+每条 RewardRecord 至少要能指回 trial_id、bundle digest、score_id 和 scorer/reward adapter version，同时记下值、状态、split 和用途，这样你才知道这份奖励从哪里来、准备用到哪里。训练可以使用 `passed/failed` 或连续 value，但不能默认把 invalid/unscorable 翻成 0，Release Sample ID 也不得进入训练日志或 prompt 调优日志。如果你看过 release 的失败样本后再去调 Judge prompt，这一轮 release 同样已被污染。
 
-训练 reward 与 release metric 可以相关，却不应完全来自同一个来源，因为可验证程序 reward 虽然能抵抗主观漂移，却可能被模型利用漏洞，而 Judge reward 虽然覆盖开放任务，却可能遭到 reward hacking。独立人工审查与多维关键 Gate 可以降低模型只会最大化单一 proxy 的风险。
+训练 reward 可以和 release metric 相关，但不应该让两者完全共用同一个来源，因为可验证的程序 reward 虽然不容易受主观判断影响，模型却可能钻它的漏洞，而 Judge reward 能够覆盖开放任务，却可能遭到 reward hacking。评估训练信号时，不能只相信同一把尺子。加上独立人工审查和多维关键 Gate，可以降低模型只顾着最大化单一 proxy 的风险。
 
 ## 动手实验
 
-用 shipping 的六条 Score 设计一个 RewardAdapter，其中 passed→1、failed→0，其他状态一律拒绝。接着写出它能够支持 Best-of-N 或监督筛选的部分，并解释为什么每个 Sample 只有一个输出时无法构造 DPO pair。最后为退款 Agent 设计 chosen/rejected，在固定输入下分别给出未授权退款和升级人工两个候选，并声明 preference 来源与安全非补偿规则。
+先用 shipping 的六条 Score 写一个 RewardAdapter，让 passed→1、failed→0，遇到其他状态就拒绝转换。然后列出它能够支持 Best-of-N 或监督筛选的部分，并解释为什么每个 Sample 只有一个输出时，还组不出 DPO pair。最后给退款 Agent 设计 chosen/rejected，在相同输入下放入「未授权退款」和「升级人工」两个候选，再说清 preference 从哪里来，以及安全项为什么不能由其他得分补偿。
 
 ```bash
 uv run eval-harness-ref run reference/examples/refund-agent/eval.yaml --output output/refund-rl
@@ -44,16 +46,16 @@ uv run eval-harness-ref inspect output/refund-rl
 
 ## 预期输出与答案
 
-Shipping Score 可以形成 scalar reward，但它没有同一 prompt 下多个候选之间的关系，所以 DPO 能力应为 unavailable，除非另行采样并记录 pair。在退款示例中，面对未获批准的大额请求，升级人工是 chosen，未授权退款是 rejected。如果 Scorer 处于 unscorable 或 Judge error，Adapter 应拒绝该记录，不能把它当成负样本。
+Shipping Score 可以转成 scalar reward，但它没有记录同一 prompt 下多个候选彼此怎样排序，所以 DPO 能力应标成 unavailable，除非你另行采样并把 pair 记下来。在退款示例里，面对尚未获批的大额请求，应该把「升级人工」标为 chosen，把「未授权退款」标为 rejected。Scorer 如果是 unscorable，或者 Judge 报错，Adapter 就要拒绝这条记录，不能擅自把它当成负样本。
 
-Dev 集一旦用于选择 checkpoint，就已经受到选择过程影响，因此不能再作为独立 release 证据来报告，而最终 Gate 必须运行在隔离的 release split 上，并保留 Baseline 配对与关键安全检查。
+一旦拿 Dev 集挑选 checkpoint，你的选择过程就已经影响了这批数据，不能再把它当作独立 release 证据来报告。到了这一步，就别再把用过的 Dev 集当成新数据。最后的 Gate 必须在已隔离的 release split 上运行，同时保留 Baseline 配对和关键安全检查。
 
 ## 如何核对
 
-先从 [基础篇 Eval-to-RL](../foundations/07-eval-to-rl-and-release-eval.md) 核对责任划分，再用 [`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 检查 RewardAdapter 应引用的 lineage 字段，最后运行退款案例，查看现有 Score 状态是否足以完成转换。
+先对照 [基础篇 Eval-to-RL](../foundations/07-eval-to-rl-and-release-eval.md) 看各个环节由谁负责，再去 [`models.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/models.py) 里检查 RewardAdapter 需要引用哪些 lineage 字段，最后运行退款案例，看现有 Score 状态能不能支持这次转换。
 
 ## 本篇不能证明什么
 
-数据隔离、RewardAdapter 和独立 Gate 无法保证训练稳定、算法收敛、reward 没有漏洞，或线上长期不会漂移，因为这些机制只能减少明显的泄漏与证据混用。训练与生产仍需专项验证。
+即使隔离了数据，也用 RewardAdapter 和独立 Gate 分开了训练与发布，你仍然不能据此保证训练一定稳定、算法一定收敛、reward 没有漏洞，或线上长期不会漂移。这些机制能减少明显的泄漏和证据混用，训练和生产还得分别做专项验证。
 
 [上一节](07-quality-gates.md) · [下一节](../harnesses/lm-evaluation-harness/README.md)
