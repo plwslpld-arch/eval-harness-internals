@@ -4,11 +4,11 @@
 
 ## 本篇要解决什么问题
 
-OpenAI Evals 的 Recorder 可以记录 sampling、match、function_call、cond_logp、metrics、error 和任意 extra，LocalRecorder 还能写 JSONL，并在 HTTP 失败时回落本地。不过，记录到了事件并不会自动说明事件是否有因果顺序、哪次执行是 canonical、还有多少样本未评分，也不会给出最终 accuracy 的分母或发布结论，所以本节要划清记录层与推断层的边界——两层不能互相代替。
+OpenAI Evals 里的 Recorder（记录器）能记下 sampling、match、function_call、cond_logp、metrics、error 和任意 extra，LocalRecorder 还可以写入 JSONL，并在 HTTP 失败后改存到本地。但事件已经写下来，不代表你就知道它们之间有没有因果顺序、哪次执行才是 canonical，或者还有多少样本没评分。Recorder 也不会替你给出 accuracy 的分母和发布结论，因此这一篇要把记录层和推断层分开，这两层不能互相顶替。
 
 ## 先建立源码地图
 
-[`RecorderBase`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L54-L93)、[`Event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L44-L51)、default recorder ContextVar 与 [`record_event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L157-L185) 都在锁定 `record.py` 中，而 [`LocalRecorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L316-L355) 和 [`HttpRecorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L374-L413) 是两种不同的事件落地方式，选择哪一种会改变证据最终写到哪里。CLI 通过 [`build_recorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L242-L266) 选择后端，token usage 的补充与 final report 的写入则发生在 [`run()`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L118-L157)，match helper 位于 [`api.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L55-L93)。
+锁定的 `record.py` 把 [`RecorderBase`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L54-L93)、[`Event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L44-L51)、default recorder ContextVar 和 [`record_event`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L157-L185) 放在一起。其中 [`LocalRecorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L316-L355) 与 [`HttpRecorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/record.py#L374-L413) 用不同方式存事件，你选哪一个，证据最后就会落到哪里。CLI 用 [`build_recorder`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L242-L266) 挑选后端，之后由 [`run()`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/cli/oaieval.py#L118-L157) 补上 token usage 并写入 final report，match helper 则在 [`api.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/api.py#L55-L93) 里。
 
 ## 完整调用链
 
@@ -23,27 +23,27 @@ OpenAI Evals 的 Recorder 可以记录 sampling、match、function_call、cond_l
 
 ## 关键数据结构
 
-Event 把 run、sample、type 和 data 连在一起，其中 sampling data 可以包含 prompt/sampled/usage，match 可以包含 correct/expected/picked/sampled/options，而 function_call 可以包含 name/arguments/return，error 用来保存消息和异常，metrics 则是 Eval 自由提供的键值。
+Event 会把 run、sample、type 和 data 连到同一条记录上。具体写什么由事件类型决定：sampling data 可以带 prompt/sampled/usage，match 可以带 correct/expected/picked/sampled/options，function_call 可以带 name/arguments/return，error 记消息和异常，metrics 则由 Eval 自己填键值。
 
-RunSpec 负责保存运行头，final report 负责给出聚合输出，但两者之间没有强制的 ScoreRecord/MetricEstimate 引用链。由于 final report 不一定列出参与每个 Metric 的 Event ID，证据 Adapter 既要保留原始 Event，也要另外生成显式的 Observation 与 Score 血缘。
+RunSpec 保存运行头，final report 给出聚合后的输出，但代码没有强制它们通过 ScoreRecord 和 MetricEstimate 相互引用。final report 也未必会列出每个 Metric 用过哪些 Event ID，所以证据 Adapter 要留住原始 Event，同时另行生成 Observation 与 Score 之间的明确血缘。
 
 ## 实现取舍与失败语义
 
-通用 Event API 让实验可以快速记录任意事实，代价是 type/data schema 由调用者自行约定，因此跨 Eval 的语义可能并不一致。ContextVar 比全局变量更适合并发上下文，但跨线程或异步任务的传播仍然需要测试。Local fallback 能增强持久性，但证据位置会分叉。远端和本地都会留下各自记录，后续汇总时必须去重并标记实际 sink。
+通用 Event API 允许实验快速记下各种事实，但调用者要自己约定 type/data schema，不同 Eval 写出来的事件因此可能同名不同义。ContextVar 比全局变量更适合并发上下文，不过你仍要测它能不能正确穿过线程和异步任务边界。Local fallback 让记录更不容易丢，却会把证据分到不同位置。如果远端和本地都留下了记录，后续汇总时就必须去重，并标明数据真正落到了哪个 sink。
 
-记录服务失败属于 Harness 基础设施故障，不应该改变模型 Score。Sampling event 已经存在但 match 缺失时，样本可能处于 unscored 状态，既不能默认算作失败，也不能悄悄从分母中消失。如果 final report 只有平均值而没有 Sample 事件清单，它的证据能力只能算 partial，而 Recorder 本身也没有发布 Gate，任何阈值决策都应交给独立政策层。
+记录服务挂了，说明 Harness 的基础设施出了故障，不能因此改写模型 Score，而如果 sampling event 已经存在，match 却没有出现，这条样本可能处于 unscored 状态，你不能默认它失败，也不能让它悄悄退出分母。final report 若只给平均值，却没有列出 Sample 事件，它能提供的证据就只能标成 partial，而 Recorder 自己也不执行发布 Gate，所以阈值判断应当交给独立的政策层。
 
 ## 动手实验
 
-给定 100 个 raw_sample、90 个 sampling、80 个 match=true、10 个 match=false、5 个 error，以及 5 个只有 sampling 而没有 match 的事件，请分别设计事件完整性报告、Score 状态映射、Metric denominator 和 Gate 输入，并说明 HTTP fallback 重复上传时应该怎样去重。
+给你 100 个 raw_sample、90 个 sampling、80 个 match=true、10 个 match=false、5 个 error，再加上 5 个只有 sampling 却没有 match 的事件。请据此分别设计事件完整性报告、Score 状态映射、Metric denominator 和 Gate 输入，并说明 HTTP fallback 重复上传后要用什么依据去重。
 
 再把这些字段映射到 Reference Harness 的 TraceEvent、ObservationBundle、ScoreRecord 与 MetricEstimate，标出 unavailable/partial。
 
 ## 预期输出与答案
 
-计划中的 Sample 分母是 100，其中 80 passed、10 failed、5 error，后者还要按错误类别映射为 blocked/invalid，另有 5 unscored。如果只在 90 个 match 上算出 88.9%，不能据此直接宣布通过，因为质量决定必须暴露这 10% 的缺失。去重至少要使用对应的 run_id + sample_id + event identity/内容摘要，不能仅凭事件文本相同就删除。
+计划里共有 100 个 Sample，所以分母是 100，其中 80 个 passed、10 个 failed、5 个 error，error 还要按类别分别映射为 blocked 或 invalid，另有 5 个 unscored。如果只用 90 个 match 算出 88.9%，你不能立刻宣布通过，因为做质量决策时必须把这 10% 的缺口摆在明面上。去重时至少要结合 run_id、sample_id 以及 event identity 或内容摘要，不能只因事件文本相同就删除。
 
-Event 到 TraceEvent 的映射只能算 partial，因为父子关系和 sequence 未必存在。sampling/match 可以组成 Observation，但仍然缺少 canonical Attempt digest，match 可以转换成 Score，而 final report metric 如果没有 score_ids，也仍然只能标为 partial。核心 Recorder 中没有 Gate。
+把 Event 映射成 TraceEvent 时只能标为 partial，因为原始事件不一定记了父子关系和 sequence。sampling 与 match 虽然可以合成 Observation，但其中还是没有 canonical Attempt digest，而 match 转成 Score 之后，final report metric 若没有 score_ids，同样只能标成 partial。核心 Recorder 也不执行 Gate，你要在独立政策层补上这一步。
 
 ## 如何核对
 
@@ -51,6 +51,6 @@ Event 到 TraceEvent 的映射只能算 partial，因为父子关系和 sequence
 
 ## 本篇不能证明什么
 
-JSONL 可以读取、fallback 也执行成功，并不能证明证据完整、事件未经改写或 Metric 统计有效，因为 Recorder 提供的只是观察存储。要形成质量结论，仍需补齐身份、血缘、分母、不确定性和 Gate Policy。
+你能读取 JSONL，fallback 也确实执行成功，依然不足以证明证据没有缺口、事件未被改写，或者 Metric 统计有效，因为 Recorder 只是把观察存下来。要做出质量结论，你还得补上身份、血缘、分母、不确定性和 Gate Policy。
 
 [上一节](02-completion-sample-run.md) · [下一节](../../contents.md)

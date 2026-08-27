@@ -4,9 +4,9 @@
 
 ## 本篇要解决什么问题
 
-Metric 很容易被看成一个单纯的 `test_case -> float` 函数，但 DeepEval 的 `BaseMetric` 会明确持有 threshold、score、reason、error、success、verbose_logs、evaluation_model 和 cost。具体 `measure` 先把状态写回对象，执行循环再读取这些字段组成 MetricData，所以这种设计虽然方便编写自定义指标，也同时带来了并发复用、状态清理、阈值解释与错误分类问题。下文会把这些隐含合同逐层展开。
+你很容易把 Metric 当成一个简单的 `test_case -> float` 函数，可 DeepEval 的 `BaseMetric` 会把 threshold、score、reason、error、success、verbose_logs、evaluation_model 和 cost 全留在自己身上。具体 `measure` 先写回这些状态，执行循环再把它们读出来，组装成 MetricData（指标数据）。这样写自定义指标确实方便，但同一个对象能不能并发复用、旧状态怎样清掉、阈值该怎么解释、错误又该归到哪一类，都成了必须说清的合同。
 
-读完之后，你应该能实现一个最小的自定义 Metric，并分清哪些字段属于原始测量、哪些属于政策判断、哪些只是运行诊断，同时也能解释模型 Judge 与确定性 Scorer 为什么不能只拿同一个 score 横向比较。
+读完后，你应该能写出一个最小的自定义 Metric，并分清哪些字段记原始测量，哪些字段表达政策判断，哪些字段只用来排查运行问题。你还要能解释，为什么 Judge（裁判模型）和确定性 Scorer（评分器）即使都给出 score，也不能直接横向比较。
 
 ## 先建立源码地图
 
@@ -30,19 +30,19 @@ Metric 很容易被看成一个单纯的 `test_case -> float` 函数，但 DeepE
 
 ## 关键数据结构
 
-BaseMetric 的抽象方法是 `measure`/`a_measure`，而返回 float 只是接口露在外面的部分——真正的结果还保存在实例字段里。`score` 是测量值，`threshold` 表示当前政策，`success` 是二者结合后得出的判断，而 `reason` 用来解释测量，`error` 表示测量不可得，`evaluation_cost` 则记录 Judge 的运行成本。需要继续排查时，还可以查看 `score_breakdown` 和 verbose_logs 提供的组件诊断。分数只是其中一项。
+BaseMetric 把 `measure`/`a_measure` 定义成抽象方法，返回的 float 只是接口露出来的一小部分，真正的结果仍留在实例字段里。`score` 记测量值，`threshold` 记当前采用的政策，程序把两者合起来才得出 `success`。`reason` 解释这次测量，`error` 说明没能测出来，`evaluation_cost` 则记下 Judge 花了多少成本。若还要往下排查，可以查看 `score_breakdown` 和 verbose_logs，了解各个组成部分出了什么情况。分数只是其中一项。
 
-因此，证据存储应同时保留原始 score 与测量配置，而不能只留下 success，因为阈值变化时，我们可以不重跑 Target 就重新计算政策结论。阈值不是测量值。可一旦 Metric 的 prompt、model 或解析逻辑发生变化，测量合同也随之改变，此时旧 score 能否复用就必须由指标自身的版本语义决定。
+因此，保存证据时要把原始 score 和测量配置一并留下，不能只存 success，因为阈值变了以后，你可以不重跑 Target，直接按旧 score 重新判断是否通过。阈值不是测量值。但只要 Metric 换了 prompt、model 或解析逻辑，测量所依据的合同也就变了，此时旧 score 还能不能用，必须看这个指标怎样定义自己的版本。
 
 ## 实现取舍与失败语义
 
-有状态基类让自定义 Metric 写起来更直观——控制台也可以直接读取 reason，不过同一个实例一旦跨 TestCase 并发复用，就可能发生数据竞争。执行框架需要复制实例、串行访问，或以其他方式确保任务隔离，而每个 Metric 在开始新测试前都必须清除上次留下的 error 与 score，否则前一用例会污染后一用例。
+有状态基类让自定义 Metric 更好写，控制台也能直接读 reason，可同一个实例一旦同时服务多个 TestCase，字段就可能互相覆盖。执行框架要么为每个任务复制实例，要么串行访问，也可以采用别的隔离办法。无论选哪一种，Metric 开始测新用例前都得清掉上次留下的 error 和 score，否则前一个用例会污染后一个。
 
-低于阈值意味着测量有效但没有通过，而 Judge 输出解析失败属于 Metric error，TestCase 缺少必需字段属于输入或适配错误，Judge API 限流则落在评分基础设施。这些错误不能混算。strict_mode 只是按特定语义收紧通过条件，属于政策配置，并不会让分数变得「更准确」。模型 Judge 给出的 reason 也是模型生成的解释，不是事实证明，所以仍然需要校准、人工复核和对抗样本。
+分数低于阈值，说明测量已经完成，只是结果没通过。Judge 的输出解析失败，要记成 Metric error。TestCase 少了必需字段，是输入或适配出了问题。Judge API 遭到限流，则是评分基础设施故障。这些情况不能混着算。strict_mode 只会按特定规则收紧通过条件，它属于政策配置，不会让分数变得「更准确」。模型 Judge 写出的 reason 也只是模型生成的解释，不能当作事实证明，因此你仍要做校准、人工复核和对抗样本测试。
 
 ## 动手实验
 
-先在纸面上实现 `ExactJsonMetric`，让它验证 actual_output 能否解析成 JSON 且包含 `answer` 字段，满足条件得 1，否则得 0，并给出 reason。接着写出 measure 前后 BaseMetric 各字段的变化，再设计 `FaithfulnessJudgeMetric`，列出必须额外锁定的模型、模板、温度、解析 schema 与重试策略。最后把 0.7 和 0.9 两个 threshold 分别应用到同一批 score，并说明这一步为何只是重新判定，而不是重新测量。
+先在纸面上写一个 `ExactJsonMetric`，让它检查 actual_output 能否解析成 JSON，并确认其中有 `answer` 字段，条件满足就给 1，否则给 0，同时写出 reason。接着列出 measure 前后 BaseMetric 的每个字段怎样变化，再设计 `FaithfulnessJudgeMetric`，说明还要锁定哪些模型、模板、温度、解析 schema 和重试策略。最后把 0.7 与 0.9 两个 threshold 分别套在同一批 score 上，并解释为什么这里只是重新判断有没有通过，并没有重新测量。
 
 ```bash
 python scripts/sources.py verify
@@ -51,16 +51,16 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-ExactJsonMetric 在测量前应把 score、reason 与 error 置空或重置，测量后 score 为 0/1，reason 描述满足或违反的具体条件，而 error 只在指标自身无法运行时出现。Judge Metric 的 identity 不能只有一个类名，至少还要包含评估模型标识、系统与用户模板摘要、参数、输出 schema、库 commit 和依赖版本。
+ExactJsonMetric 测量前要清空或重置 score、reason 和 error，测量后把 score 写成 0 或 1，并让 reason 说清究竟满足或违反了什么条件。只有指标自己跑不起来时，才应该写 error。Judge Metric 不能只靠一个类名标记身份，至少还要带上评估模型标识、系统与用户模板摘要、参数、输出 schema、库 commit 和依赖版本。
 
-把不同 threshold 应用到同一批结果，只会改变 success 与汇总，不会改写原始 score，而 strict_mode 一旦变化，也必须记录在结果里。若 Judge 逻辑已经改变，原 score 对应的测量合同也就不再相同，此时不能只重算 success 就把它冒充成同一指标版本。
+把不同 threshold 套在同一批结果上，只会改变 success 和汇总数字，不会改写原始 score。strict_mode 只要变了，也必须跟着记进结果。若 Judge 已经换了判断逻辑，原 score 所依据的测量合同就不再相同，此时不能只重算 success，再把它说成同一版指标的结果。
 
 ## 如何核对
 
-先阅读 [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py#L54-L93) 中的字段、抽象方法和 `is_successful`，再到 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py#L167-L206) 搜索 `_execute_metric`、MetricData 和 test run update，从而核对发生异常后是否继续，以及结果究竟在何时冻结。
+先读 [`deepeval/metrics/base_metric.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py#L54-L93) 里的字段、抽象方法和 `is_successful`，弄清基类怎样保存并判断状态。再到 [`deepeval/evaluate/execute/loop.py`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/evaluate/execute/loop.py#L167-L206) 搜索 `_execute_metric`、MetricData 和 test run update，核对程序遇到异常后还会不会往下走，以及它究竟在什么时候把结果定下来。
 
 ## 本篇不能证明什么
 
-Metric 带有 reason、threshold 和 cost，并不能证明它测量的构念有效、Judge 与专家一致、阈值经过业务验证，也不能说明不同指标的 0.8 可以直接比较。指标的可靠性、效度、偏差和鲁棒性，都需要独立的验证数据来检验。
+Metric 即使带着 reason、threshold 和 cost，也证明不了它测的东西真的有效，Judge 与专家意见一致，或者阈值经过了业务验证。不同指标各自给出的 0.8 也不能直接比较。你还得用独立的验证数据，分别检查指标是否可靠、有没有效度、偏差多大，以及遇到扰动是否稳定。
 
 [上一节](01-dataset-golden-test-case.md) · [下一节](03-async-cache-errors.md)

@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-模型响应回填以后，系统里还没有现成的「准确率」，因为 Task 必须先把同一文档的若干响应解释成逐样本 metric，再为每个 metric 选择聚合函数并计算标准误，有时还要把多个 Task 继续聚合为 Group。这里最容易漏掉几个问题：自定义 metric 没写 aggregation 会发生什么，有效样本数怎样计算，Group 为什么必须自底向上处理，测试又锁住了哪些语义？
+模型响应写回 Instance 后，系统还算不出「准确率」。分母也还没定。Task 得先读懂同一文档的几条响应，把它们变成这条样本的 metric，再为每个 metric 选择聚合函数、计算标准误，有些配置还会把多个 Task 继续汇成 Group（任务组）。这里有几个问题不能漏：自定义 metric 没声明 aggregation 时系统会怎样处理，有效样本数到底怎么算，Group 为什么要从最深一层往上归并，以及测试锁住了哪些行为？
 
 ## 先建立源码地图
 
-逐样本处理由 [`Task.process_results()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L403-L442) 承担，aggregation 配置也放在同一个类里，而核心循环把结果加入 raw_metrics 的代码位于 [`evaluate()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429-L468)。Task 与 Group 聚合、stderr 和结果容器分散在 `evaluator_utils.py` 的四个函数中，后文会按执行顺序逐个走过。
+每条样本的结果由 [`Task.process_results()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L403-L442) 来解释，aggregation 也配置在同一个类里，随后 [`evaluate()`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429-L468) 的核心循环才把这些结果加入 raw_metrics。Task 和 Group 怎样聚合、stderr 怎样计算、最终结果怎样收集，分散在 `evaluator_utils.py` 的四个函数里，后文会按实际执行顺序一一走过。
 
-源码里的 `process_results` 这个名字很容易让人误会，因为它处理的是单个 doc 的结果，并非整次运行报告。返回字典里的 value 会先逐条积累，之后 aggregation 才会产出 Task metric。
+这个名字很容易误导人。`process_results` 实际只处理一份 doc 的结果，并不负责整次运行报告。它返回的字典会先把 value 一条条积累起来，等到 aggregation 真正执行时，系统才得到 Task 层的 metric。
 
 ## 完整调用链
 
@@ -38,32 +38,32 @@ EvalAcc
   higher_is_better / samples / n_samples / groups
 ```
 
-在锁定源码中，`sample_len` 会在遍历 raw_metrics 时被设置为当前 items 的长度，而注释明确提示，它目前反映的是最后一个 metric 的 count。如果不同 metric 因为缺失而产生不同长度，只看一个 sample_len 就可能把分母差异藏起来。这是可以直接核对的实现边界——也正因为如此，本仓库才坚持让每个 Metric 显式记录 denominator。
+锁定源码遍历 raw_metrics 时，会不断把 `sample_len` 改成当前 items 的长度，注释也明确提醒你，这个值最后反映的是最后一个 metric 的 count。这个坑要看清。只要不同 metric 因为缺失而积累出不同数量的 items，一个 sample_len 就会遮住它们的分母差异。这项边界可以直接从代码里核对，所以本仓库才要求每个 Metric 都明确记录自己的 denominator。
 
 ## 实现取舍与失败语义
 
-Task 自带 aggregation，可以让 metric 定义贴近任务语义，也能支持 mean 以外的函数，但 fallback mean 虽然提高了扩展时的容错性，却可能把原本需要成对、加权或非线性处理的 metric 错误聚合。Bootstrap stderr 能提供一层基础不确定性，不过它的重采样单位是 items，所以当多个 doc 来自同一实体或同一 prompt 模板时，独立同分布假设仍需额外审查。
+Task 自己声明 aggregation 后，metric 怎样归并就能贴着任务语义来写，也可以采用 mean 以外的函数。可一旦代码找不到声明就 fallback 到 mean，扩展时虽然不容易立刻报错，却可能把原本需要配对、加权或非线性处理的 metric 算错。Bootstrap（自助法）stderr 能给出一层基础的不确定性估计，但它以 items 为重采样单位，如果多份 doc 来自同一实体或同一种 prompt 模板，你还得另外检查独立同分布假设是否站得住。
 
-Group 使用后序遍历处理嵌套层级，因为这样可以确保父组开始聚合时，子组结果已经生成。higher_is_better 需要跨子任务传播，一旦方向冲突，就不能悄悄挑选其中一个。有效样本与原始样本能够同时保存是个优点，但这仍不是预声明的 Trial Plan，limit、过滤和缺失还要由读者逐项核对。
+Group 会按后序遍历处理嵌套层级，这样父组开始归并时，所有子组都已经算出结果。higher_is_better 还要沿着子任务往上传，只要方向发生冲突，系统就不能悄悄选一个继续算。结果里能同时保存有效样本数和原始样本数，确实方便核对，但它仍不等于事先声明的 Trial Plan，limit 怎样生效、filter 去掉了什么、哪些值缺失，都要逐项查清。
 
 ## 动手实验
 
-手工计算以下两组 Task，其中 T1 有 2 个样本，acc 为 `[1, 0]`，T2 有 4 个样本，acc 为 `[1, 1, 1, 0]`。如果 Group 设置 `weight_by_size=true`，请先求出结果，然后再对两个 Task metric 做不加权 mean，并解释为什么两种算法得到的结果不同。
+请手工计算两项 Task：T1 有 2 条样本，acc 为 `[1, 0]`，T2 有 4 条样本，acc 为 `[1, 1, 1, 0]`。先按 Group 声明的 `weight_by_size=true` 求出结果，再把两个 Task metric 直接做不加权 mean，并解释这两种算法为什么会得到不同答案。
 
-再查看上游 `tests/test_aggregation_pipeline.py` 的单 Task、双 Task 加权、嵌套 Group 和错误路径测试名称，列出你会为自定义 aggregation 新增的最小测试。
+再去看上游 `tests/test_aggregation_pipeline.py` 中单 Task、双 Task 加权、嵌套 Group 和错误路径各有哪些测试，然后列出你会为自定义 aggregation 补上的最小测试集。
 
 ## 预期输出与答案
 
-T1=0.5，T2=0.75。按样本数加权时，结果是 `(2×0.5 + 4×0.75)/6 = 2/3`，而 Task 等权 mean 得到 0.625。究竟哪一个正确，取决于 Group 事先声明的 estimand，不能等看到结果以后再挑选算法。自定义 aggregation 至少要覆盖正常输入、空样本或单样本、不同 filter、stderr 支持与 Group 组合。
+T1=0.5，T2=0.75。若按样本数加权，结果是 `(2×0.5 + 4×0.75)/6 = 2/3`，两个 Task 等权做 mean 则得到 0.625。哪一个答案才符合任务，要看 Group 事先声明了什么 estimand，不能等结果出来后再挑算法。自定义 aggregation 至少要测试正常输入、空样本或单样本、不同 filter、stderr 支持以及与 Group 组合时的行为。
 
-上游测试里的单 Task Group 应保持原有 Task metric，双 Task weighted Group 应按 sample_len 加权，而嵌套 Group 必须验证子节点先产生结果。
+上游测试要求单 Task Group 保留原来的 Task metric，双 Task weighted Group 按 sample_len 加权，嵌套 Group 则必须验证子节点先算出结果。
 
 ## 如何核对
 
-依次阅读 [`_compute_task_aggregations`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L173-L212)、[`_collect_results`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L222-L261)、[`aggregate_groups`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L275-L299) 和 [`_process_results`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L349-L387)。特别核对 fallback mean、bootstrap 上限特例、sample_len TODO 与 post-order traversal。再回到 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L403-L442) 查看 ConfigurableTask 怎样注册 aggregation 和 higher_is_better。
+按顺序阅读 [`_compute_task_aggregations`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L173-L212)、[`_collect_results`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L222-L261)、[`aggregate_groups`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L275-L299) 和 [`_process_results`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py#L349-L387)，沿着返回值看结果怎样逐层汇总。这里要重点核对 fallback mean、bootstrap 上限的特殊处理、sample_len TODO 和 post-order traversal，然后回到 [`api/task.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/task.py#L403-L442)，看 ConfigurableTask 怎样注册 aggregation 和 higher_is_better。
 
 ## 本篇不能证明什么
 
-聚合测试通过，只能证明锁定实现会怎样把逐样本值变成 Task 或 Group 输出，不能证明 benchmark 的采样有效，也不能证明 stderr 已经覆盖真实不确定性，更不能因此把任务排行榜当成发布 Gate。独立性、外部有效性和非补偿风险政策，仍需外层设计。
+聚合测试通过，只能说明锁定实现会怎样把每条样本的值汇成 Task 或 Group 输出，不能证明 benchmark 采样有效，也不能证明 stderr 覆盖了真实的不确定性，更不能据此把排行榜当成发布 Gate。样本是否独立、结论能否推广，以及哪些风险不允许互相补偿，都要在外层另行设计。
 
 [上一节](02-request-execution.md) · [下一节](../../contents.md)
