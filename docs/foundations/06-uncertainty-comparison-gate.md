@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-Candidate 得分 82%，Baseline 得分 80%，能否发布？只看两个点估计无法回答：它们是否测了相同样本、差异是否由少数样本驱动、重复运行是否相关、有没有缺失证据、关键安全切面是否失败，以及阈值是不是看到结果后才选。比较和 Gate 必须把统计问题与决策政策分开。
+Candidate 得分 82%，Baseline 得分 80%，这足以支持发布吗？两个点估计回答不了，因为我们还不知道双方是否测了相同样本，也不知道差异是否由少数样本驱动。重复运行之间可能相关，证据可能缺失，关键安全切面也可能已经失败。甚至判定阈值都有可能是在看到结果之后才临时选定的。只有把统计比较和决策政策分开，这些问题才不会被一个百分比遮住。
 
 ## 学完你能解释什么
 
@@ -15,13 +15,13 @@ Candidate 得分 82%，Baseline 得分 80%，能否发布？只看两个点估�
 
 ## 贯穿案例
 
-shipping 有三个样本。buggy 通过 2/3，fixed 通过 3/3，点估计差为 1/3；因为两个 Target 使用完全相同的 Sample 和 repetition，所以可以计算每一对的 Score 差，再对配对差值重采样。样本只有三个，区间不会神奇地提供真实业务确定性，但配对至少避免把样本难度差异误当模型差异；发布 Gate 还要求 fixed pass-rate 达到 1.0 且没有 unscorable 证据。
+shipping 一共有三个样本，其中 buggy 通过 2/3，fixed 通过 3/3，所以点估计差为 1/3。两个 Target 使用完全相同的 Sample 和 repetition，因此可以先计算每一对 Score 的差，再对这些配对差值重采样。样本只有三个，任何区间都无法凭空提供真实业务确定性，不过配对至少避免了把样本难度差异误认成模型差异。发布 Gate 还会单独检查 fixed pass-rate 是否达到 1.0，以及整次运行中有没有 unscorable 证据。
 
 ## 核心概念与边界
 
-**MetricEstimate** 描述某个 Target 在一组计划 Trial 上的估计；**ComparisonResult** 描述 Candidate 相对 Baseline 的效果量、方向和不确定性。**GatePolicy** 是预先声明的决策函数，读取有效 Metric、比较和关键检查；**GateDecision** 是一次具体运行得到的通过、失败、阻断或无法判断，并保存依据。
+**MetricEstimate** 描述某个 Target 在一组计划 Trial 上得到的估计。**ComparisonResult** 关注 Candidate 相对 Baseline 的效果量、方向和不确定性。预先声明的 **GatePolicy** 负责读取有效 Metric、比较结果与关键检查，而 **GateDecision** 记录一次具体运行究竟通过、失败、被阻断还是无法判断，并把依据一同保存下来。
 
-`blocked` 表示计划条件没满足，例如环境不可用或唯一 Metric 缺失；`inconclusive` 表示已有运行证据却不足以作通过/失败推断，例如关键 Score uncertain。failed 表示有效证据明确未达政策，passed 才表示所有声明条件满足；四者不应压成布尔值。
+`blocked` 表示计划要求的条件尚未满足，例如运行环境不可用或唯一 Metric 缺失。`inconclusive` 则表示已经拿到运行证据，却仍不足以推断通过或失败，例如关键 Score 处于 uncertain。failed 说明有效证据明确没有达到政策要求，passed 才说明所有声明条件都已满足。四种结果携带的行动含义不同——压成布尔值就会丢失这些差别。
 
 ## 机制图
 
@@ -46,13 +46,13 @@ ComparisonResult(baseline_id, candidate_id, mean_difference,
 GateDecision(gate_id, status, metric_ids, reason)
 ```
 
-区间算法还应保存 iterations、重采样单位和缺失策略，否则同一个“95% 区间”可能来自完全不同假设；GatePolicy 要版本化，阈值、关键切面和例外流程不能只存在 CI 脚本的一行 if 中。
+区间算法还应保存 iterations、重采样单位和缺失策略，否则两个都叫「95% 区间」的结果，背后可能采用完全不同的假设。GatePolicy 也要版本化，因为阈值、关键切面和例外流程一旦只藏在 CI 脚本的一行 if 中，就很难复核某次决定当时遵循了什么规则。
 
 ## 设计取舍
 
-非配对比较实现简单，但同一 Dataset 下会浪费样本内相关信息；配对比较更敏感，却要求身份和缺失处理严格。Bootstrap 对复杂分布直观，但不是小样本的万能证明——也不能修复有偏 Dataset。质量 Gate 可以只看绝对阈值，也可同时要求“不劣于 Baseline”；关键安全风险通常采用非补偿规则，不能被高平均正确率抵消。
+非配对比较实现起来简单，但面对同一 Dataset 时，会浪费样本内部的相关信息。配对比较往往更敏感——代价是必须严格处理双方身份与每一项缺失。Bootstrap 能直观呈现复杂分布，却无法替小样本提供万能证明，也修复不了有偏的 Dataset。质量 Gate 可以只看绝对阈值，也可以同时要求「不劣于 Baseline」。关键安全风险通常采用非补偿规则，因为高平均正确率不能抵消这类失败。
 
-lm-evaluation-harness 的 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429-L468) 与 `evaluator_utils.py` 展示任务运行和结果整理的**上游源码事实**；本仓库把发布 Gate 独立建模，是面向质量工程的**教学实现**，不是声称上游自带同一 Gate API。
+lm-evaluation-harness 的 [`evaluator.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator.py#L429-L468) 与 `evaluator_utils.py` 展示任务如何运行、结果如何整理，这是**上游源码事实**。本仓库把发布 Gate 独立建模，属于面向质量工程的**教学实现**，并不声称上游自带相同的 Gate API。
 
 ## 失败语义
 
@@ -68,22 +68,22 @@ lm-evaluation-harness 的 [`evaluator.py`](https://github.com/EleutherAI/lm-eval
 
 ## 预期输出与答案
 
-相同 seed 和 iterations 应生成完全相同结果，证明算法回放稳定；改变 seed 可能改变有限 Bootstrap 样本的区间，但原始配对差的均值仍为 1/3。shipping 的 fixed Gate passed、buggy Gate failed；若任一关键 Score 改为 unscorable，相关 Gate 必须 inconclusive，而不是用剩余样本计算 100%。
+相同 seed 和 iterations 应生成完全相同的结果，这能证明这次算法回放保持稳定，但如果输入、配对键或算法版本发生变化，即使碰巧得到同一个数字，也不能据此认定两次分析拥有相同身份。改变 seed 可能改变有限 Bootstrap 样本给出的区间，但原始配对差的均值仍为 1/3。在 shipping 中，fixed Gate 为 passed，buggy Gate 为 failed。如果任一关键 Score 改成 unscorable，相关 Gate 必须返回 inconclusive，不能只拿剩余样本计算出 100%。
 
 ## 常见误解
 
-“区间不重叠就一定可发布”忽略政策和多重比较；“样本数大就没有偏差”混淆方差与系统偏差；“p 值大说明两者相同”把未拒绝当等价；“Gate failed 等于程序失败”混淆有效负面结论和执行故障。
+认为「区间不重叠就一定可发布」，会漏掉政策约束和多重比较。样本数变大只能帮助控制部分随机方差，并不会自动消除数据里的系统偏差。较大的 p 值也不能说明两者相同，因为未拒绝不等于已经证明等价。Gate failed 表达的是有效证据下的负面结论，和程序执行故障并非同一回事。
 
 ## 如何核对
 
-查看 [`tests/test_metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_metrics.py) 是否锁住计划分母，查看 [`tests/test_gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_gates.py) 是否阻止无效证据通过；手工从 `report.json` 取 Score 重算 numerator/denominator，并确认 Gate 原因中的阈值与配置一致。
+查看 [`tests/test_metrics.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_metrics.py) 是否锁住计划分母，再查看 [`tests/test_gates.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_gates.py) 是否阻止无效证据通过。还可以手工从 `report.json` 取出 Score，重算 numerator/denominator，并确认 Gate 原因中的阈值与配置一致。
 
 ## 与其他 Harness 的关系
 
-Promptfoo 常把评测接入 CI 并用阈值判断；DeepEval 适合测试断言式回归；benchmark Harness 更关注聚合与排行榜；平台型产品可能提供实验比较——无论界面如何，统计估计与政策决定都应可分开复核，并明确缺失和多重依赖。
+Promptfoo 常把评测接入 CI，再用阈值作判断。DeepEval 适合测试断言式回归，benchmark Harness 更关注聚合与排行榜，平台型产品则可能提供实验比较。无论采用哪种界面，统计估计与政策决定都应该能够分开复核，同时明确缺失情况和多重依赖。
 
 ## 本篇不能证明什么
 
-一个本地 Bootstrap 和阈值 Gate 不构成完整统计审查，也不授权真实生产发布；它只展示从预声明 Trial、配对 Score 到可解释 Decision 的最小闭环——外部有效性、风险接受和组织审批仍在系统外。
+一个本地 Bootstrap 加上一道阈值 Gate，还构不成完整的统计审查，也不会自动授权真实生产发布。这里展示的只是从预声明 Trial、配对 Score 一路走到可解释 Decision 的最小闭环，它要求每个状态都能回到对应证据，却还没有处理分布漂移、多重检验或长期风险预算。后续还要检验外部有效性，并完成风险接受与组织审批，而这些工作仍然需要结合新的运行证据，在这套系统之外完成。
 
 [上一章](05-scorer-judge-score-metric.md) · [下一章](07-eval-to-rl-and-release-eval.md)

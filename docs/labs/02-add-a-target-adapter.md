@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-Target Adapter 把任意被测系统翻译为统一 `run(Trial) -> TargetResult`。本实验先理解安全子进程 Adapter，再设计 HTTP/本地函数 Adapter 的合同，重点是错误分类、身份和秘密边界，而不是堆 SDK 参数。
+Target Adapter 负责把各不相同的被测系统接入统一的 `run(Trial) -> TargetResult` 接口——后续运行、评分和门禁都依赖这层翻译。本实验会从安全子进程 Adapter 的现成实现出发，再设计 HTTP 或本地函数 Adapter 的合同，因为真正影响评测可信度的是错误分类、身份记录和秘密边界，SDK 参数反倒只是实现细节。
 
 ## 核心机制
 
 ![Target Adapter 与执行边界](../assets/diagrams/foundations/01-boundary.svg)
 
-Adapter 只执行一次 Trial，不管理 Harness retry、不评分、不决定 Gate；它返回 completed/product_failure，或仅在没有有效产品观察的基础设施故障时抛 InfrastructureError。输入来自 `trial.sample.input`，而输出必须是 JSON object。
+Adapter 的职责很窄，它只执行一次 Trial，既不管理 Harness retry，也不参与评分或决定 Gate。边界要守住。运行结束后，它应返回 completed/product_failure，只有基础设施故障导致这次运行没有留下有效产品观察时，才抛出 InfrastructureError。输入取自 `trial.sample.input`，而输出必须满足 JSON object 合同。
 
 ## 完整流程
 
@@ -27,15 +27,15 @@ uv run pytest tests/test_subprocess_target.py tests/test_runner.py -q
 
 ## 关键数据与不变量
 
-Adapter identity 至少包括类型、实现版本、实际 endpoint/model/script digest 和非敏感配置，而 InfrastructureError code 要稳定，不能捕获所有 Exception 后无限 retry。产品拒答若是系统合法输出，应作为 completed observation 交给 Scorer，而网络未连接才是 infra。
+Adapter identity 至少要记录类型、实现版本、实际 endpoint/model/script digest 和非敏感配置，否则之后很难确认结果究竟来自哪个系统。InfrastructureError code 也要保持稳定，因为捕获所有 Exception 再无限 retry，会把产品失败伪装成偶发的基础设施问题。产品拒答如果属于系统合同允许的输出，就应作为 completed observation 交给 Scorer，网络根本没有连通才属于 infra。
 
 ## 动手实验
 
-复制纸面模板实现 `LocalFunctionTarget`，构造函数接收 callable，run 将 input 传给函数并要求返回 dict；随后设计四个测试：返回 dict、返回 list、抛业务异常、抛 InfrastructureError，并写出每种期望 TargetResult/Attempt。
+复制纸面模板实现 `LocalFunctionTarget`，让构造函数接收 callable，并由 run 把 input 传入函数后检查返回值是否为 dict。然后设计四个测试，分别覆盖返回 dict、返回 list、抛业务异常和抛 InfrastructureError，并写出每种情况下预期出现的 TargetResult/Attempt。
 
 ## 预期输出与答案
 
-dict → completed；list → product_failure 或明确 contract error；业务异常若代表被测代码失败，应保存 product_failure；明确基础设施异常才触发新 Attempt。Callable 身份还需模块、qualname 与代码 digest——不能只写 `function`。
+返回 dict 时应得到 completed，返回 list 时应得到 product_failure 或明确的 contract error。业务异常如果代表被测代码自身失败，就要保存为 product_failure，只有明确的基础设施异常才触发新 Attempt。Callable 的身份还要包含模块、qualname 与代码 digest，只写 `function` 无法区分两段完全不同的实现。
 
 ## 如何核对
 
@@ -43,6 +43,6 @@ dict → completed；list → product_failure 或明确 contract error；业务�
 
 ## 本篇不能证明什么
 
-Adapter 合同通过不能证明远端服务幂等、认证安全或输出真实来自声明模型；这些需要集成环境和实际身份调和。
+Adapter 合同通过，只能说明这一层按约定完成了输入转换、执行和结果分类，而远端服务是否幂等、认证是否安全，以及输出是否真的来自声明的模型，仍要放到集成环境中结合实际身份、服务端记录和端到端的完整请求链路核验。
 
 [上一节](01-run-one-deterministic-eval.md) · [下一节](03-write-a-scorer.md)

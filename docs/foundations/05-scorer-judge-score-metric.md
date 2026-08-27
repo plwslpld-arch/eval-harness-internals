@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-评测项目常把“指标”一词同时用于判断一句回答、计算一组平均值和决定是否发布，所以结果是 Judge 的一条主观判断被当成总体质量，或缺失输出被无声写成 0。要避免这种混乱，必须把执行评分器的组件、单 Trial 评分事实和跨 Trial 统计估计拆开。
+评测项目常把「指标」一词同时用于判断一句回答、计算一组平均值和决定是否发布。这样做很容易把 Judge 的一次主观判断当成总体质量，也可能让缺失输出悄悄变成 0。要理清这条链路，就得把执行评分的组件、单个 Trial 的评分事实，以及跨 Trial 的统计估计分别说清楚。
 
 ## 学完你能解释什么
 
@@ -15,13 +15,13 @@
 
 ## 贯穿案例
 
-shipping 的 Scorer 读取 Observation 中的 `fee` 和样本期望值——相等得到 passed/1，不等得到 failed/0。它不关心 Target 是脚本还是模型。对三个 Sample 聚合时，Metric 分母固定为三个计划 Trial；即使某个 Bundle 缺少 `fee`，分母仍为三，该条 Score 是 unscorable，并进一步使 Gate 无法判断，而不是从分母删除。
+shipping 的 Scorer 会读取 Observation 中的 `fee`，再拿它与样本中预先声明的期望值比较。两者相等就得到 passed/1，不相等就得到 failed/0。这个判断只依赖留下来的证据，因此 Target 用脚本还是模型并不影响规则。聚合三个 Sample 时，Metric 的分母固定为三个计划 Trial。即使某个 Bundle 没有 `fee`，对应 Score 也只能记为 unscorable，分母仍然是三，而 Gate 会因为证据不完整而无法判断。
 
 ## 核心概念与边界
 
-**Scorer** 是把一个 Observation Bundle 转换成 ScoreRecord 的可版本化函数；**LLM-as-Judge** 是使用模型实现的 Scorer，不是独立层级，它还需 Rubric、采样设置、校准集、偏差检查和分歧处理。**ScoreRecord** 是对单个 Trial 的评分事实，包含状态、值、理由、Scorer 身份和证据血缘；**MetricEstimate** 对预声明的 Trial/Score 集合做聚合，包含分子、分母、估计值和 score_ids。
+**Scorer** 是一个可以独立版本化的函数，它负责把 Observation Bundle 转换成 ScoreRecord。**LLM-as-Judge** 只是用模型实现的 Scorer，并没有在评分流程之外另起一个层级。因为模型判断会受提示词和采样影响，所以还要配套 Rubric、采样设置、校准集、偏差检查和分歧处理。**ScoreRecord** 记录单个 Trial 已经发生的评分事实，其中包含状态、值、理由、Scorer 身份和证据血缘。等这些单次事实齐备之后，**MetricEstimate** 才对预先声明的 Trial/Score 集合做聚合，并保存分子、分母、估计值和 score_ids。
 
-环境事实可直接验证时，优先用测试、规则或终态断言；Judge 适合多值文本质量、语义符合度和需要 Rubric 的判断，但其输出应允许 uncertain，并与人工标注或确定性切面校准。模型说“我完成了”只是 Target 输出，不能作为自己的独立评分。
+如果环境事实能够直接验证，测试、规则或终态断言通常比模型自评更可靠。Judge 更适合评价多值文本质量、语义符合度，以及那些必须依照 Rubric 才能判断的结果。它的输出仍要允许 uncertain，并通过人工标注或确定性证据切面进行持续校准。模型声称「我完成了」只是一段 Target 输出，不能反过来充当独立评分证据。
 
 ## 机制图
 
@@ -45,13 +45,13 @@ shipping 的 Scorer 读取 Observation 中的 `fee` 和样本期望值——相�
 | ScoreRecord | status、value、reason | Trial、Attempt、Bundle、Scorer |
 | MetricEstimate | numerator、denominator、value | metric_id 与 score_ids |
 
-值和状态必须同时保留，因为 `value=0` 可能代表规则明确判错，却不能表达缺证据或协议无效；只有状态能告诉 Gate 这个数是否可用于推断。理由用于人类核对，不应取代结构化状态。
+值和状态必须同时保留，因为二者回答的是评分里的不同问题。`value=0` 可以表示规则已经明确判错，却表达不了证据缺失或协议无效。Gate 得先读取状态，才能知道这个数是否适合继续推断，而 reason 只是方便人类核对，不能顶替结构化状态。
 
 ## 设计取舍
 
-二元规则简单、可复现，却可能遗漏部分质量；连续分数更细，但阈值、尺度和校准会影响解释。多个 Scorer 可以分别测正确性、安全和格式，再由非补偿 Gate 处理关键风险——不应先把关键安全失败平均进高正确率。Judge 可以降低人工成本，但需要冻结模型、prompt、Rubric 和随机性，并定期与人工样本对照。
+二元规则简单且容易复现，却可能遗漏那些难以用通过或失败概括的质量。连续分数能表达更细的差别，但阈值、尺度和校准都会影响它的含义。多个 Scorer 可以分别检查正确性、安全和格式，再让非补偿 Gate 单独处理关键风险——否则一次安全失败可能被高正确率平均掉。Judge 虽然能降低人工成本，仍需要冻结模型、prompt、Rubric 和随机性，并定期拿人工样本做对照。
 
-DeepEval 的 [`BaseMetric`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py#L54-L93) 展示 Metric/Judge 抽象，是**上游源码事实**；Promptfoo 的 [`runAssertion`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts#L683-L703) 展示 Assertion 分派。把二者映射到统一的 Scorer 责任是**机制解释**，并非断言其状态枚举相同。
+DeepEval 的 [`BaseMetric`](https://github.com/confident-ai/deepeval/blob/a2e0d4cfd3118352d321c1c84bdeba17d4a201bc/deepeval/metrics/base_metric.py#L54-L93) 展示 Metric/Judge 抽象，这是**上游源码事实**。Promptfoo 的 [`runAssertion`](https://github.com/promptfoo/promptfoo/blob/ce89186a22c59543f4f71a55d42442ff3f0e3654/src/assertions/index.ts#L683-L703) 则展示 Assertion 如何分派。这里把二者放到统一的 Scorer 责任下理解，属于**机制解释**，并不表示它们拥有相同的状态枚举。
 
 ## 失败语义
 
@@ -67,22 +67,22 @@ DeepEval 的 [`BaseMetric`](https://github.com/confident-ai/deepeval/blob/a2e0d4
 
 ## 预期输出与答案
 
-缺字段的 Bundle 应产生 `unscorable` 且 value 为 null，它不能被默认为 failed；两条 passed Score 配三个计划 Trial 时 Metric 为 2/3，而不是 2/2。若把 unscorable Score 一起交给 Gate，Gate 应为 inconclusive，因为证据不足以支持通过或明确失败。
+缺字段的 Bundle 应产生 `unscorable`，对应 value 为 null，不能默认为 failed。两条 passed Score 对应三个计划 Trial 时，Metric 应当是 2/3，而非 2/2。如果把 unscorable Score 一起交给 Gate，结果应为 inconclusive，因为现有证据既不足以支持通过，也不足以确认失败。
 
 ## 常见误解
 
-“Judge 给数字就很客观”忽略校准与模型偏差；“unscorable 按 0 最安全”混淆产品质量和 Harness 可观测性；“平均分足够”会掩盖关键风险与分组差异；“同名 metric 可直接比较”忽略数据、Scorer 和分母定义。
+认为「Judge 给出数字就很客观」，会忽略校准过程与模型偏差。把 unscorable 记作 0 看似保守，却会混淆产品质量问题和 Harness 自身的可观测性问题。只看平均分还会遮住关键风险与分组差异，而直接比较同名 metric，也可能漏掉数据、Scorer 和分母定义的变化。
 
 ## 如何核对
 
-运行 `python -m pytest tests/test_scoring.py tests/test_metrics.py tests/test_gates.py -q`，重点检查缺字段状态、计划分母、重复 score_id 和不可用证据不能过 Gate；再阅读锁定 DeepEval 实现，区分上游所谓 Metric 何时同时承担本篇的 Scorer 与 Score 汇总责任。
+运行 `python -m pytest tests/test_scoring.py tests/test_metrics.py tests/test_gates.py -q`，重点检查缺字段状态、计划分母、重复 score_id，以及不可用证据无法通过 Gate 的约束。随后阅读锁定的 DeepEval 实现，判断上游所谓 Metric 在什么情况下同时承担了本篇的 Scorer 和 Score 汇总责任。
 
 ## 与其他 Harness 的关系
 
-lm-evaluation-harness 常让 Task 构造请求并聚合 metric；Inspect AI 明确暴露 Scorer 与 Metric；Promptfoo 以 Assertion 面向测试配置；DeepEval 用 Metric 类执行包括 Judge 在内的单案例判断。名称相同不代表层级相同，比较时应问“输入是一条 Observation 还是一组 Score”。
+lm-evaluation-harness 通常由 Task 构造请求并聚合 metric，Inspect AI 会明确暴露 Scorer 与 Metric，Promptfoo 则以 Assertion 面向测试配置。DeepEval 使用 Metric 类执行单案例判断，其中也包括 Judge。名称相同并不表示所在层级相同，因此比较这些工具时，应追问输入究竟是一条 Observation，还是一组 Score。
 
 ## 本篇不能证明什么
 
-评分血缘和状态正确不能证明 Rubric 有效、Judge 无偏或 Dataset 代表线上流量。它只阻止不兼容的证据被静默压成一个看似精确的数字。
+评分血缘和状态正确不能证明 Rubric 有效、Judge 无偏或 Dataset 代表真实线上流量，也无法说明高分是否覆盖了真正需要守住的业务风险，更不能替代领域专家对评分目标的复核。它能做的事情很具体——阻止不兼容的证据被静默压成一个看似精确的数字。
 
 [上一章](04-trace-artifact-observation.md) · [下一章](06-uncertainty-comparison-gate.md)

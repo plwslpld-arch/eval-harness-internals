@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-第一次动手不接模型 API，而是完整跑通 Dataset → Trial → Attempt → Artifact → Score → Metric → Gate，这样任何失败都能在本地复现，不会被网络、额度或模型漂移掩盖。你将运行运费案例。再从报告反向追一条失败证据。
+第一次动手先不接模型 API，而是完整跑通 Dataset → Trial → Attempt → Artifact → Score → Metric → Gate。这样一旦出现失败，就能在本地稳定复现，不会被网络、额度或模型漂移掩盖。你会先运行运费案例，再从生成的报告出发，反向追踪一条完整的失败证据链。
 
 ## 核心机制
 
 ![确定性 Eval 的最小闭环](../assets/diagrams/foundations/02-eval-spec-flow.svg)
 
-配置先固定两个 Target 和三个 Sample，随后由 Planner 生成六个 Trial、本地脚本输出 fee、Scorer 比较 expected，Gate 则要求 100%；输出目录是一次 Run 的证据根，后续 inspect/score/gate 都只消费它。
+配置会先固定两个 Target 和三个 Sample，随后 Planner 生成六个 Trial，本地脚本为每个 Trial 输出 fee，再由 Scorer 与 expected 比较。Gate 的要求是 100%。输出目录保存着一次 Run 的全部根证据，后续 inspect/score/gate 都只消费这份目录，因此每个结论都能沿着同一条证据链回查。
 
 ## 完整流程
 
@@ -29,11 +29,11 @@ uv run eval-harness-ref inspect output/lab-01
 
 ## 关键数据与不变量
 
-计划 Trial 数必须是 6；每个完成 Trial 只有一个 canonical Attempt；Artifact digest 与 bytes 匹配；两个 Target 的 Metric denominator 各为 3；Score failed 与 Attempt succeeded 可以同时成立，因为执行成功不等于产品通过。
+计划 Trial 数必须是 6，每个完成的 Trial 只能拥有一个 canonical Attempt，而且 Artifact digest 必须与 bytes 匹配。两个 Target 的 Metric denominator 各自为 3。Score failed 与 Attempt succeeded 可以同时成立——前者描述产品结果，后者只说明执行过程顺利完成。
 
 ## 动手实验
 
-把 `output/lab-01/artifacts` 中任意文件追加一个字符，再运行下面的命令。
+从 `output/lab-01/artifacts` 中任选一个 Artifact 文件，在末尾追加一个字符，然后运行下面的检查命令。
 
 ```bash
 uv run eval-harness-ref inspect output/lab-01
@@ -62,9 +62,7 @@ buggy-release：failed
 fixed-release：passed
 ```
 
-计划 6 个 Trial、6 个 Bundle、6 条 Score，三个数字相等，说明每个 Trial 都留下了
-一份可评分证据，没有中途丢失。金额 100 的 buggy Trial 是 succeeded/canonical，
-但它的 Score 是 failed——执行成功不等于产品通过，这两层在报告里始终分开。
+计划中有 6 个 Trial，最终也得到 6 个 Bundle 和 6 条 Score。三个数字相等，说明每个 Trial 都留下了一份可以被 Scorer 复核的证据，中途没有丢失。金额 100 的 buggy Trial 虽然是 succeeded/canonical，但对应 Score 仍为 failed，因为执行成功只描述程序完成了工作，产品结果却没有达到规则要求。报告会始终把执行状态与产品判断这两层分开记录。
 
 篡改 Artifact 后再 `inspect`，会直接拒绝出结论。
 
@@ -72,9 +70,7 @@ fixed-release：passed
 错误：运行证据无效：Artifact 摘要不一致：artifacts/ae82e58adceaf5a6…
 ```
 
-注意它报的是「运行证据无效」，不是「评分失败」，因为失败发生在证据层，还没走到评分。
-旧的 report.html 仍然躺在目录里，但它已经不能作为有效结论。报告是证据的函数，
-证据一动，报告就失效了。
+这里报告的是「运行证据无效」，而非「评分失败」，因为问题出在证据层，此时流程还没有走到评分。旧的 report.html 虽然仍留在原来的输出目录里，却已经不能支撑任何有效结论。报告由证据推导而来，所以底层证据一旦改变，原有报告也就随之失效。
 
 ## 如何核对
 

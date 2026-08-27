@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-调用超时后再试一次很合理；模型答错后再问一次有时也能得到正确答案。但这两种“重试”不能混为一谈。前者是在恢复同一个实验对象的基础设施执行，后者是在给被测产品额外机会。如果只记录最后一次成功，失败样本会被重试成通过，成功率分母也会随着可用结果变化。
+调用超时后再试一次很合理，模型答错后再问一次也有可能得到正确答案，但这两种「重试」改变的对象并不相同。前一种在恢复同一实验对象的基础设施执行，后一种却给了被测产品额外的答题机会。如果只保留最后那次成功，失败样本就会被逐步重试成通过，成功率的分母也会随可用结果一起变化。
 
 ## 学完你能解释什么
 
@@ -15,13 +15,13 @@
 
 ## 贯穿案例
 
-金额 100 的 Sample 分别交给 buggy 与 fixed Target，形成两个 Trial——如果 buggy 脚本正常启动并返回运费 10，这个 Trial 已完成；答案虽错，也不能再启动一次“希望它答对”。若 Python 子进程因临时资源错误没有启动，Harness 可以在预声明的两次基础设施预算内创建 Attempt 2；恢复成功后 Attempt 2 成为唯一 canonical Attempt，Attempt 1 仍保留在证据中。
+金额 100 的 Sample 分别交给 buggy 和 fixed Target 后，会形成两个 Trial。如果 buggy 脚本正常启动并返回运费 10，这个 Trial 已经完成，即使答案错了也不能再启动一次「希望它答对」。如果 Python 子进程因临时资源错误而没有启动，Harness 则可以在预先声明的两次基础设施预算内创建 Attempt 2。恢复成功后，Attempt 2 成为唯一 canonical Attempt，Attempt 1 仍然要留在证据中。
 
 ## 核心概念与边界
 
-**Sample** 是 Dataset 中稳定的输入与 Reference 单元。**Trial** 是 Sample × Target × Repetition 物化后的统计对象，它在执行前已进入计划分母。**Attempt** 是为完成一个 Trial 而发生的基础设施执行记录，记录序号、错误码和是否 canonical。
+**Sample** 是 Dataset 中稳定的输入与 Reference 单元，而 **Trial** 是 Sample × Target × Repetition 物化后的统计对象，它在执行前已进入计划分母。**Attempt** 是为完成一个 Trial 而发生的基础设施执行记录，记录序号、错误码和是否 canonical。
 
-重复次数不是 Attempt。对随机模型做 5 次重复会生成 5 个 Trial，因为每次都是计划内观测；某个 Trial 因网络握手失败而恢复 2 次，仍只有 1 个统计单位。产品级 retry 若本来就是 Target 的算法——例如 Agent 自己在 Loop 内重新调用模型，应封装在同一个 Target 行为里，并在 Trace 中可见，而不是由 Eval Harness 偷偷增加 Attempt。
+重复次数不是 Attempt。对随机模型做 5 次重复会生成 5 个 Trial，因为每一次都是计划内的独立观测。某个 Trial 因网络握手失败恢复了 2 次，仍然只有 1 个统计单位。如果产品级 retry 原本就是 Target 的算法，例如 Agent 在 Loop 内重新调用模型，它应当封装在同一 Target 行为里并在 Trace 中可见，而不能由 Eval Harness 悄悄增加 Attempt。
 
 ## 机制图
 
@@ -36,7 +36,7 @@
 5. 所有恢复机会耗尽后，Trial 为 `blocked`，没有 canonical Attempt，也不能伪造 Observation Bundle。
 6. 产品失败由 Adapter 作为正常返回的一种结果类型传回——它仍产生 canonical Attempt，随后由 Scorer 判断失败。
 
-这条状态机直接实现在 [`run_trial`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/runner.py)；[`tests/test_runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_runner.py) 分别锁住基础设施恢复、产品失败不重试和 canonical 唯一性。
+这条状态机直接实现在 [`run_trial`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/src/eval_harness_reference/runner.py)，而 [`tests/test_runner.py`](https://github.com/plwslpld-arch/eval-harness-internals/blob/main/tests/test_runner.py) 分别锁住了基础设施恢复、产品失败不重试和 canonical 唯一性。
 
 ## 关键数据结构
 
@@ -56,11 +56,11 @@ Attempt
   error_code
 ```
 
-Trial 不保存“最终分数”，因为执行和评分是两个阶段；Attempt 也不保存 Dataset 权重，因为统计设计不属于恢复层。canonical 不是“最好的一次”，而是协议允许进入后续证据链的唯一一次；选择规则必须在看到结果前确定。
+Trial 不保存「最终分数」，因为执行和评分分属两个阶段，而 Attempt 也不保存 Dataset 权重，因为统计设计并不属于恢复层。canonical 不指向「表现最好的那次」，它是协议允许进入后续证据链的唯一一次执行，因此选择规则必须在看到结果之前确定。
 
 ## 设计取舍
 
-最简单的本地 Harness 可以同步执行并在内存里选择 canonical；分布式系统还需要 Lease、Fencing Token 和幂等提交，防止超时 Worker 在新 Worker 已接管后迟到写入。首版 Reference Harness 不假装实现分布式一致性，而是把“最多一个 canonical”作为模型不变量——这样课程能清楚展示语义，同时避免用复杂基础设施遮住统计问题。
+最简单的本地 Harness 可以同步执行，再在内存里选择 canonical。分布式系统还需要 Lease、Fencing Token 和幂等提交，否则超时 Worker 可能在新 Worker 已经接管后又迟到写入。首版 Reference Harness 没有宣称已实现分布式一致性，它只把「最多一个 canonical」定为模型不变量——这样既能讲清语义，也不会让复杂基础设施遮住统计问题。
 
 Harbor 的锁定 [`Trial` 抽象基类](https://github.com/harbor-framework/harbor/blob/74f0176384cff88b99306770473b4875760c5a21/src/harbor/trial/trial.py#L86-L125) 展示 Agent Trial 生命周期，是**上游源码事实**。Reference Harness 的 Attempt 分层是本仓库的**教学实现**，字段不能直接当作 Harbor 内部结构的逐项翻译。
 
@@ -82,7 +82,7 @@ Harbor 的锁定 [`Trial` 抽象基类](https://github.com/harbor-framework/harb
 
 ## 常见误解
 
-“只要最终成功，前面的 Attempt 可以删掉”会丢失可靠性与成本证据；“Attempt 越多样本越多”会造成伪重复；“blocked 就按 0 分最保守”把平台故障错误归因给产品；“模型自洽重试也必须拆 Attempt”则混淆 Target 内部策略与 Harness 恢复。
+「只要最终成功，前面的 Attempt 可以删掉」会丢失可靠性与成本证据，而「Attempt 越多样本越多」会制造伪重复。把 blocked 直接按 0 分计算，看似保守，实际上把平台故障错误归因给了产品。如果又要求「模型自洽重试也必须拆 Attempt」，就会继续混淆 Target 内部策略与 Harness 恢复。
 
 ## 如何核对
 
@@ -90,10 +90,10 @@ Harbor 的锁定 [`Trial` 抽象基类](https://github.com/harbor-framework/harb
 
 ## 与其他 Harness 的关系
 
-benchmark 型 Harness 常把请求重试藏在 Model Adapter；声明式应用评测可能把每个 Test Case 直接称作一条结果；Agent 环境 Harness 通常有更重的 Trial 生命周期。比较这些实现时要追踪“统计分母何时确定”“产品错误是否可重试”“哪个结果进入评分”，不能只对齐 `retry` 配置名。
+benchmark 型 Harness 常把请求重试藏在 Model Adapter 里，声明式应用评测可能把每个 Test Case 直接称作一条结果，Agent 环境 Harness 通常还有更重的 Trial 生命周期。比较这些实现时，要追踪「统计分母何时确定」「产品错误是否可重试」和「哪个结果进入评分」，只对齐 `retry` 这个配置名得不到答案。
 
 ## 本篇不能证明什么
 
-正确分层不会自动选择最佳重试预算，也不能保证分布式执行恰好一次。它能证明的是：在声明的本地协议内，基础设施恢复不会悄悄增加成功样本或删除失败 Trial。
+分层正确也不会自动给出最佳重试预算，更不能保证分布式执行恰好一次。它所能证明的范围很具体：在已声明的本地协议内，基础设施恢复没有悄悄增加成功样本，也没有删掉失败 Trial。
 
 [上一章](02-task-dataset-target-environment.md) · [下一章](04-trace-artifact-observation.md)

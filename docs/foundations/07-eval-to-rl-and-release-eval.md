@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-评测发现失败样本后，最有价值的下一步往往是生成偏好对、验证器奖励或在线强化学习任务；但一旦同一批样本和 Scorer 被用于训练、选择 checkpoint，又继续用来声称发布质量，模型可能只学会通过已知门禁。Eval-to-RL 的关键不是把分数接到训练 API，而是保持训练 reward、checkpoint 选择和独立 Release Eval 三种决定的证据隔离。
+评测发现失败样本后，人们往往会用它生成偏好对、验证器奖励或在线强化学习任务。问题在于，同一批样本和 Scorer 一旦既用于训练、选择 checkpoint，又被拿来证明发布质量，模型可能只是学会了通过已知门禁。Eval-to-RL 的关键不在于把分数接到训练 API，而在于隔离三类决定的证据：训练 reward、checkpoint 选择，以及独立 Release Eval。
 
 ## 学完你能解释什么
 
@@ -15,13 +15,13 @@
 
 ## 贯穿案例
 
-shipping 的金额 100 失败可进入训练难例：对于 DPO，可构造“免运费”正确输出优于“收 10 元”错误输出的偏好对；对于 GRPO/RFT，可用确定性规则产生 0/1 reward。但发布评测不能只保留 99、100、101 这三个已被优化器反复看到的样本，所以应另外冻结未参与训练的边界组合、数据类型和异常路径，让 Candidate 在新运行中独立接受同一业务不变量检查。
+shipping 中金额 100 的失败可以进入训练难例。用于 DPO 时，可以构造「免运费」正确输出优于「收 10 元」错误输出的偏好对。用于 GRPO/RFT 时，则可以让确定性规则产生 0/1 reward。发布评测不能继续只用 99、100、101 这三个已经被优化器反复看过的样本，因此还要冻结未参与训练的边界组合、数据类型和异常路径，让 Candidate 在一次新运行中独立接受同一业务不变量的检查。
 
 ## 核心概念与边界
 
-**Evaluator** 产生带血缘的 Score 和失败簇；**RewardAdapter** 明确把评测语义转换为训练接口：标量 reward、偏好对、验证器结果或不可用。**DPO** 消费偏好数据；**GRPO/RFT** 常消费可验证或模型生成轨迹上的奖励。**checkpoint choice eval** 在训练过程中选择候选，允许影响优化路径；但 **independent release eval** 使用隔离留出集和独立运行，在候选冻结后决定是否进入下一环境。
+**Evaluator** 产生带血缘的 Score 和失败簇。随后，**RewardAdapter** 按照明确规则，把评测语义转换成训练接口能够接收的标量 reward、偏好对、验证器结果，或者标记为不可用。**DPO** 消费偏好数据，**GRPO/RFT** 则常常消费可验证轨迹或模型生成轨迹上的奖励。训练期间可以用 **checkpoint choice eval** 选择候选，并允许结果影响优化路径。等候选身份冻结后，**independent release eval** 才使用隔离留出集和独立运行，判断它能否进入下一环境。
 
-RewardAdapter 必须声明能力合同。确定性测试通过可安全映射为验证器 reward；Judge 的 uncertain 不应硬压成 0/1；需要跨样本聚合的公平性 Metric 不能无解释地分摊到每条轨迹；带人工隐私数据的 Score 也可能禁止进入训练。不可表达时应写 `unavailable`，部分表达时写 `partial`。
+RewardAdapter 必须声明自己的能力合同。确定性测试通过时，通常可以安全地映射成对应的验证器 reward。Judge 给出的 uncertain 不能硬压成 0/1，而需要跨样本聚合的公平性 Metric，也不能在没有解释的情况下分摊到每条轨迹。某些 Score 还包含人工标注过程中的隐私数据，因而可能被禁止进入训练。遇到无法表达的情况应写 `unavailable`，只能表达一部分语义时则写 `partial`。
 
 ## 机制图
 
@@ -48,9 +48,9 @@ RewardAdapter 必须声明能力合同。确定性测试通过可安全映射为
 
 ## 设计取舍
 
-复用同一个 Scorer 能保持目标一致，却也会放大奖励黑客风险；因此 Release Eval 应增加独立切面、不同实现或人工抽查——完全隐藏留出集降低泄漏，但维护成本高且反馈慢；可采用开发集快速迭代、周期性刷新独立集。自动 reward 规模大，人工偏好能覆盖细腻语义，两者都需要来源与授权记录。
+复用同一个 Scorer 有助于保持目标一致，却也会放大奖励黑客风险。因此，Release Eval 应增加独立的评测切面、不同实现或人工抽查。完全隐藏留出集可以降低泄漏，代价是维护成本更高、反馈更慢，所以实践中可以用开发集快速迭代，并周期性刷新独立集。自动 reward 便于扩大训练数据规模，人工偏好则能覆盖更细腻的语义——但两者都必须留下来源与授权记录。
 
-OpenAI Evals 的锁定 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85) 展示样本 Eval 抽象，是**上游源码事实**。把 Score 经过 RewardAdapter 连接到 DPO/GRPO/RFT 是本仓库的**架构机制解释**；OpenAI Evals 该文件本身不提供这里描述的训练适配器。
+OpenAI Evals 的锁定 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7de5215c907fbddc30efdaf316913eccdd/evals/eval.py#L46-L85) 展示样本 Eval 抽象，这是**上游源码事实**。本仓库再通过 RewardAdapter 把 Score 连接到 DPO/GRPO/RFT，这部分属于**架构机制解释**。OpenAI Evals 的这个文件本身并未提供这里描述的训练适配器实现。
 
 ## 失败语义
 
@@ -62,23 +62,23 @@ OpenAI Evals 的锁定 [`eval.py`](https://github.com/openai/evals/blob/8eac7a7d
 
 ## 动手实验
 
-从 shipping 的 `report.json` 选出 failed Score，沿 observation_bundle_digest 找到金额 100 的输出与 expected；写一张表，分别判断它能否转换为：DPO 偏好对、GRPO 标量 reward、独立发布 Score。再把一个 unscorable Score 放进同一张表。
+从 shipping 的 `report.json` 选出 failed Score，沿 observation_bundle_digest 找到金额 100 的输出与 expected。然后写一张表，分别判断它能否转换为：DPO 偏好对、GRPO 标量 reward、独立发布 Score。再把一个 unscorable Score 放进同一张表。
 
 ## 预期输出与答案
 
-明确错误且有确定性 Reference 的金额 100 样本可生成 chosen=`fee:0`、rejected=`fee:10`，也可映射为 0 reward；其来源血缘必须保留。它仍不能作为独立发布证据，因为已进入训练。unscorable 不能映射为失败 reward，应标记 unavailable 并修复观测链；独立发布 Score 必须来自冻结 Candidate 在未参与训练的 Dataset 上的新 Trial。
+金额 100 的样本错误明确，而且拥有确定性 Reference，因此可以生成 chosen=`fee:0`、rejected=`fee:10`，也可以映射为 0 reward。无论最后采用哪一种训练数据形式，都必须完整保留它的来源血缘。因为这个样本已经被用于训练过程，所以不能再充当独立发布评测中的证据。unscorable 也不能直接映射为失败 reward，应标记 unavailable，并先修复观测链。独立发布 Score 必须来自冻结 Candidate 在未参与训练的 Dataset 上运行的新 Trial。
 
 ## 常见误解
 
-“Eval 分数天然就是 reward”忽略粒度和状态；“只要划分 train/test 就不会泄漏”忽略同实体、近重复和反馈循环；“Release Eval 越晚越独立”不成立，若结果持续指导调参，它已经是开发集；“RL 提升 reward 就证明产品更好”把优化目标当外部有效性。
+把 Eval 分数直接当成 reward，会忽略粒度和状态。仅仅划分 train/test 也阻止不了所有泄漏，因为同实体样本、近重复内容和反馈循环仍可能跨过边界。Release Eval 做得晚，不代表它天然独立。如果结果持续用于指导调参，这批数据实际上已经承担开发集的角色。RL 提升 reward 只说明优化目标上的变化，不能直接证明产品的外部有效性。
 
 ## 如何核对
 
-从任一训练样本反查原 Score、Bundle 和 Scorer 版本，确认 RewardAdapter 的每个状态映射有测试；检查 SplitManifest 是否按实体分组，确认独立集没有进入训练、prompt 选择或阈值调节。Reference Harness 当前只提供 Eval 证据，不实现训练，这是有意的边界而非遗漏声明。
+从任一训练样本反查原 Score、Bundle 和 Scorer 版本，并确认 RewardAdapter 的每一种状态映射都有测试。还要检查 SplitManifest 是否按实体分组，从而确认独立集没有进入训练、prompt 选择或阈值调节。Reference Harness 当前只提供 Eval 证据，并未实现训练，这是一条有意保留的边界，并非遗漏声明。
 
 ## 与其他 Harness 的关系
 
-主流 Eval Harness 通常聚焦评测执行、评分或 CI；训练框架聚焦优化——二者之间最重要的是显式 Adapter，而不是共享一个数据文件。Agent Environment Harness 还能提供可验证终态 reward；LLM-as-Judge Harness 更需校准与人工仲裁。无论工具组合怎样，独立 Release Eval 都应保留自己的 Dataset、运行和 Gate 血缘。
+主流 Eval Harness 通常聚焦评测执行、评分或 CI，训练框架则更关注优化过程。两类系统衔接时，显式 Adapter 比共享一个数据文件更重要，因为 Adapter 能说明语义究竟怎样转换。Agent Environment Harness 还可以提供能够验证终态的 reward，LLM-as-Judge Harness 则更依赖校准与人工仲裁。无论怎样组合工具，独立 Release Eval 都应保留专属于发布判断的 Dataset、运行和 Gate 血缘。
 
 ## 本篇不能证明什么
 
