@@ -19,7 +19,7 @@ shipping 的 Scorer（评分器）从 Observation 里读出 `fee`，再与 Sampl
 
 ## 核心概念与边界
 
-**Scorer** 是可以单独版本化的函数，它读取 Observation Bundle，再产出 ScoreRecord（评分记录）。**LLM-as-Judge**（大语言模型裁判）只是在 Scorer 里面调用模型，并没有跳出评分流程另占一层。
+**Scorer** 是可以单独版本化的函数，它读取 Observation Bundle，再产出 ScoreRecord（评分记录）。**LLM-as-Judge** 只是在 Scorer 里面调用模型，并没有跳出评分流程另占一层。
 
 模型的判断会随提示词和采样变化，因此你还得准备 Rubric（评分标准）、采样设置和校准集，并处理偏差与分歧。**ScoreRecord** 记下单个 Trial 已经发生的评分，包括状态、值、理由、Scorer 身份和证据血缘。等每次评分都落下来以后，**MetricEstimate**（指标估计值）才聚合预先声明的 Trial/Score 集合，同时保存分子、分母、估计值和 score_ids。
 

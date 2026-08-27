@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-如果 Scorer（评分器）只把 Target 给出的「success」字段读出来再照抄，就等于让被测系统给自己判分，判分者和被测对象之间也就没有边界了。这个实验从 FieldMatchesExpectedScorer 开始，让 Scorer 根据已经冻结的 Observation（观测）和 Reference 自己下判断，然后再补齐集合匹配、缺字段、无效血缘和多值 Reference 这几种情况。
+如果 Scorer（评分器）只把 Target 给出的「success」字段读出来再照抄，就等于让被测系统给自己判分，判分者和被测对象之间也就没有边界了。这个实验从 FieldMatchesExpectedScorer 开始，让 Scorer 根据已经冻结的 Observation（观测）和 Reference 自己下判断，然后再补齐集合匹配、缺字段、无效血缘和多值 Reference 这几种情况。判分过程必须独立。
 
 ## 核心机制
 
 ![Observation 到 Score 的转换](../assets/diagrams/foundations/05-scoring.svg)
 
-Scorer 拿到 ObservationBundle 之后，只能去合同指定的事件或 Artifact 里找证据，再根据这些证据生成 ScoreRecord。每条 Score 都要带上 trial_id、canonical_attempt_id、bundle digest 和 scorer_id，你才能根据记录查回当时用的观测与规则，也能在评分规则升级后，交给另一版 Scorer 重算同一份 Bundle。结果有效却不符合规则，就记为 failed；没有可用观测，就记为 unscorable；如果血缘出错，则记为 invalid。
+Scorer 拿到 ObservationBundle 之后，只能去合同指定的事件或 Artifact 里找证据，再根据这些证据生成 ScoreRecord。每条 Score 都要带上 trial_id、canonical_attempt_id、bundle digest 和 scorer_id，你才能根据记录查回当时用的观测与规则，也能在评分规则升级后，交给另一版 Scorer 重算同一份 Bundle。结果有效却不符合规则时记为 failed，没有可用观测时记为 unscorable，如果血缘出错则记为 invalid。
 
 ## 完整流程
 
@@ -27,7 +27,7 @@ uv run pytest tests/test_scoring.py tests/test_models.py -q
 
 ## 关键数据与不变量
 
-只要 Scorer identity 变了，score_id 就得跟着变；如果只是调整 threshold，则必须留住原始 value，不能把实际测到的值和发布政策塞进同一个字段。Score 只能指向 canonical Attempt。多值 Reference（参考答案）则会列出允许的答案和它们各自适用的条件，你不能随手拿第一个答案来判分，reason 也只写能够核对的解释，不采集隐藏思维链。
+只要 Scorer identity 变了，score_id 就得跟着变。如果只是调整 threshold，则必须留住原始 value，不能把实际测到的值和发布政策塞进同一个字段。Score 只能指向 canonical Attempt，而多值 Reference 会列出允许的答案和它们各自适用的条件，你不能随手拿第一个答案来判分，reason 也只写能够核对的解释，不采集隐藏思维链。
 
 ## 动手实验
 
@@ -35,7 +35,7 @@ uv run pytest tests/test_scoring.py tests/test_models.py -q
 
 ## 预期输出与答案
 
-high 应该得到 passed/1，low 应该得到 failed/0，缺字段时则是 unscorable/None。结论很直接。allowed 集合是 Scorer 合同的一部分，你一旦改了它，旧 Score 就不再代表同一次测量，必须换用新的 scorer_id/score_id 重新评分。只有 Gate threshold 变了时，原 Score 才可能继续复用。
+high 应该得到 passed/1，low 应该得到 failed/0，缺字段时则是 unscorable/None。结论很直接：allowed 集合是 Scorer 合同的一部分，你一旦改了它，旧 Score 就不再代表同一次测量，必须换用新的 scorer_id/score_id 重新评分。只有 Gate threshold 变了时，原 Score 才可能继续复用。
 
 ## 如何核对
 

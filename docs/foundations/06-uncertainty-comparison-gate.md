@@ -19,7 +19,7 @@ shipping 一共有三个 Sample，buggy 通过 2/3，fixed 通过 3/3，因此�
 
 ## 核心概念与边界
 
-**MetricEstimate**（指标估计值）告诉你某个 Target 在一组计划 Trial 上测出了什么。**ComparisonResult**（对比结果）再把 Candidate 和 Baseline 放到一起，看效果相差多少、方向如何，以及这个差异有多不确定。
+**MetricEstimate**（指标估计值）告诉你某个 Target 在一组计划 Trial 上测出了什么。**ComparisonResult** 再把 Candidate 和 Baseline 放到一起，看效果相差多少、方向如何，以及这个差异有多不确定。
 
 预先声明的 **GatePolicy** 读取有效 Metric、比较结果和关键检查，最后由 **GateDecision**（门禁决策）记下这次运行究竟是通过、失败、被阻断还是无法判断，同时保存判定依据。
 
@@ -86,6 +86,6 @@ Promptfoo 常把评测接进 CI，再用阈值下判断。DeepEval 更适合用�
 
 ## 本篇不能证明什么
 
-在本地跑一次 Bootstrap，再加一道阈值 Gate，还算不上完整的统计审查，更不会自动获得真实生产发布的授权。这里展示的只是一个最小闭环：从预先声明 Trial 开始，把 Baseline 和 Candidate 的 Score 配好对，最后产出能够解释的 Decision，并让每个状态都能查回证据。分布漂移、多重检验和长期风险预算还没有处理。你仍要拿新的运行证据检验外部有效性，并在这套系统之外完成风险接受和组织审批。
+在本地跑一次 Bootstrap，再加一道阈值 Gate，还算不上完整的统计审查，更不会自动获得真实生产发布的授权。这里展示的只是一个最小闭环：从预先声明 Trial 开始，把 Baseline 和 Candidate 的 Score 配好对，最后生成 Decision，把结论和依据都写清楚，也让每个状态都能查回证据。分布漂移、多重检验和长期风险预算还没有处理。你仍要拿新的运行证据检验外部有效性，并在这套系统之外完成风险接受和组织审批。
 
 [上一章](05-scorer-judge-score-metric.md) · [下一章](07-eval-to-rl-and-release-eval.md)

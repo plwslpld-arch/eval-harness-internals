@@ -4,13 +4,13 @@
 
 ## 本篇要解决什么问题
 
-第一次动手先不接模型 API，你要从 Dataset（数据集）一直跑到 Trial（试验）、Attempt、Artifact、Score、Metric 和 Gate，把整条路走通。这样哪一步出错，你都能在本地稳定复现，不会让网络、额度或模型漂移把问题盖住。先跑运费案例，然后打开报告，从结论倒着查回产生这次失败的整条证据链。
+第一次动手先不接模型 API，你要从 Dataset 一直跑到 Trial（试验）、Attempt、Artifact、Score、Metric 和 Gate，把整条路走通。这样哪一步出错，你都能在本地稳定复现，不会让网络、额度或模型漂移把问题盖住。先跑运费案例，然后打开报告，从结论倒着查回产生这次失败结论的整条证据链。
 
 ## 核心机制
 
 ![确定性 Eval 的最小闭环](../assets/diagrams/foundations/02-eval-spec-flow.svg)
 
-配置先把两个 Target 和三个 Sample 定下来，Planner 再据此建出六个 Trial，本地脚本逐个算出 fee，最后由 Scorer（评分器）拿它和 expected 比较。Gate 要求所有样本都通过。一次 Run 用到的根证据全部放在输出目录里，后面跑 inspect、score 或 gate 时都只读这份目录，所以你能沿同一条证据链把每个结论查回去。
+配置先把两个 Target 和三个 Sample 定下来，Planner 再据此建出六个 Trial，本地脚本逐个算出 fee，最后由 Scorer（评分器）拿它和 expected 比较。Gate 要求所有样本都通过，而一次 Run 用到的根证据全部放在输出目录里，后面跑 inspect、score 或 gate 时都只读这份目录，所以你能沿同一条证据链把每个结论查回去。
 
 ## 完整流程
 
@@ -29,7 +29,7 @@ uv run eval-harness-ref inspect output/lab-01
 
 ## 关键数据与不变量
 
-计划里必须有 6 个 Trial，每个完成的 Trial 只能选定一个 canonical Attempt，Artifact（产物）的 digest 也必须和实际 bytes 对得上。两个 Target 各有 3 个 Metric denominator。Score failed 和 Attempt succeeded 可以同时出现：前者说产品结果没过关，后者只说程序顺利跑完了。这两件事不能混。
+计划里必须有 6 个 Trial，每个完成的 Trial 只能选定一个 canonical Attempt，Artifact 的 digest 也必须和实际 bytes 对得上。两个 Target 各自的 Metric denominator 都等于 3，而 Score failed 和 Attempt succeeded 可以同时出现：前者说产品结果没过关，后者只说程序顺利跑完了。这两件事不能混。
 
 ## 动手实验
 
