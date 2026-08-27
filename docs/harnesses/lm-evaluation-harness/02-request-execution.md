@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-一条 benchmark 文档并不一定只对应一次模型调用，例如多项选择题可能为每个选项各构造一条 loglikelihood 请求，生成题却可能只有一条 generate_until，而且请求还会因为 repeats 被复制。一旦把“模型请求数”“文档数”和“统计样本数”混在一起，成本、分母和重试语义就都会算错，因此本节会沿着 `evaluate` 的核心循环追踪 Instance 的完整生命周期。
+一条 benchmark 文档并不一定只对应一次模型调用，例如多项选择题可能为每个选项各构造一条 loglikelihood 请求，生成题却可能只有一条 generate_until，而且请求还会因为 repeats 被复制。一旦把「模型请求数」「文档数」和「统计样本数」混在一起，成本、分母和重试语义就都会算错，因此本节会沿着 `evaluate` 的核心循环追踪 Instance 的完整生命周期。
 
 ## 先建立源码地图
 
@@ -21,7 +21,7 @@
 3. 调度器遍历 `task.instances`，按 request_type 放入全局 requests 分桶。分布式模式先收集各 rank 数量，为较短 rank 计算 padding_requests。
 4. 每个分桶内按照 `req.repeats` 复制对象；分布式补齐再增加伪请求，使各 rank 前向批次数一致。
 5. `getattr(lm, reqtype)(cloned_reqs)` 调用对应 Model Adapter 方法。返回列表与 cloned_reqs 用严格 zip 对齐，每个响应追加到原 Instance 的 `resps`。
-6. Task 执行 filter，生成 `filtered_resps`。调度器按 doc_id 分组、按 idx 排序，恢复“同一文档的多条请求”顺序。
+6. Task 执行 filter，生成 `filtered_resps`。调度器按 doc_id 分组、按 idx 排序，恢复「同一文档的多条请求」顺序。
 7. `task.process_results(doc, filtered responses)` 把多个响应变为文档级 metric。可选 sample log 同时记录 arguments、原始响应、过滤响应和 doc/prompt/target hash。
 
 ## 关键数据结构

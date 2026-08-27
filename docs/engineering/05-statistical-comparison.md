@@ -24,7 +24,7 @@ Candidate 通过率是 82%，Baseline 是 80%，这两个平均数看起来已�
 4. `compare_targets` 从 Evidence 找到 Trial 的 sample_id/repetition，从 Report 找到有效 score，形成两张 key → value 映射。
 5. 取交集配对，计算 candidate - baseline 差值。若无共享键则直接失败。
 6. Bootstrap 对 pair 差值重采样；seed 固定使教材测试可重复，并输出平均差与区间，不把区间端点解释为参数有 95% 概率位于其中。
-7. Gate 将统计结果与预注册 margin、关键指标非劣要求、错误率和成本约束结合；不能用“均值为正”代替全部政策。
+7. Gate 将统计结果与预注册 margin、关键指标非劣要求、错误率和成本约束结合；不能用「均值为正」代替全部政策。
 8. 报告展示 pair_count、缺失 pair、分层效果和单例回归，支持定位而非只公布赢家。
 
 ## 关键数据与不变量

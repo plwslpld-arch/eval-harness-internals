@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-Inspect AI 不只是“另一套 benchmark runner”。它把 Task 定义成 Dataset、Solver、Scorer 与可选 Sandbox 的组合，因此既能运行普通模型任务，也能处理带工具和状态的 Agent Eval。阅读源码时真正需要理清的是，公共 `eval` 怎样解析 Task，`eval_run` 怎样为每项 Task 准备隔离环境与日志，`task_run` 怎样执行每个 Sample，以及 Scorer 怎样读取 TaskState 和 Target，再把结果写回结构化 EvalLog。
+Inspect AI 不只是「另一套 benchmark runner」。它把 Task 定义成 Dataset、Solver、Scorer 与可选 Sandbox 的组合，因此既能运行普通模型任务，也能处理带工具和状态的 Agent Eval。阅读源码时真正需要理清的是，公共 `eval` 怎样解析 Task，`eval_run` 怎样为每项 Task 准备隔离环境与日志，`task_run` 怎样执行每个 Sample，以及 Scorer 怎样读取 TaskState 和 Target，再把结果写回结构化 EvalLog。
 
 本课程固定在提交 `ebf4815ee260afcc8c34ad9d66e6f8d98a89e905`，正文会把上游直接可见的类和调用标为源码事实，而当这些对象被映射到 Trial、Attempt、Observation 和 Gate 时，也会明确说明那是机制解释，不会假设两边字段一一相同。
 
@@ -40,7 +40,7 @@ Inspect AI 不只是“另一套 benchmark runner”。它把 Task 定义成 Dat
 
 把 Sandbox 与 Task 并列是一项关键设计，因为同一 Solver 可以在本地、Docker 或其他环境实现中运行，Agent 终态也能进入评分。代价同样具体——环境创建、文件复制、setup、cleanup 和网络策略都会成为运行协议的一部分。Scorer 必须是 async callable，这便于 Judge 或外部检查并发运行，但它能否复现，仍取决于模型和参数有没有完整记录。
 
-Task retry 与 Sample 评分失败不是一回事。`run_task_retry_attempts` 会针对整项 Task 的错误或 cancel/retry 请求重新调度，而 `score_on_error` 决定 Sample 执行异常后是否仍要评分，至于普通 Score 不通过，它本身就是有效评测结果。如果把这三种情况都叫作“失败重试”，统计解释就会失真。
+Task retry 与 Sample 评分失败不是一回事。`run_task_retry_attempts` 会针对整项 Task 的错误或 cancel/retry 请求重新调度，而 `score_on_error` 决定 Sample 执行异常后是否仍要评分，至于普通 Score 不通过，它本身就是有效评测结果。如果把这三种情况都叫作「失败重试」，统计解释就会失真。
 
 ## 动手实验
 

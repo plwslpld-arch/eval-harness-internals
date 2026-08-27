@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-开放式回答、合同风险和多轮 Agent 轨迹很难用精确匹配评分，所以很多评测会直接加入 LLM-as-a-Judge。可是“让更强模型打 0 到 1 分”还不是完整方案，因为它没有交代 rubric、输入可见性、输出 schema、失败/弃权、位置偏差、校准数据和成本。Judge 是带有不确定性的测量器，不是事实裁判——本篇会从 Reference Harness 的离线 Judge Protocol 出发，设计一层既能替换实现、又能核对证据的适配层。
+开放式回答、合同风险和多轮 Agent 轨迹很难用精确匹配评分，所以很多评测会直接加入 LLM-as-a-Judge。可是「让更强模型打 0 到 1 分」还不是完整方案，因为它没有交代 rubric、输入可见性、输出 schema、失败/弃权、位置偏差、校准数据和成本。Judge 是带有不确定性的测量器，不是事实裁判——本篇会从 Reference Harness 的离线 Judge Protocol 出发，设计一层既能替换实现、又能核对证据的适配层。
 
 核心路线默认不访问网络。`JudgeScorer` 可以接受任何实现 `judge_id + judge(ObservationBundle)` 的对象，而离线 Stub 与真实 API 使用同一份结果合同。这样一来，测试既能锁住 lineage，又不会把模型凭据或漂移带进基础门禁。
 
@@ -45,7 +45,7 @@ uv run pytest tests/test_runtime_extensions.py -k judge -q
 
 ## 预期输出与答案
 
-离线测试不调用网络，但 Score 仍应保留 value=0.8、reason“满足离线规则”以及完整 lineage。换成真实配置后，至少还要增加 judge_id、provider/model version、prompt/rubric digest、schema、参数、重试/超时、cache policy、成本和校准数据版本。
+离线测试不调用网络，但 Score 仍应保留 value=0.8、reason「满足离线规则」以及完整 lineage。换成真实配置后，至少还要增加 judge_id、provider/model version、prompt/rubric digest、schema、参数、重试/超时、cache policy、成本和校准数据版本。
 
 如果 Judge 超时，系统应产生 Judge error/不可评分，而不是把产品记为 0 分。如果两位人工存在分歧且仲裁尚未完成，结果就应是 uncertain，因为测量还没有收敛。如果 Judge 与人工在关键高风险条目上系统性漏判，那么即使整体一致率很高，它也不能用于 release gate。
 

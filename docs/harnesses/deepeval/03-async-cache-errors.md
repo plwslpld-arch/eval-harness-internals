@@ -6,7 +6,7 @@
 
 当 Judge 调用既昂贵又缓慢时，异步并发、缓存和忽略错误就成了必要的工程能力——可它们也最容易让评测数字失真。并发可能污染有状态 Metric，缓存可能复用过期评分，ignore_errors 可能改变分母，而失败后重跑还可能把同一个测试变成多个独立观察。下文会从 DeepEval 的 AsyncConfig、CacheConfig、ErrorConfig 和 agentic loop 出发，把恢复行为与统计边界一一对齐。
 
-这里关心的不是“打开哪个参数会更快”，而是每个参数究竟改变了执行调度、评分调用、证据记录，还是外部测试行为，因为任何优化都必须保持 Sample/Trial 身份、结果完整性与错误可见性。
+这里关心的不是「打开哪个参数会更快」，而是每个参数究竟改变了执行调度、评分调用、证据记录，还是外部测试行为，因为任何优化都必须保持 Sample/Trial 身份、结果完整性与错误可见性。
 
 ## 先建立源码地图
 
@@ -30,7 +30,7 @@
 
 ## 关键数据结构
 
-AsyncConfig 至少要表达 run_async、max_concurrent、throttle 等调度政策，CacheConfig 负责描述缓存读取与写入行为，ErrorConfig 则说明 ignore_errors 和跳过策略，而这些配置都应该进入 RunManifest。这些配置属于运行身份。Semaphore 只能限制“同时进行的协程数”，并不会提供 Trial 身份、顺序或事务语义。缓存值也不能只有一个分数，因为只有同时携带 test case 摘要、metric identity/config、Judge model、代码版本与输出 schema，后续命中才有办法审计。
+AsyncConfig 至少要表达 run_async、max_concurrent、throttle 等调度政策，CacheConfig 负责描述缓存读取与写入行为，ErrorConfig 则说明 ignore_errors 和跳过策略，而这些配置都应该进入 RunManifest。这些配置属于运行身份。Semaphore 只能限制「同时进行的协程数」，并不会提供 Trial 身份、顺序或事务语义。缓存值也不能只有一个分数，因为只有同时携带 test case 摘要、metric identity/config、Judge model、代码版本与输出 schema，后续命中才有办法审计。
 
 错误结果需要使用 target_error、trace_error、metric_error、timeout、cancelled、cache_corrupt 等机器可读类型，不能只留下一段消息。Reference Harness 的 Trial/Attempt 模型可以把基础设施重试留在同一 Trial 下面，并从中选定一个 canonical Attempt，但 DeepEval 入口本身不会自动为外部 Target 重试建立这套统计合同。
 
@@ -42,7 +42,7 @@ ignore_errors 适合在长批次中继续收集诊断，但发布分析必须先
 
 ## 动手实验
 
-设有 100 个测试，其中 90 个完成且 72 个通过，另外 5 个遇到 Judge 超时，5 个出现 Target 错误。请分别计算“仅完成项通过率”和“按全体样本通过率”，并说明两种口径各自遗漏了什么。然后设计一个缓存键，列出必须覆盖的 TestCase、Metric 与依赖字段，最后模拟 max_concurrent=20 引发限流，比较降低并发、Judge 内部 retry 和重跑整个 Trial 所留下的证据差异。
+设有 100 个测试，其中 90 个完成且 72 个通过，另外 5 个遇到 Judge 超时，5 个出现 Target 错误。请分别计算「仅完成项通过率」和「按全体样本通过率」，并说明两种口径各自遗漏了什么。然后设计一个缓存键，列出必须覆盖的 TestCase、Metric 与依赖字段，最后模拟 max_concurrent=20 引发限流，比较降低并发、Judge 内部 retry 和重跑整个 Trial 所留下的证据差异。
 
 ```bash
 python scripts/sources.py verify

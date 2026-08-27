@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-评测数据很容易把“给模型的输入”“参考答案”“模型实际输出”和“运行时检索证据”塞进同一个模糊的 JSON 对象，而 DeepEval 把 Dataset、Golden 和 LLMTestCase 分开，正好让我们沿着数据的变化看清这些阶段——下文会解释 Dataset 怎样维护单轮或多轮的一致性与数据集身份，也会说明 Golden 为什么可以先于 Target 执行存在，以及 LLMTestCase 为何必须拿到 actual_output 才能交给大多数 Metric 测量。
+评测数据很容易把「给模型的输入」「参考答案」「模型实际输出」和「运行时检索证据」塞进同一个模糊的 JSON 对象，而 DeepEval 把 Dataset、Golden 和 LLMTestCase 分开，正好让我们沿着数据的变化看清这些阶段——下文会解释 Dataset 怎样维护单轮或多轮的一致性与数据集身份，也会说明 Golden 为什么可以先于 Target 执行存在，以及 LLMTestCase 为何必须拿到 actual_output 才能交给大多数 Metric 测量。
 
 这不是字段字典。我们会沿对象生命周期追问字段由谁写、何时冻结、怎样关联数据集，还会辨认哪些运行时观测不能回写成参考数据，最后再看 agentic iterator 如何在用户代码执行后补全 TestCase。
 
@@ -42,7 +42,7 @@ Dataset 是有身份的容器，却不是统计单位。Golden 保存的是待�
 
 ## 动手实验
 
-选择一个“根据知识库回答退款问题”的样本，先写出 Golden 与执行后 LLMTestCase 的最小 JSON 形状，再把预先给定的政策放进 context，把系统实际检索片段放进 retrieval_context，并解释二者为何不同。随后模拟两次网络 Attempt，第一次超时而第二次成功，并指出除了 DeepEval TestCase 以外还要保存哪些 attempt 元数据。最后补出 Dataset 版本清单所需的来源、许可证、内容摘要与切分信息。
+选择一个「根据知识库回答退款问题」的样本，先写出 Golden 与执行后 LLMTestCase 的最小 JSON 形状，再把预先给定的政策放进 context，把系统实际检索片段放进 retrieval_context，并解释二者为何不同。随后模拟两次网络 Attempt，第一次超时而第二次成功，并指出除了 DeepEval TestCase 以外还要保存哪些 attempt 元数据。最后补出 Dataset 版本清单所需的来源、许可证、内容摘要与切分信息。
 
 ```bash
 python scripts/sources.py verify

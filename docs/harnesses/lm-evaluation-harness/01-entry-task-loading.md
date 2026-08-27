@@ -32,13 +32,13 @@ Model Adapter 抽象位于 [`api/model.py`](https://github.com/EleutherAI/lm-eva
 
 ## 实现取舍与失败语义
 
-高层入口把兼容性和用户便利集中处理，因此 `evaluate` 可以假定自己收到的是已初始化 LM 与已加载 Task，但代价是配置覆盖发生在对象加载之后，读者必须继续追踪最终 Task config，不能只停在 YAML。源码自己把 predict-only 通过覆盖 metric 为 bypass 的做法标为较 hacky，这提醒读者，“只生成输出”和“产生可解释 Score”是两种运行模式，而模型类型不满足 `LM` 协议时，运行会在开始前失败。
+高层入口把兼容性和用户便利集中处理，因此 `evaluate` 可以假定自己收到的是已初始化 LM 与已加载 Task，但代价是配置覆盖发生在对象加载之后，读者必须继续追踪最终 Task config，不能只停在 YAML。源码自己把 predict-only 通过覆盖 metric 为 bypass 的做法标为较 hacky，这提醒读者，「只生成输出」和「产生可解释 Score」是两种运行模式，而模型类型不满足 `LM` 协议时，运行会在开始前失败。
 
 Task 完整性测试一旦失败，运行就应立即阻断，而结果只由 rank 0 返回并写入文件，这样可以避免多进程重复输出。缓存不等于身份。缓存文件按 rank 拆分虽然解决了并发写入，却不能自动证明不同机器、tokenizer 或浮动模型身份之间的缓存可以互换。
 
 ## 动手实验
 
-阅读 `simple_evaluate` 的参数表，为 shipping Reference Harness 写一张映射表：`model/model_args` 对应 TargetSpec，`tasks` 对应 Task/Dataset 选择，`limit` 对应计划抽样，`bootstrap_iters` 对应统计配置，`use_cache` 对应执行优化，并且要对每一项标注“完全对应、部分对应、不等价”。
+阅读 `simple_evaluate` 的参数表，为 shipping Reference Harness 写一张映射表：`model/model_args` 对应 TargetSpec，`tasks` 对应 Task/Dataset 选择，`limit` 对应计划抽样，`bootstrap_iters` 对应统计配置，`use_cache` 对应执行优化，并且要对每一项标注「完全对应、部分对应、不等价」。
 
 然后执行：
 

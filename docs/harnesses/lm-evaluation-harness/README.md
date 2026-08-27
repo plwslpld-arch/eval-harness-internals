@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-lm-evaluation-harness 常被理解成“跑 benchmark 的命令行工具”，但真正值得研究的是，它怎样把不同 Dataset、prompt 方式和 metric 统一成少数几种模型请求类型。如果只看 CLI 参数，就会错过三个关键问题：Task 何时把一条文档拆成多个请求，Model Adapter 为什么不必理解具体 benchmark，以及逐样本值怎样重新组合并聚合成任务结果。
+lm-evaluation-harness 常被理解成「跑 benchmark 的命令行工具」，但真正值得研究的是，它怎样把不同 Dataset、prompt 方式和 metric 统一成少数几种模型请求类型。如果只看 CLI 参数，就会错过三个关键问题：Task 何时把一条文档拆成多个请求，Model Adapter 为什么不必理解具体 benchmark，以及逐样本值怎样重新组合并聚合成任务结果。
 
 本课程以锁定提交 `ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66` 为准，不会追随浮动的 `main`，而在阅读时，源码会被分成装配、请求构造、执行回填、样本处理和聚合五站，同时也会指出它与本仓库 Trial/Attempt/Observation 语义并不完全等价的地方。
 
@@ -18,7 +18,7 @@ lm-evaluation-harness 常被理解成“跑 benchmark 的命令行工具”，�
 | 请求对象 | [`api/instance.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/api/instance.py) | 连接文档、请求参数、重复响应和过滤响应 |
 | 聚合 | [`evaluator_utils.py`](https://github.com/EleutherAI/lm-evaluation-harness/blob/ffb2f7b0dfbb05a8095b04947a15cc0a70d54c66/lm_eval/evaluator_utils.py) | Task/Group metric、stderr、配置和样本数整理 |
 
-这些都是**上游源码事实**，而当课程把它们映射成“Planner—Target Adapter—Scorer—Metric”时，给出的则是**机制解释**，因为上游并没有采用 Reference Harness 的全部对象或状态枚举。
+这些都是**上游源码事实**，而当课程把它们映射成「Planner—Target Adapter—Scorer—Metric」时，给出的则是**机制解释**，因为上游并没有采用 Reference Harness 的全部对象或状态枚举。
 
 ## 完整调用链
 
@@ -48,7 +48,7 @@ Instance
   filtered_resps   filter 后交给 process_results 的响应
 ```
 
-一个多项选择文档可以生成多个 loglikelihood Instance，这些 Instance 共享 doc_id，却使用不同的 idx，因此“请求数”可能远大于“样本数”。基数必须分清。上游结果还会保存 doc/prompt/target hash，以便核对 sample log，不过它的血缘对象与本仓库 Observation Bundle 并不是一一对应。
+一个多项选择文档可以生成多个 loglikelihood Instance，这些 Instance 共享 doc_id，却使用不同的 idx，因此「请求数」可能远大于「样本数」。基数必须分清。上游结果还会保存 doc/prompt/target hash，以便核对 sample log，不过它的血缘对象与本仓库 Observation Bundle 并不是一一对应。
 
 ## 实现取舍与失败语义
 

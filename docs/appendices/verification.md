@@ -36,7 +36,7 @@ uv run eval-harness-ref compare output/shipping --candidate-target fixed --basel
 1. 在 `sources/sources.lock.yml` 找课程对应 commit 与 scope；
 2. 用正文永久链接打开锁定文件，不使用 main 分支当前内容；
 3. 从入口沿文中调用链逐站核对调用者、输入、状态改变和返回值；
-4. 对“机制解释”至少找两个互相支撑的调用点；
+4. 对「机制解释」至少找两个互相支撑的调用点；
 5. 公开源码不足时停止推断，将能力标为外部契约或不可核对。
 
 ## 结果边界

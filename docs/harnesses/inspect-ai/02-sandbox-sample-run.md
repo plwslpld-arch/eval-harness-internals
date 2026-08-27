@@ -32,15 +32,15 @@ SandboxEnvironmentSpec 说明环境类型与配置，但真正的环境证据还
 
 ## 实现取舍与失败语义
 
-每个 Sample 使用独立 Sandbox，通常最容易复现和清理，但代价是更高的启动成本。复用环境虽然更快，却必须先证明 reset 已经消除跨 Sample 状态。Inspect AI 允许设置 Task 或 Sample 级 Sandbox 及并发上限，这给实现者留下了选择空间——教材只把它视为一种能力，不会把“用了容器”直接等同于无污染。
+每个 Sample 使用独立 Sandbox，通常最容易复现和清理，但代价是更高的启动成本。复用环境虽然更快，却必须先证明 reset 已经消除跨 Sample 状态。Inspect AI 允许设置 Task 或 Sample 级 Sandbox 及并发上限，这给实现者留下了选择空间——教材只把它视为一种能力，不会把「用了容器」直接等同于无污染。
 
 `retry_on_error` 处理 Sample 级错误，它会递归重建新的 TaskState，同时保留 error_retries，因此不能与 Solver 内部自我修正、Task 级 retry 或普通 Score 失败混为一谈。`score_on_error` 只在重试耗尽后允许错误 Sample 进入 Scorer，这样可以评估已经完成的部分，但错误仍会计入 fail_on_error，不能被 Score 掩盖，而操作员 cancel 所选的 score、error、abort 或 retry，也各有不同的终止语义。
 
 ## 动手实验
 
-设计一个“删除指定临时文件”的 Agent Sample：Sandbox 初态有 `target.txt` 与 `keep.txt`，Agent 只能调用 shell 工具，Scorer 检查终态。列出必须记录的观察：初态摘要、每次工具调用、退出码、最终目录清单、目标文件是否缺失、保留文件是否仍在、Sandbox reset 结果。
+设计一个「删除指定临时文件」的 Agent Sample：Sandbox 初态有 `target.txt` 与 `keep.txt`，Agent 只能调用 shell 工具，Scorer 检查终态。列出必须记录的观察：初态摘要、每次工具调用、退出码、最终目录清单、目标文件是否缺失、保留文件是否仍在、Sandbox reset 结果。
 
-再回答：Agent 最终文本写“已删除”但 `target.txt` 仍存在时，TaskState.output、EvalSample error、Score 分别应是什么。
+再回答：Agent 最终文本写「已删除」但 `target.txt` 仍存在时，TaskState.output、EvalSample error、Score 分别应是什么。
 
 ## 预期输出与答案
 

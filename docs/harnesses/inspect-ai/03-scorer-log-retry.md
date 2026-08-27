@@ -36,7 +36,7 @@ Sample retry 会重建状态，所以适合处理瞬时错误，而模型只是�
 
 ## 动手实验
 
-构造一个包含 100 个计划 Sample 的思想实验，其中 90 个有 Score，具体是 80 passed、10 failed，另有 5 个 Solver error 且 score_on_error=false，还有 5 个 Scorer 返回 None。分别计算“只在 scored samples 上的通过率”和“以计划 Sample 为分母的通过率”，再决定 Gate 应该是 passed、failed 还是 inconclusive。
+构造一个包含 100 个计划 Sample 的思想实验，其中 90 个有 Score，具体是 80 passed、10 failed，另有 5 个 Solver error 且 score_on_error=false，还有 5 个 Scorer 返回 None。分别计算「只在 scored samples 上的通过率」和「以计划 Sample 为分母的通过率」，再决定 Gate 应该是 passed、failed 还是 inconclusive。
 
 接着比较两种恢复路径：第一种是 Sample 23 首次调用 API 超时，随后 retry 成功，第二种是 Task 在日志写入阶段失败，Task retry 因而复用已经完成的 Sample。请画出两种路径中应该保留的错误、重试和最终 Score 关系。
 
@@ -44,7 +44,7 @@ Sample retry 会重建状态，所以适合处理瞬时错误，而模型只是�
 
 只看已评分子集时，通过率是 80/90≈88.9%，而改用计划分母后则是 80/100=80%。如果政策要求达到 85%，同时又规定关键缺失不可忽略，Gate 就不能按 88.9% 判为 passed，而应因为 10 个未评分样本判为 inconclusive，或按预声明的保守政策判为 failed。选择必须在运行前声明。
 
-Sample retry 应保留第一次 error_retries，并让新状态产生的 Score 进入结果，而 Task retry 应保留失败的 EvalLog，再由新 entry 记录复用的 SampleSource 和新的 Task 尝试。两种恢复都不能伪装成“从未失败过”。
+Sample retry 应保留第一次 error_retries，并让新状态产生的 Score 进入结果，而 Task retry 应保留失败的 EvalLog，再由新 entry 记录复用的 SampleSource 和新的 Task 尝试。两种恢复都不能伪装成「从未失败过」。
 
 ## 如何核对
 

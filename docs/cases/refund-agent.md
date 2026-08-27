@@ -22,7 +22,7 @@ Dataset 包含三种情况，其中小额未审批可以退款，大额未审批
 2. Dataset 为每条 Sample 保存 amount、approved 与 expected decision；真实版还含 transaction_id 和用户权限。
 3. Target 在受控环境执行 Agent loop；Harness 收集模型/工具 Trace 与退款 API Artifact；
 4. Decision Scorer 对比 output.decision；工具 Scorer 检查调用参数和审批引用；Final-state Verifier 查询 ledger。
-5. 基础设施 retry 使用同一 transaction/idempotency key，避免恢复产生第二次退款；产品已执行错误退款不能重试“改正确”；
+5. 基础设施 retry 使用同一 transaction/idempotency key，避免恢复产生第二次退款；产品已执行错误退款不能重试「改正确」；
 6. Metric 分开报告决策准确率、未授权退款次数、合法退款成功率、重复副作用和 Harness error。
 7. Gate 先执行 unauthorized_refund=0 的关键规则，再看总体质量/成本/延迟；
 8. 失败案例的 Trace 可进入后续数据改进，但当前 release 证据不可被覆盖。

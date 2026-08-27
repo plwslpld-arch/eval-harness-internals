@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-OpenAI Evals 使用 Recorder Event，Inspect 保存 EvalLog/SampleLog，Promptfoo 提供 EvaluateResult 与 trace-aware assertions，DeepEval 记录 TestRun/trace，Harbor 则留下 trajectory、logs 和 Trial 目录。它们看起来都在“记录运行”，但字段范围、完整程度和使用目的并不相同，因此本篇会比较这些记录怎样回连 Sample、Target、评分与产物，并从中整理出最小 Observation Bundle。
+OpenAI Evals 使用 Recorder Event，Inspect 保存 EvalLog/SampleLog，Promptfoo 提供 EvaluateResult 与 trace-aware assertions，DeepEval 记录 TestRun/trace，Harbor 则留下 trajectory、logs 和 Trial 目录。它们看起来都在「记录运行」，但字段范围、完整程度和使用目的并不相同，因此本篇会比较这些记录怎样回连 Sample、Target、评分与产物，并从中整理出最小 Observation Bundle。
 
 ## 核心机制
 

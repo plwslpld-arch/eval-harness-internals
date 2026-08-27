@@ -30,7 +30,7 @@
 
 ## 关键数据结构
 
-DatasetConfig 固定数据集名称、版本、路径与筛选条件，JobConfig/RunLock 则固定 Agent、模型、并发、n_attempts、超时、网络和环境政策，因此 TrialConfig 才是一组不可混淆的运行坐标。坐标必须保持稳定。真正代表完整执行证据的是 TrialResult，单凭“目录存在”或“config 存在”都不能替代它。JobStats 与 BenchmarkResults 只是从 TrialResult 派生出来的缓存，所以即使需要重建，也应该能从行级结果重新计算。
+DatasetConfig 固定数据集名称、版本、路径与筛选条件，JobConfig/RunLock 则固定 Agent、模型、并发、n_attempts、超时、网络和环境政策，因此 TrialConfig 才是一组不可混淆的运行坐标。坐标必须保持稳定。真正代表完整执行证据的是 TrialResult，单凭「目录存在」或「config 存在」都不能替代它。JobStats 与 BenchmarkResults 只是从 TrialResult 派生出来的缓存，所以即使需要重建，也应该能从行级结果重新计算。
 
 Terminal-Bench 的 TrialResults 包含 task_name、trial_name、reward 等字段，而 BenchmarkResults 会先按任务计算每个 task 的成功次数，再据此估计 pass@k。这样做保留了 task 这个聚类单位，避免把 300 条 Trial 当成 300 个不同任务，从而夸大任务覆盖。
 
@@ -51,7 +51,7 @@ python -m pytest tests/test_harness_course_docs.py -q
 
 ## 预期输出与答案
 
-筛选后的实际任务有 6 个，因此计划共包含 `6 × 2 × 3 = 36` 个 Trial，而稳定坐标至少要覆盖 dataset commit/task id、Agent 与模型 identity 以及 repetition index。30 个完整结果可以复用，但“8 个无 result”与总计划互相矛盾，因为整个计划只有 36 项，这说明恢复清单必须先校验，不能拿到数字就盲算。如果把条件改成 4 条不完整，就应清理并重新调度这 4 条，同时调度另外 2 条未启动任务，共计 6 条。模型版本变化会改写 Target identity，所以应建立新的 Job。
+筛选后的实际任务有 6 个，因此计划共包含 `6 × 2 × 3 = 36` 个 Trial，而稳定坐标至少要覆盖 dataset commit/task id、Agent 与模型 identity 以及 repetition index。30 个完整结果可以复用，但「8 个无 result」与总计划互相矛盾，因为整个计划只有 36 项，这说明恢复清单必须先校验，不能拿到数字就盲算。如果把条件改成 4 条不完整，就应清理并重新调度这 4 条，同时调度另外 2 条未启动任务，共计 6 条。模型版本变化会改写 Target identity，所以应建立新的 Job。
 
 这个矛盾是有意留下的，它要求读者先验证计划全集与集合关系，而不是拿到日志数字就直接相加。应先校验恢复清单。
 

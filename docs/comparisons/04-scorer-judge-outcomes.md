@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-lm-eval 的 process_results、Inspect Scorer、OpenAI Evals match record、Promptfoo Assertion、DeepEval Metric 和 Harbor Verifier 都会把运行观察转成结果，不过它们输出的可能是 exact match、连续 score 或 reward map，语义并不相同。真正容易出错的地方，是把“评分失败”与“评分器失败”混为一谈，因此本篇会用统一 Outcome 状态比较确定性规则、模型 Judge 和环境 Verifier。
+lm-eval 的 process_results、Inspect Scorer、OpenAI Evals match record、Promptfoo Assertion、DeepEval Metric 和 Harbor Verifier 都会把运行观察转成结果，不过它们输出的可能是 exact match、连续 score 或 reward map，语义并不相同。真正容易出错的地方，是把「评分失败」与「评分器失败」混为一谈，因此本篇会用统一 Outcome 状态比较确定性规则、模型 Judge 和环境 Verifier。
 
 ## 核心机制
 

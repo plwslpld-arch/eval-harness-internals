@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-如果模型第一次答错、第二次答对，Harness 能不能自动重试并把这个样本记为通过？不能。只有产品的服务契约已经包含重试，而且这段行为本来就属于被测 Target 时，第二次回答才是有效产品观察的一部分。Eval Harness 的 retry 只能恢复“没有得到有效产品观察”的基础设施故障，否则失败样本会被反复重抽直到成功，分母和失败概率也会一起被改写。本篇通过 Trial/Attempt、分开的行为预算和 canonical Attempt，为两种看起来相似的重试划出严格边界。
+如果模型第一次答错、第二次答对，Harness 能不能自动重试并把这个样本记为通过？不能。只有产品的服务契约已经包含重试，而且这段行为本来就属于被测 Target 时，第二次回答才是有效产品观察的一部分。Eval Harness 的 retry 只能恢复「没有得到有效产品观察」的基础设施故障，否则失败样本会被反复重抽直到成功，分母和失败概率也会一起被改写。本篇通过 Trial/Attempt、分开的行为预算和 canonical Attempt，为两种看起来相似的重试划出严格边界。
 
 熟悉 Sample/Trial/Attempt 之后，你应能给 timeout、429、进程启动失败、模型拒答、工具错误、断言失败和日志写入失败分类。分类是为了设计一台不会借恢复机制作弊的状态机，因为错误属于哪一层，会直接决定它能否重试。
 
@@ -29,7 +29,7 @@ Trial 是预先进入统计计划的观察单位，而 Attempt 是同一 Trial �
 
 ## 关键数据与不变量
 
-`AttemptStatus={succeeded, infra_failed, cancelled}` 描述单次基础设施执行，而 `TrialStatus={completed, blocked, invalid}` 描述整个计划观察的结果。Attempt ID 由 Trial ID + ordinal 得出，一个 Trial 最多只能有一个 canonical，并且 canonical 必须是 succeeded。产品失败仍然可以由 succeeded Attempt 产生，因为“成功执行”只表示获得了有效观察，并不等于“产品通过”。
+`AttemptStatus={succeeded, infra_failed, cancelled}` 描述单次基础设施执行，而 `TrialStatus={completed, blocked, invalid}` 描述整个计划观察的结果。Attempt ID 由 Trial ID + ordinal 得出，一个 Trial 最多只能有一个 canonical，并且 canonical 必须是 succeeded。产品失败仍然可以由 succeeded Attempt 产生，因为「成功执行」只表示获得了有效观察，并不等于「产品通过」。
 
 预算至少要区分 Harness infra attempts、Target 内部调用/工具预算、Judge 预算和全局墙钟预算，因为这些预算耗尽后代表的失败并不相同。可恢复错误名单需要白名单化，如果将所有 Exception 都视为可重试，确定性程序错误就会被不断重试掩盖。取消也不应自动继续。它可能来自用户、全局预算或上游任务撤销。
 
@@ -47,7 +47,7 @@ uv run pytest tests/test_runner.py -q
 
 基础设施先失败后成功时，会留下两个 Attempt，第二个是 canonical，Trial 则为 completed。直接 product_failure 时，只会产生一个 succeeded canonical Attempt，Trial 仍是 completed，但 Scorer 后续可能给出 failed。如果所有尝试都是 infra failure，系统会留下达到预算数量的 infra_failed Attempt，Trial 因为没有 canonical 而 blocked，也不会生成 Score，但它仍在计划 denominator 中。
 
-错误答案本身已经是有效产品观察，所以它应当进入 Score failed，而不是进入 Harness retry。如果业务 Target 自己定义“最多请求模型三次再投票”，这三次请求就是单个 Trial 内的 Target Trace，既不是 Harness 的三个 Attempt，也不能当成三个独立样本。
+错误答案本身已经是有效产品观察，所以它应当进入 Score failed，而不是进入 Harness retry。如果业务 Target 自己定义「最多请求模型三次再投票」，这三次请求就是单个 Trial 内的 Target Trace，既不是 Harness 的三个 Attempt，也不能当成三个独立样本。
 
 ## 如何核对
 

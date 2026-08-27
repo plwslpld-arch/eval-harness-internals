@@ -4,7 +4,7 @@
 
 ## 本篇要解决什么问题
 
-语言模型基准常把“输入发给模型、比较答案”作为主循环，而终端 Agent 评测必须先启动隔离环境、安装或连接 Agent、执行多轮命令并保留日志与文件，然后才能在相同或独立环境中运行 verifier。Harbor 是从 Terminal-Bench 后续演进出来的通用 Agent Harness/Eval Harness 框架，Terminal-Bench 1 则保留了更紧凑的早期 Harness 结构——把两者放在一起阅读，就能沿源码看到 Job/Dataset 怎样展开 Trial、环境与 Agent 如何交替、Verifier 如何从容器产物生成 reward，以及恢复结果时为什么不能只看一个 `resolved` 布尔值。
+语言模型基准常把「输入发给模型、比较答案」作为主循环，而终端 Agent 评测必须先启动隔离环境、安装或连接 Agent、执行多轮命令并保留日志与文件，然后才能在相同或独立环境中运行 verifier。Harbor 是从 Terminal-Bench 后续演进出来的通用 Agent Harness/Eval Harness 框架，Terminal-Bench 1 则保留了更紧凑的早期 Harness 结构——把两者放在一起阅读，就能沿源码看到 Job/Dataset 怎样展开 Trial、环境与 Agent 如何交替、Verifier 如何从容器产物生成 reward，以及恢复结果时为什么不能只看一个 `resolved` 布尔值。
 
 本课程锁定 Harbor `74f0176384cff88b99306770473b4875760c5a21` 与 Terminal-Bench 1 `d28711d0da2675d0bb1d56de45ae5df6082438a3`。我们先用 Terminal-Bench 1 解释紧凑基线，再用 Harbor 展示网络策略、资源能力、事件 hook、regrade 与多步结果等扩展，但这并不是两个项目的版本差异大全，也不表示 Harbor 的每项能力都来自 Terminal-Bench 1。
 
@@ -41,11 +41,11 @@ Task 描述 instruction、环境构建和 verifier，而 Dataset 表示锁定后
 
 容器把任务依赖与副作用隔离开，使文件和命令可以接受验证，不过镜像、运行时、网络与资源限制也因此进入实验身份。将 Verifier 与 Agent 分开能够提高防篡改能力，但需要复制工作区或明确哪些产物共享，而且环境差异本身也可能制造假失败。resume 可以节省成本——却只能在锁定配置相同且结果完整时复用，残留目录不能冒充完成状态。
 
-Agent 没有解决任务属于产品失败，而 Agent 进程崩溃可能来自产品本身，也可能是适配错误。环境构建失败、健康检查失败与 Verifier reward 缺失则属于 Harness 错误，超时还必须注明发生在 setup、agent 还是 verifier 阶段。不同阶段不能混写。只有把这些情况分层记录，Gate 才能区分“不通过”和“无法判断”。
+Agent 没有解决任务属于产品失败，而 Agent 进程崩溃可能来自产品本身，也可能是适配错误。环境构建失败、健康检查失败与 Verifier reward 缺失则属于 Harness 错误，超时还必须注明发生在 setup、agent 还是 verifier 阶段。不同阶段不能混写。只有把这些情况分层记录，Gate 才能区分「不通过」和「无法判断」。
 
 ## 动手实验
 
-为“在容器中修复一个损坏的配置文件”设计 Task，列出 instruction、初始文件、网络策略、资源限制、Agent 可写路径、隐藏 verifier 和 reward。给同一个 Task 安排 3 个随机 Trial，再为第二个 Trial 的容器启动失败安排一次基础设施重试，并写出正确的 Trial/Attempt 数量。最后解释为什么只保存 `reward=1` 无法复现或审计这次运行。
+为「在容器中修复一个损坏的配置文件」设计 Task，列出 instruction、初始文件、网络策略、资源限制、Agent 可写路径、隐藏 verifier 和 reward。给同一个 Task 安排 3 个随机 Trial，再为第二个 Trial 的容器启动失败安排一次基础设施重试，并写出正确的 Trial/Attempt 数量。最后解释为什么只保存 `reward=1` 无法复现或审计这次运行。
 
 ```bash
 python scripts/sources.py verify
