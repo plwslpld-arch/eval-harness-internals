@@ -4,7 +4,7 @@
 
 > 从一个样本到一次发布决定，读懂评测系统如何运行。
 
-这是一套面向开发者的中文 Eval Harness 源码教材，并包含一个可离线运行的 Python Reference Harness。你会从 Task、Dataset、Trial、Attempt 和 Trace 开始，沿六套真实开源实现读懂执行、评分、统计比较与发布 Gate。
+这套面向开发者的中文 Eval Harness 源码教材，配有一个可离线运行的 Python Reference Harness，你会从 Task、Dataset、Trial、Attempt 和 Trace 开始，再沿六套真实开源实现读懂执行、评分、统计比较与发布 Gate。先跑通，再拆开看。
 
 [开始学习](00-start-here.md){ .md-button .md-button--primary }
 [选择学习路线](learning-paths.md){ .md-button }
@@ -27,4 +27,4 @@ uv run eval-harness-ref inspect output/shipping
 uv run eval-harness-ref compare output/shipping --candidate-target fixed --baseline-target buggy
 ```
 
-完整目录、案例、实验和验证方法见[文档总目录](contents.md)。
+完整目录把案例、实验和验证方法放在同一条学习路径上，具体入口见[文档总目录](contents.md)。
