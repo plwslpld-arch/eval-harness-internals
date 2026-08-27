@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import argparse
 import re
 from pathlib import Path
@@ -181,6 +182,64 @@ def _mkdocs_navigation_violations(root: Path) -> list[str]:
     return [f"mkdocs.yml: 导航缺少 {path}" for path in sorted(core_docs - entries)]
 
 
+def _repository_metadata_violations(root: Path) -> list[str]:
+    """GitHub About 的唯一真相在 .github/repository-metadata.yml。
+
+    两个仓库是一对：agent 讲「模型的意图怎样变成真实动作」，本仓库讲「动作做完之后
+    谁来判定它做对了」。读者从任一侧都要能走到另一侧，所以姊妹仓库写进元数据并在这里
+    校验，README 也必须真的链接过去——否则声明只是摆设，改一边忘另一边不会有人发现。
+    """
+    path = root / ".github" / "repository-metadata.yml"
+    if not path.exists():
+        return ["缺少 .github/repository-metadata.yml"]
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [f".github/repository-metadata.yml 不是合法 JSON: {exc}"]
+
+    out: list[str] = []
+    han = re.compile(r"[\u4e00-\u9fff]")
+    if data.get("name") != "eval-harness-internals":
+        out.append("元数据仓库名必须是 eval-harness-internals")
+    about = data.get("about")
+    if not isinstance(about, str) or not han.search(about):
+        out.append("必须提供中文 About")
+    elif len(about) > 160:
+        out.append("中文 About 不能超过 160 个字符")
+    if data.get("homepage") != "https://plwslpld-arch.github.io/eval-harness-internals/":
+        out.append("About 必须填本仓库的 Pages 地址")
+
+    topics = data.get("topics")
+    if not isinstance(topics, list):
+        out.append("Topics 必须是数组")
+    else:
+        for topic in topics:
+            if not isinstance(topic, str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,49}", topic):
+                out.append(f"Topic 非法：{topic}")
+        # 与姊妹仓库共用的检索面，缺一条两个仓库就不再是一对。
+        for topic in ("eval-harness", "source-code-analysis", "chinese", "llm"):
+            if topic not in topics:
+                out.append(f"缺少核心 Topic：{topic}")
+
+    sibling = data.get("sibling")
+    if not isinstance(sibling, dict):
+        out.append("必须声明姊妹仓库")
+    else:
+        if sibling.get("repo") != "plwslpld-arch/agent-harness-internals":
+            out.append("姊妹仓库必须是 agent-harness-internals")
+        if not isinstance(sibling.get("name"), str) or not han.search(sibling.get("name", "")):
+            out.append("姊妹仓库必须有中文名称")
+        for key in ("url", "site"):
+            value = sibling.get(key)
+            if not isinstance(value, str) or not value.startswith("https://"):
+                out.append(f"姊妹仓库缺少 {key}")
+
+    readme = root / "README.md"
+    if readme.exists() and "plwslpld-arch/agent-harness-internals" not in readme.read_text(encoding="utf-8"):
+        out.append("README 必须链接姊妹仓库")
+    return out
+
+
 def collect_repository_violations(root: Path) -> list[str]:
     root = root.resolve()
     violations: list[str] = []
@@ -200,6 +259,7 @@ def collect_repository_violations(root: Path) -> list[str]:
     violations.extend(svg_safety_violations(root))
     violations.extend(_public_text_violations(root))
     violations.extend(_mkdocs_navigation_violations(root))
+    violations.extend(_repository_metadata_violations(root))
     return sorted(set(violations))
 
 

@@ -10,6 +10,14 @@
 [选择学习路线](learning-paths.md){ .md-button }
 [下载完整中文 PDF](downloads/eval-harness-internals-cn.pdf){ .md-button }
 
+## 姊妹项目
+
+这套教材从「一次运行留下了什么证据」开始，回答的是判定问题。那些证据本身是怎样被产生的，
+也就是模型给出下一步意图之后由谁把它变成可控制、可恢复的真实动作，写在
+[Agent Harness 源码内核](https://plwslpld-arch.github.io/agent-harness-internals/) 里，
+那边会沿六套编程智能体的锁定源码追配置怎样成形、工具循环怎样推进、权限在哪几层拦截、
+以及会话状态怎样恢复。两套教材共用同一种读法，都从锁定源码的行号锚点出发。
+
 ## 三条主线
 
 | 主线 | 你会得到什么 |
